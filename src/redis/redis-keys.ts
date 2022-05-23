@@ -1,0 +1,11 @@
+export const INDEXER_NEW_HEAD_CHANNEL = 'starknet:indexer:head:new'
+export const INDEXER_HEAD_BLOCK = 'starknet:indexer:head'
+export const INDEXER_LAST_COMPLETE_BLOCK = 'starknet:indexer:last:complete'
+export const INDEXER_CHAIN_HEIGHT = 'starknet:indexer:chain:height'
+export const INDEXER_STATUS = 'starknet:indexer:status'
+
+export const BLOCK_COMPLETE_CHANNEL = 'starknet:indexer:complete:block'
+export const BLOCK_START_CHANNEL = 'starknet:indexer:started:block'
+export const EVENT_LAST = 'starknet:indexer:last:event'
+export const EVENT_TOTAL = 'starknet:indexer:total:event'
+export const BLOCK_CACHE_PREFIX = 'starknet:indexer:cache:block'

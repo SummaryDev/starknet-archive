@@ -1,3 +1,9 @@
+# ide
+.idea
+
+# ts output dir
+lib
+
 # Logs
 logs
 *.log

@@ -1,0 +1,46 @@
+{
+  "name": "starknet-archive",
+  "private": true,
+  "description": "Data indexer for StarkNet blockchain",
+  "version": "0.0.1",
+  "license": "GPL-3.0-or-later",
+  "repository": "git@github.com:olegabu/starknet-archive.git",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "rm -rf lib && tsc",
+    "migrate": "node lib/run.js migrate",
+    "start": "node lib/run.js index",
+    "test": "ts-mocha test/**.ts"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^9.0.0",
+    "debug": "^4.3.3",
+    "dotenv": "^10.0.0",
+    "envalid": "^7.2.2",
+    "ethers": "^5.6.6",
+    "figlet": "^1.5.2",
+    "ioredis": "^4.28.3",
+    "lodash": "^4.17.21",
+    "p-retry": "~4.6.1",
+    "p-timeout": "~4.1.0",
+    "p-wait-for": "^3.2.0",
+    "pg": "^8.7.3",
+    "starknet": "^3.9.0",
+    "starknet-analyzer": "../starknet-analyzer",
+    "typeorm": "^0.2.41"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.7",
+    "@types/figlet": "^1.5.4",
+    "@types/ioredis": "^4.28.7",
+    "@types/lodash": "^4.14.178",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "^17.0.34",
+    "ts-mocha": "^10.0.0",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.6.4"
+  }
+}
