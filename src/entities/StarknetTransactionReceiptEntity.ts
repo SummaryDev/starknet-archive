@@ -5,7 +5,7 @@ import {StarknetBlockEntity} from './StarknetBlockEntity'
 import {ConsumedMessage, ExecutionResources, StarknetEvent, StarknetTransactionReceipt} from "../starknet/data";
 // import {TransactionReceipt} from 'starknet/types'
 // import {TransactionReceipt} from '../starknet/data'
-import {TransactionReceipt} from 'starknet-analyzer/src/types/rawStarknet'
+import {TransactionReceipt} from 'starknet-parser/src/types/rawStarknet'
 
 export const STARKNET_TRANSACTION_RECEIPT_TABLE_NAME = 'starknet_transaction_receipt';
 

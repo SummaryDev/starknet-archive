@@ -15,3 +15,53 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
     command: ["postgres", "-c", "log_statement=all"]
+
+  indexer:
+    image: starknet-archive
+#    restart: unless-stopped
+    environment:
+      - DB_NAME=${DB_NAME}
+      - DB_HOST=db
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_PORT=5432
+      - REDIS_URI=redis://redis:6379/0
+#      - FORCE_HEIGHT=true # starting block height
+      - WS_PROVIDER_ENDPOINT_URI=https://alpha4.starknet.io
+      - WORKERS_NUMBER=1
+#      - BLOCK_HEIGHT=100000
+    depends_on:
+      - db
+      - redis
+    command: >
+      sh -c "npm run migrate && npm run start"
+
+  indexer-status-service:
+    image: starknet-archive-status-service
+    restart: unless-stopped
+    depends_on:
+      - redis
+    environment:
+      REDIS_URI: redis://redis:6379/0
+      PORT: 8081
+    ports:
+      - "${STATUS_SERVICE_PORT:-4011}:8081"
+
+  indexer-gateway:
+    image: starknet-archive-gateway
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - db
+      - indexer-status-service
+#      - indexer
+    ports:
+      - "${GATEWAY_SERVICE_PORT:-4010}:8080"
+    environment:
+      - DEV_MODE=true
+      - DB_NAME=${DB_NAME}
+      - DB_HOST=db
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_PORT=5432
+      - STARKNET_INDEXER_STATUS_SERVICE=http://indexer-status-service:8081/status

@@ -1,7 +1,7 @@
 import {formatId} from "../util/format"
 import {Column, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn} from 'typeorm'
 import { AbstractWarthogModel } from './AbstractWarthogModel'
-import {FunctionInput, OrganizedCalldata} from "starknet-analyzer/src/types/organizedStarknet";
+import {FunctionInput, OrganizedCalldata} from "starknet-parser/src/types/organizedStarknet";
 import {StarknetTransactionReceiptEntity} from "./StarknetTransactionReceiptEntity";
 import {Transaction} from "../starknet/data";
 import {StarknetBlockEntity} from "./StarknetBlockEntity";

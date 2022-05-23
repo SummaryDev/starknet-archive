@@ -11,10 +11,10 @@ import {StarknetBlockEntity, StarknetTransactionEntity, StarknetTransactionRecei
 //import {GetBlockResponse, Transaction, TransactionReceipt} from 'starknet/types'
 import {GetBlockResponse, StarknetBlockInfo} from '../starknet/data'
 import {defaultProvider} from 'starknet'
-import { BlockOrganizer } from 'starknet-analyzer/lib/organizers/BlockOrganizer'
+import { BlockOrganizer } from 'starknet-parser/lib/organizers/BlockOrganizer'
 import {StarknetEventEntity} from '../entities'
 import {StarknetCalldataEntity} from '../entities'
-import {TransactionReceipt} from 'starknet-analyzer/src/types/rawStarknet'
+import {TransactionReceipt} from 'starknet-parser/src/types/rawStarknet'
 
 const debug = Debug('index-builder:indexer');
 

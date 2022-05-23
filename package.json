@@ -29,7 +29,7 @@
     "p-wait-for": "^3.2.0",
     "pg": "^8.7.3",
     "starknet": "^3.9.0",
-    "starknet-analyzer": "../starknet-analyzer",
+    "starknet-parser": "../starknet-parser",
     "typeorm": "^0.2.41"
   },
   "devDependencies": {

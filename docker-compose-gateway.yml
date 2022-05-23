@@ -16,25 +16,6 @@ services:
       POSTGRES_PASSWORD: ${DB_PASS}
     command: ["postgres", "-c", "log_statement=all"]
 
-#  indexer:
-#    image: starknet-archive
-##    restart: unless-stopped
-#    environment:
-#      - WORKERS_NUMBER=1
-#      - DB_NAME=${DB_NAME}
-#      - DB_HOST=db
-#      - DB_USER=${DB_USER}
-#      - DB_PASS=${DB_PASS}
-#      - DB_PORT=5432
-#      - REDIS_URI=redis://redis:6379/0
-##      - FORCE_HEIGHT=true # starting block height
-#      - WS_PROVIDER_ENDPOINT_URI=wss://.../
-#    depends_on:
-#      - db
-#      - redis
-#    command: >
-#      sh -c "npm run migrate && npm run start"
-
   indexer-status-service:
     image: starknet-archive-status-service
     restart: unless-stopped
