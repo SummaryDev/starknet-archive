@@ -135,13 +135,16 @@ export class IndexBuilder {
         //TODO add DEPLOY transactions
         if (transaction.type !== "INVOKE_FUNCTION") continue;
 
+        const organizedFunction = await this.blockOrganizer.getFunction(transaction);
+
         const transactionEntity = StarknetTransactionEntity.fromApiData(blockEntity, i, transaction);
+
+        //TODO perhaps function name decoded from abi entryPointSelector is not the best name
+        transactionEntity.name = organizedFunction.name;
 
         debug(`Saving transactionEntity ${JSON.stringify(transactionEntity)}`);
         await em.save(transactionEntity);
         debug(`Saved transactionEntity`);
-
-        const organizedFunction = await this.blockOrganizer.getFunction(transaction);
 
         for (let j = 0; j < organizedFunction.inputs.length; j++) {
           const calldata = organizedFunction.inputs[j];

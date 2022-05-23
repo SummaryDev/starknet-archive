@@ -28,9 +28,11 @@ export class StarknetTransactionEntity
 
   //TODO add index? @Index()
   @Column()
+  @Index()
   contractAddress!: string;
 
   @Column({nullable: true})
+  @Index()
   entryPointSelector!: string;
 
   @Column({nullable: true})
@@ -40,6 +42,7 @@ export class StarknetTransactionEntity
   maxFee!: string;
 
   @Column()
+  @Index()
   transactionHash!: string;
 
   @Column()
@@ -87,7 +90,8 @@ export declare type InvokeFunctionTransaction = {
     });
     entity.block = blockEntity;
 
-    entity.name = t.transaction_hash;
+    //TODO perhaps function name decoded from abi entryPointSelector is not the best name
+    // entity.name = t.transaction_hash;
     entity.transactionHash = t.transaction_hash;
     entity.contractAddress = t.contract_address;
     entity.entryPointSelector = t.entry_point_selector;
