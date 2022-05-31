@@ -1,31 +1,26 @@
 # starknet-archive
 
-Data indexer for StarkNet. 
-
-It stores chain blocks in Postgres database in 
-decoded and slightly normalized form.
+Data archiver for StarkNet. 
 
 Build
 ```bash
 npm install && npm run build
 ```
 
-Build docker image with
+Start local dev database and run the indexer from the cli
+```bash
+docker-compose up -d && npm run start
+```
+
+Build docker image
 ```bash
 docker build -t starknet-archive .
 ```
-
-Start the database and run the indexer from the cli
+Save docker image
 ```bash
-docker-compose -f docker-compose-db.yml up -d && npm run migrate && npm run start
+docker save starknet-archive | gzip > starknet-archive.tgz
 ```
-
-Start the indexer and its auxiliary services (gateway and status) then run the indexer from the cli
+Run
 ```bash
-docker-compose -f docker-compose-gateway.yml up -d && npm run migrate && npm run start
-```
-
-Start all in docker containers
-```bash
-docker-compose up -d
+docker run --env-file .env --network host -e START_BLOCK=100000 -e FINISH_BLOCK=100003 starknet-archive
 ```
