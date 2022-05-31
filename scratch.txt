@@ -1,0 +1,81 @@
+query block {
+  block(where: {block_number: {_eq: 100000}}) {
+    transactions {
+      type
+      contract_address
+      max_fee
+      transaction_hash
+      function
+      entry_point_type
+      entry_point_selector
+      inputs {
+        name
+        type
+        value
+      }
+      events {
+        name
+        transmitter_contract
+        arguments {
+          name
+          type
+          value
+        }
+      }
+    }
+    block_hash
+    block_number
+    state_root
+    timestamp
+  }
+}
+
+sudo apt-get install ca-certificates curl gnupg lsb-release postgresql-client -y
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update -y
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
+
+docker build -t starknet-archive . && docker save starknet-archive | gzip > starknet-archive.tgz && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@54.144.42.135: && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@52.23.151.184: && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@3.82.55.48: && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@3.81.123.149:
+
+scp -i ~/oleg-hp-ubuntu.pem install.sh aws.env starknet-archive.tgz ubuntu@54.144.42.135:
+scp -i ~/oleg-hp-ubuntu.pem install.sh aws.env starknet-archive.tgz ubuntu@52.23.151.184:
+scp -i ~/oleg-hp-ubuntu.pem install.sh aws.env starknet-archive.tgz ubuntu@3.82.55.48:
+scp -i ~/oleg-hp-ubuntu.pem install.sh aws.env starknet-archive.tgz ubuntu@3.81.123.149:
+
+scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@54.144.42.135:
+scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@52.23.151.184:
+scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@3.82.55.48:
+scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@3.81.123.149:
+
+rm -rf node_modules/ && rm package-lock.json && npm install && npm run build
+
+scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@54.144.42.135: && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@52.23.151.184: && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@3.82.55.48: && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@3.81.123.149:
+
+scp -i ~/oleg-hp-ubuntu.pem starknet-archive-gateway.tgz ubuntu@52.207.223.4:
+
+sudo docker load < starknet-archive.tgz && sudo docker images
+
+sudo docker load < starknet-archive-gateway.tgz && sudo docker images
+
+
+ssh -i ~/oleg-hp-ubuntu.pem ubuntu@54.144.42.135
+ssh -i ~/oleg-hp-ubuntu.pem ubuntu@52.23.151.184
+ssh -i ~/oleg-hp-ubuntu.pem ubuntu@3.82.55.48
+ssh -i ~/oleg-hp-ubuntu.pem ubuntu@3.81.123.149
+
+ssh -i ~/oleg-hp-ubuntu.pem ubuntu@52.207.223.4
+
+sudo docker rm -f $(sudo docker ps -a -q)
+sudo docker volume rm $(sudo docker volume ls -q)
+docker system prune -a
+
+sudo docker load < starknet-archive.tgz && sudo docker images
+
+./install.sh
+
+sudo docker run --env-file aws.env --network host -e START_BLOCK=100000 -e FINISH_BLOCK=110000 -d starknet-archive
+sudo docker run --env-file aws.env --network host -e START_BLOCK=110001 -e FINISH_BLOCK=120000 -d starknet-archive
+sudo docker run --env-file aws.env --network host -e START_BLOCK=120001 -e FINISH_BLOCK=130000 -d starknet-archive
+sudo docker run --env-file aws.env --network host -e START_BLOCK=130001 -e FINISH_BLOCK=140000 -d starknet-archive
