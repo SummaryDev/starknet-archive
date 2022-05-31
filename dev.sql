@@ -33,13 +33,18 @@ ORDER BY
   block_number
 LIMIT 1;
 
-CREATE INDEX input_transactionTransactionHash_index ON public.input ("transactionTransactionHash");
-CREATE INDEX event_transactionTransactionHash_index ON public.event ("transactionTransactionHash");
-CREATE INDEX argument_eventId_index ON public.argument ("eventId");
+
 CREATE INDEX transaction_blockBlockNumber_index ON public.transaction ("blockBlockNumber");
 CREATE INDEX transaction_contract_address_function_index ON public.transaction (contract_address, function);
 CREATE INDEX transaction_contract_address_index ON public.transaction (contract_address);
+
+CREATE INDEX event_transactionTransactionHash_index ON public.event ("transactionTransactionHash");
 CREATE INDEX event_name_transmitter_contract_index ON public.event (name, transmitter_contract);
 CREATE INDEX event_transmitter_contract_index ON public.event (transmitter_contract);
+
+CREATE INDEX input_transactionTransactionHash_index ON public.input ("transactionTransactionHash");
+
+CREATE INDEX argument_eventId_index ON public.argument ("eventId");
+
 
 select distinct transmitter_contract from event where name = 'Transfer';

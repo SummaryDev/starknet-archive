@@ -1,4 +1,4 @@
-import {ColumnType, EntitySchema} from 'typeorm';
+import {EntitySchema} from 'typeorm';
 import {OrganizedBlock, OrganizedTransaction, OrganizedEvent, FunctionInput, EventArgument} from "starknet-parser/src/types/organizedStarknet";
 
 export const BlockEntity = new EntitySchema<OrganizedBlock>({
@@ -19,7 +19,7 @@ export const BlockEntity = new EntitySchema<OrganizedBlock>({
       type: String
     },
     timestamp: {
-      type: String
+      type: Number
     },
     status: {
       type: String,
@@ -41,11 +41,10 @@ export const BlockEntity = new EntitySchema<OrganizedBlock>({
       inverseSide: 'block',
       cascade: true
     }
-
   }
 })
 
-export const TransactionEntity = new EntitySchema<OrganizedTransaction & {block: OrganizedBlock}>({
+export const TransactionEntity = new EntitySchema<OrganizedTransaction & {block: OrganizedBlock, blockBlockNumber: number}>({
   name: "transaction",
   columns: {
     transaction_hash: {
@@ -73,6 +72,9 @@ export const TransactionEntity = new EntitySchema<OrganizedTransaction & {block:
       type: String,
       nullable: true
     },
+    blockBlockNumber: {
+      type: Number
+    },
   },
   relations: {
     block: {
@@ -93,10 +95,30 @@ export const TransactionEntity = new EntitySchema<OrganizedTransaction & {block:
       inverseSide: 'transaction',
       cascade: true
     }
-  }
+  },
+  indices: [
+    {
+      name: 'transaction_blockBlockNumber_index',
+      columns: [
+        'blockBlockNumber'
+      ]
+    },
+    {
+      name: 'transaction_contract_address_function_index',
+      columns: [
+        'contract_address', 'function'
+      ]
+    },
+    {
+      name: 'transaction_contract_address_index',
+      columns: [
+        'contract_address'
+      ]
+    }
+  ]
 })
 
-export const InputEntity = new EntitySchema<FunctionInput & {id: number, transaction: OrganizedTransaction}>({
+export const InputEntity = new EntitySchema<FunctionInput & {id: number, transaction: OrganizedTransaction, transactionTransactionHash: string}>({
   name: "input",
   columns: {
     id: {
@@ -116,6 +138,10 @@ export const InputEntity = new EntitySchema<FunctionInput & {id: number, transac
       type: "jsonb",
       nullable: true
     },
+    transactionTransactionHash: {
+      type: String,
+      nullable: true
+    }
     // transactionHash: {
     //   primary: true
     // }
@@ -127,10 +153,18 @@ export const InputEntity = new EntitySchema<FunctionInput & {id: number, transac
       joinColumn: true,
       inverseSide: 'inputs',
     }
-  }
+  },
+  indices: [
+    {
+      name: 'input_transactionTransactionHash_index',
+      columns: [
+        'transactionTransactionHash'
+      ]
+    }
+  ]
 })
 
-export const EventEntity = new EntitySchema<OrganizedEvent & {id: number, transaction: OrganizedTransaction}>({
+export const EventEntity = new EntitySchema<OrganizedEvent & {id: number, transaction: OrganizedTransaction, transactionTransactionHash: string}>({
   name: "event",
   columns: {
     id: {
@@ -146,6 +180,10 @@ export const EventEntity = new EntitySchema<OrganizedEvent & {id: number, transa
       type: String,
       // primary: true
     },
+    transactionTransactionHash: {
+      type: String,
+      nullable: true
+    }
     // transactionHash: {
     //   primary: true,
     //   type: String
@@ -164,10 +202,30 @@ export const EventEntity = new EntitySchema<OrganizedEvent & {id: number, transa
       inverseSide: 'event',
       cascade: true
     }
-  }
+  },
+  indices: [
+    {
+      name: 'event_transactionTransactionHash_index',
+      columns: [
+        'transactionTransactionHash'
+      ]
+    },
+    {
+      name: 'event_name_transmitter_contract_index',
+      columns: [
+        'name', 'transmitter_contract'
+      ]
+    },
+    {
+      name: 'event_transmitter_contract_index',
+      columns: [
+        'transmitter_contract'
+      ]
+    }
+  ]
 })
 
-export const ArgumentEntity = new EntitySchema<EventArgument & {id: number, event: OrganizedEvent}>({
+export const ArgumentEntity = new EntitySchema<EventArgument & {id: number, event: OrganizedEvent, eventId: number}>({
   name: "argument",
   columns: {
     id: {
@@ -187,6 +245,9 @@ export const ArgumentEntity = new EntitySchema<EventArgument & {id: number, even
       type: "jsonb",
       nullable: true
     },
+    eventId: {
+      type: Number
+    }
     // eventTransactionHash: {
     //   primary: true,
     //   type: String
@@ -207,5 +268,13 @@ export const ArgumentEntity = new EntitySchema<EventArgument & {id: number, even
       joinColumn: true,
       inverseSide: 'arguments',
     }
-  }
+  },
+  indices: [
+    {
+      name: 'argument_eventId_index',
+      columns: [
+        'eventId'
+      ]
+    }
+  ]
 })
