@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import {createConnection, DataSource, getRepository} from "typeorm"
+import {createConnection, getConnectionOptions, DataSource} from "typeorm"
 import {defaultProvider} from 'starknet'
 import {GetBlockResponse} from 'starknet-parser/src/types/rawStarknet'
 import { OrganizedBlock } from 'starknet-parser/src/types/organizedStarknet'
@@ -8,10 +8,12 @@ import * as console from 'starknet-parser/lib/helpers/console'
 import {BlockEntity} from './entities'
 
 function main() {
-  createConnection().then(async ds => {
-    console.info(ds.options)
-    await processBlocks(ds)
-  }).catch(err => console.error('caught in main', err))
+  getConnectionOptions().then(connectionOptions => {
+    createConnection(connectionOptions).then(async ds => {
+      console.info(ds.options)
+      await processBlocks(ds)
+    }).catch(err => console.error('cannot getConnection', err))
+  }).catch(err => console.error('cannot getConnectionOptions', err))
 }
 
 main()
@@ -37,7 +39,7 @@ async function processBlocks(ds: DataSource) {
       organizedBlock = await blockOrganizer.organizeBlock(block)
     } catch (err) {
       console.error(`cannot getBlock ${blockNumber}, retrying`, err)
-      await sleep(5000)
+      await sleep()
       continue
     }
 
@@ -54,6 +56,6 @@ async function processBlocks(ds: DataSource) {
 
 }
 
-async function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+async function sleep() {
+  return new Promise(resolve => setTimeout(resolve, Number.parseInt(process.env.RETRY_TIMEOUT || '1000')));
 }
