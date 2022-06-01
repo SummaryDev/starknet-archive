@@ -1,5 +1,5 @@
-import {EntitySchema} from 'typeorm';
-import {OrganizedBlock, OrganizedTransaction, OrganizedEvent, FunctionInput, EventArgument} from "starknet-parser/src/types/organizedStarknet";
+import {EntitySchema, ValueTransformer} from 'typeorm'
+import {OrganizedBlock, OrganizedTransaction, OrganizedEvent, FunctionInput, EventArgument} from "starknet-parser/src/types/organizedStarknet"
 
 export const BlockEntity = new EntitySchema<OrganizedBlock>({
   name: "block",
@@ -225,7 +225,12 @@ export const EventEntity = new EntitySchema<OrganizedEvent & {id: number, transa
   ]
 })
 
-export const ArgumentEntity = new EntitySchema<EventArgument & {id: number, event: OrganizedEvent, eventId: number}>({
+export const numeric: ValueTransformer = {
+  to: (entityValue: number) => entityValue.toString(),
+  from: (databaseValue: string): number => parseInt(databaseValue, 10)
+}
+
+export const ArgumentEntity = new EntitySchema<EventArgument & {id: number, event: OrganizedEvent, eventId: number, decimal: Number}>({
   name: "argument",
   columns: {
     id: {
@@ -244,6 +249,12 @@ export const ArgumentEntity = new EntitySchema<EventArgument & {id: number, even
     value: {
       type: "jsonb",
       nullable: true
+    },
+    decimal: {
+      type: 'numeric',
+      precision: 78,
+      nullable: true,
+      transformer: numeric
     },
     eventId: {
       type: Number
