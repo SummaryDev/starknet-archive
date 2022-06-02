@@ -13,6 +13,28 @@ describe('providers', function() {
 
   describe('DatabaseAbiProvider', async() => {
 
+    it('finds implementation contract address from proxy constructor', async() => {
+      const p = new DatabaseAbiProvider(defaultProvider, await createConnection())
+
+      const contractAddressProxy = '0x328eddfaf2c85bd63f814c25b5b81fd21a5ca04993440b24c6b87b6fb93c921'
+      const abiProxy = await p.get(contractAddressProxy)
+      log(abiProxy)
+      const isProxy = DatabaseAbiProvider.isProxy(abiProxy)
+      expect(isProxy).true
+
+      /*
+      select b.block_number, t.transaction_hash, t.constructor_calldata from transaction as t, block as b where t.contract_address = '0x328eddfaf2c85bd63f814c25b5b81fd21a5ca04993440b24c6b87b6fb93c921' and t.type = 'DEPLOY' and t."blockBlockNumber" = b.block_number order by b.block_number desc;
+
+      134018	0x2dd6e7e242921c61c8b3b8dc07cf88a8792562dc21b732550af4fbfb5aee217	["0x3cbd5ea6dfab767246b10a6afaa5e6a7019492935b2364d836d7f02a07b58ae"] <-- WAS DEPLOYED IN THIS BLOCK
+       */
+
+      let implementationContractAddress = await p.findImplementationContractAddressByConstructor(contractAddressProxy, abiProxy, 134018)
+      expect(implementationContractAddress).eq('0x3cbd5ea6dfab767246b10a6afaa5e6a7019492935b2364d836d7f02a07b58ae')
+
+      implementationContractAddress = await p.findImplementationContractAddressByConstructor(contractAddressProxy, abiProxy, 134017)
+      expect(implementationContractAddress).undefined
+    })
+
     it('finds implementation contract address from upgrade event', async() => {
       const p = new DatabaseAbiProvider(defaultProvider, await createConnection())
 
@@ -23,9 +45,12 @@ describe('providers', function() {
       expect(isProxy).true
 
       /*
+      select b.block_number, a.value, e.name, a.name from argument as a, event as e, transaction as t, block as b where e.transmitter_contract = '0x328eddfaf2c85bd63f814c25b5b81fd21a5ca04993440b24c6b87b6fb93c921' and a."eventId" = e.id and e.name ilike '%upgrade%' and e."transactionTransactionHash" = t.transaction_hash and t."blockBlockNumber" = b.block_number order by b.block_number desc;
+
       164233	"0x65c4fe3e8d1eaa783a62417271af5546d9164cc81d7780617b1295722bfd535"	Upgraded	implementation
       161300	"0x3a29ab9db30291ab762af40a510cb0fe61c4a4f1050142d1ea9d58754cbd641"	Upgraded	implementation
       146407	"0x1e7bad045fbf062272ba29f3d95d678868c3151399b25ba8bb1092077a85edd"	Upgraded	implementation
+      134018	"0x3cbd5ea6dfab767246b10a6afaa5e6a7019492935b2364d836d7f02a07b58ae"	Upgraded	implementation <-- WAS DEPLOYED IN THIS BLOCK
        */
 
       let implementationContractAddress = await p.findImplementationContractAddressByEvent(contractAddressProxy, abiProxy, 164233)
@@ -37,7 +62,10 @@ describe('providers', function() {
       implementationContractAddress = await p.findImplementationContractAddressByEvent(contractAddressProxy, abiProxy, 146407)
       expect(implementationContractAddress).eq('0x1e7bad045fbf062272ba29f3d95d678868c3151399b25ba8bb1092077a85edd')
 
-      implementationContractAddress = await p.findImplementationContractAddressByEvent(contractAddressProxy, abiProxy, 146406)
+      implementationContractAddress = await p.findImplementationContractAddressByEvent(contractAddressProxy, abiProxy, 134018)
+      expect(implementationContractAddress).eq('0x3cbd5ea6dfab767246b10a6afaa5e6a7019492935b2364d836d7f02a07b58ae')
+
+      implementationContractAddress = await p.findImplementationContractAddressByEvent(contractAddressProxy, abiProxy, 134017)
       expect(implementationContractAddress).undefined
     })
 

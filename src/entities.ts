@@ -11,7 +11,7 @@ export const BlockEntity = new EntitySchema<OrganizedBlock>({
     block_hash: {
       type: String
     },
-    previous_block_hash: {
+    parent_block_hash: {
       type: String,
       nullable: true
     },
@@ -58,9 +58,14 @@ export const TransactionEntity = new EntitySchema<OrganizedTransaction & {block:
       type: String
     },
     entry_point_selector: {
-      type: String
+      type: String,
+      nullable: true
     },
     entry_point_type: {
+      type: String,
+      nullable: true
+    },
+    nonce: {
       type: String,
       nullable: true
     },
@@ -68,8 +73,44 @@ export const TransactionEntity = new EntitySchema<OrganizedTransaction & {block:
       type: String,
       nullable: true
     },
+    version: {
+      type: String,
+      nullable: true
+    },
+    signature: {
+      type: 'jsonb',
+      nullable: true
+    },
     function: {
       type: String,
+      nullable: true
+    },
+    actual_fee: {
+      type: String,
+      nullable: true
+    },
+    l2_to_l1_messages: {
+      type: 'jsonb',
+      nullable: true
+    },
+    execution_resources: {
+      type: 'jsonb',
+      nullable: true
+    },
+    contract_definition: {
+      type: 'jsonb',
+      nullable: true
+    },
+    contract_address_salt: {
+      type: String,
+      nullable: true
+    },
+    class_hash: {
+      type: String,
+      nullable: true
+    },
+    constructor_calldata: {
+      type: 'jsonb',
       nullable: true
     },
     // blockBlockNumber: {

@@ -3,8 +3,13 @@ import {AbiProvider} from "starknet-parser/lib/organizers/AbiProvider"
 import {FunctionAbi, Provider} from "starknet"
 import * as console from 'starknet-parser/lib/helpers/console'
 import {DataSource, ILike, LessThanOrEqual, Like, Repository} from "typeorm";
-import {RawAbi, RawAbiEntity, RawBlock, RawBlockEntity, TransactionEntity, EventEntity, ArgumentEntity} from "./entities";
-import {OrganizedEvent, OrganizedTransaction, EventArgument} from "starknet-parser/src/types/organizedStarknet";
+import {RawAbi, RawAbiEntity, RawBlock, RawBlockEntity, InputEntity, ArgumentEntity, TransactionEntity} from "./entities";
+import {
+  OrganizedEvent,
+  OrganizedTransaction,
+  EventArgument,
+  FunctionInput
+} from "starknet-parser/src/types/organizedStarknet";
 
 export interface BlockProvider {
   get(blockNumber: number): Promise<GetBlockResponse>
@@ -31,14 +36,14 @@ export class DatabaseAbiProvider implements AbiProvider {
   private readonly cache: { [key: string]: Abi }
   private readonly repository: Repository<RawAbi>
   private readonly txRepository: Repository<OrganizedTransaction>
-  private readonly eventRepository: Repository<OrganizedEvent>
+  private readonly inputRepository: Repository<FunctionInput>
   private readonly argumentRepository: Repository<EventArgument>
 
   constructor(private readonly provider: Provider, ds: DataSource) {
     this.cache = {}
     this.repository = ds.getRepository<RawAbi>(RawAbiEntity)
     this.txRepository = ds.getRepository<OrganizedTransaction>(TransactionEntity)
-    this.eventRepository = ds.getRepository<OrganizedEvent>(EventEntity)
+    this.inputRepository = ds.getRepository<FunctionInput>(InputEntity)
     this.argumentRepository = ds.getRepository<EventArgument>(ArgumentEntity)
   }
 
@@ -73,15 +78,55 @@ export class DatabaseAbiProvider implements AbiProvider {
     return ret
   }
 
-  async findImplementationContractAddressByContructor(proxyContractAddress: string, proxyContractAbi: Abi, blockNumber?: number): Promise<string | undefined> {
+  async findImplementationContractAddressByConstructor(proxyContractAddress: string, proxyContractAbi: Abi, blockNumber?: number): Promise<string | undefined> {
     let ret = undefined
 
-    // const txDeploy = await this.txRepository.findBy({type: 'DEPLOY'})
-    // if(txDeploy.length != 1) {
-    //   console.warn(`cannot getImplementation from ${txDeploy.length} deployment transactions for ${proxyContractAddress}`)
-    // }
-    //
-    // txDeploy[0].inputs
+    const constructors = DatabaseAbiProvider.getImplementationConstructors(proxyContractAbi)
+
+    if(constructors.length != 1) {
+      console.warn(`cannot getImplementation from ${constructors.length} constructors in abi for ${proxyContractAddress} before block ${blockNumber}`)
+    } else {
+      const constructorAbi = constructors[0]
+      const constructorName = constructorAbi.name
+      const argName = '%implement%'
+
+      const tx = await this.txRepository.createQueryBuilder('t')
+        .leftJoin('t.block', 'b')
+        .where('b.block_number <= :blockNumber', {blockNumber: blockNumber})
+        .andWhere('t.contract_address = :proxyContractAddress', {proxyContractAddress: proxyContractAddress})
+        .andWhere('t.type = :txType', {txType: 'DEPLOY'})
+        .orderBy('b.block_number', 'DESC')
+        .limit(1)
+        .getOne()
+
+      console.debug(tx)
+
+      if(!tx) {
+        console.warn(`cannot getImplementation from empty query looking for deployment transaction for ${proxyContractAddress} before block ${blockNumber}`)
+      } else {
+        const calldata = tx.constructor_calldata
+
+        if(calldata.length != 1) {
+          console.warn(`cannot getImplementation from ${calldata.length} length calldata for deployment transaction ${tx.transaction_hash} for ${proxyContractAddress} before block ${blockNumber}`)
+        } else {
+          //TODO should parse constructor calldata into function inputs and look for '%implementation%' input, don't rely on just a single input
+          /*
+          {
+            "name": "constructor",
+            "type": "constructor",
+            "inputs": [
+              {
+                "name": "implementation_address",
+                "type": "felt"
+              }
+            ],
+            "outputs": []
+          }
+           */
+          ret = calldata[0]
+        }
+      }
+    }
 
     return ret
   }
