@@ -4,9 +4,18 @@
    "description": "Archiver for StarkNet blocks",
    "type": "commonjs",
    "devDependencies": {
-      "@types/node": "^16.11.10",
+      "@types/bn.js": "^5.1.0",
+      "@types/chai": "^4.3.1",
+      "@types/elliptic": "^6.4.14",
+      "@types/minimalistic-assert": "^1.0.1",
+      "@types/mocha": "^9.1.1",
+      "@types/node": "^16.11.38",
+      "assert": "^2.0.0",
+      "chai": "^4.3.6",
+      "mocha": "^10.0.0",
+      "ts-mocha": "^10.0.0",
       "ts-node": "10.7.0",
-      "typescript": "4.5.2"
+      "typescript": "^4.5.2"
    },
    "dependencies": {
       "dotenv": "^16.0.1",
@@ -19,6 +28,7 @@
    "scripts": {
       "start": "node lib/index.js",
       "typeorm": "typeorm-ts-node-commonjs",
-      "build": "rm -rf lib && tsc"
+      "build": "rm -rf lib && tsc",
+      "test": "ts-mocha test/*.ts"
    }
 }
