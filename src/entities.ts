@@ -337,6 +337,7 @@ export const RawBlockEntity = new EntitySchema<RawBlock>({
 })
 
 export interface RawAbi {
+  block_number: number
   contract_address: string
   raw: any
 }
@@ -344,6 +345,10 @@ export interface RawAbi {
 export const RawAbiEntity = new EntitySchema<RawAbi>({
   name: "raw_abi",
   columns: {
+    block_number: {
+      type: Number,
+      primary: true
+    },
     contract_address: {
       type: String,
       primary: true

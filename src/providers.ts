@@ -2,14 +2,10 @@ import {GetBlockResponse, GetCodeResponse, Abi} from "starknet-parser/src/types/
 import {AbiProvider} from "starknet-parser/lib/organizers/AbiProvider"
 import {FunctionAbi, Provider} from "starknet"
 import * as console from 'starknet-parser/lib/helpers/console'
-import {DataSource, ILike, LessThanOrEqual, Like, Repository} from "typeorm";
-import {RawAbi, RawAbiEntity, RawBlock, RawBlockEntity, InputEntity, ArgumentEntity, TransactionEntity} from "./entities";
-import {
-  OrganizedEvent,
-  OrganizedTransaction,
-  EventArgument,
-  FunctionInput
-} from "starknet-parser/src/types/organizedStarknet";
+import {Cache} from 'starknet-parser/lib/helpers/helpers'
+import {DataSource, ILike, LessThanOrEqual, Like, Repository} from "typeorm"
+import {RawAbi, RawAbiEntity, RawBlock, RawBlockEntity, InputEntity, ArgumentEntity, TransactionEntity} from "./entities"
+import {OrganizedEvent,OrganizedTransaction,EventArgument,FunctionInput} from "starknet-parser/src/types/organizedStarknet"
 
 export interface BlockProvider {
   get(blockNumber: number): Promise<GetBlockResponse>
@@ -25,66 +21,114 @@ export class OnlineBlockProvider implements BlockProvider {
 }
 
 export class MockBlockProvider implements BlockProvider {
-  constructor(private readonly cache: { [blockNumber: number]: GetBlockResponse }) {}
+  private readonly cache: Cache<GetBlockResponse>
+
+  constructor() {
+    this.cache = new Cache<GetBlockResponse>()
+  }
 
   async get(blockNumber: number) {
-    return this.cache[blockNumber]
+    return this.cache.get(blockNumber)
+  }
+
+  set(o: GetBlockResponse, blockNumber: number) {
+    this.cache.set(o, blockNumber)
   }
 }
 
 export class DatabaseAbiProvider implements AbiProvider {
-  private readonly cache: { [key: string]: Abi }
+  private readonly abiCache: Cache<Abi>
   private readonly repository: Repository<RawAbi>
   private readonly txRepository: Repository<OrganizedTransaction>
   private readonly inputRepository: Repository<FunctionInput>
   private readonly argumentRepository: Repository<EventArgument>
 
   constructor(private readonly provider: Provider, ds: DataSource) {
-    this.cache = {}
+    this.abiCache = new Cache<Abi>()
     this.repository = ds.getRepository<RawAbi>(RawAbiEntity)
     this.txRepository = ds.getRepository<OrganizedTransaction>(TransactionEntity)
     this.inputRepository = ds.getRepository<FunctionInput>(InputEntity)
     this.argumentRepository = ds.getRepository<EventArgument>(ArgumentEntity)
   }
 
-  async get(contractAddress: string): Promise<Abi> {
+  async get(contractAddress: string, blockNumber: number): Promise<Abi> {
     let ret
 
-    const fromCache = this.cache[contractAddress]
+    const fromCache = this.abiCache.get(blockNumber, contractAddress)
 
     if(!fromCache) {
-      const fromDb = await this.repository.findOneBy({contract_address: contractAddress})
+      const fromDb = await this.repository.findOneBy({contract_address: contractAddress, block_number: blockNumber})
 
       if(!fromDb) {
         const getCodeResponse = await this.provider.getCode(contractAddress) as any
         const code = getCodeResponse as GetCodeResponse
         const fromApi = code.abi
 
-        await this.repository.save({contract_address: contractAddress, raw: fromApi})
+        await this.repository.save({contract_address: contractAddress, block_number: blockNumber, raw: fromApi})
         ret = fromApi
-        console.debug(`from api for ${contractAddress}`)
+        console.debug(`from api for ${contractAddress} at ${blockNumber}`)
       } else {
         ret = fromDb.raw
-        console.debug(`from db for ${contractAddress}`)
+        console.debug(`from db for ${contractAddress} at ${blockNumber}`)
       }
 
-      this.cache[contractAddress] = ret
+      this.abiCache.set(ret, blockNumber, contractAddress)
 
     } else {
       ret = fromCache
-      console.debug(`from cache for ${contractAddress}`)
+      console.debug(`from cache for ${contractAddress} at ${blockNumber}`)
     }
 
     return ret
   }
 
-  async findImplementationContractAddressByConstructor(proxyContractAddress: string, proxyContractAbi: Abi, blockNumber?: number): Promise<string | undefined> {
+  async findImplementationContractAddress(proxyContractAddress: string, proxyContractAbi: Abi, blockNumber: number): Promise<string | undefined> {
+    let ret
+
+    //TODO revisit logic which result is more reliable byEvent || byGetter || byConstructor
+
+    if(DatabaseAbiProvider.getImplementationGetters(proxyContractAbi).length > 0) {
+      ret = await this.findImplementationContractAddressByGetter(proxyContractAddress, proxyContractAbi, blockNumber)
+    } else if (DatabaseAbiProvider.getUpgradeEvents(proxyContractAbi).length > 0) {
+      ret = await this.findImplementationContractAddressByEvent(proxyContractAddress, proxyContractAbi, blockNumber)
+    } else if (DatabaseAbiProvider.getImplementationConstructors(proxyContractAbi).length > 0) {
+      ret = await this.findImplementationContractAddressByConstructor(proxyContractAddress, proxyContractAbi, blockNumber)
+    } else {
+      console.warn(`cannot findImplementationContractAddress no hints found neither by getter nor by upgrade event nor by constructor for proxy contract ${proxyContractAddress} block ${blockNumber}`)
+    }
+
+    return ret
+  }
+
+  async findImplementationContractAddressByAll(proxyContractAddress: string, proxyContractAbi: Abi, blockNumber: number): Promise<string | undefined> {
+    const byGetter = await this.findImplementationContractAddressByGetter(proxyContractAddress, proxyContractAbi, blockNumber)
+    const byEvent = await this.findImplementationContractAddressByEvent(proxyContractAddress, proxyContractAbi, blockNumber)
+    const byConstructor = await this.findImplementationContractAddressByConstructor(proxyContractAddress, proxyContractAbi, blockNumber)
+
+    if(byGetter && byEvent && byGetter !== byEvent) {
+      console.warn(`findImplementationContractAddress results differ byGetter ${byGetter} and byEvent ${byEvent}`)
+    }
+
+    if(byGetter && byConstructor && byGetter !== byConstructor) {
+      console.warn(`findImplementationContractAddress results differ byGetter ${byGetter} and byConstructor ${byConstructor}`)
+    }
+
+    if(byEvent && byConstructor && byEvent !== byConstructor) {
+      console.warn(`findImplementationContractAddress results differ byEvent ${byEvent} and byConstructor ${byConstructor}`)
+    }
+
+    //TODO revisit logic which result is more reliable byEvent || byGetter || byConstructor
+
+    return byEvent || byGetter || byConstructor
+  }
+
+  async findImplementationContractAddressByConstructor(proxyContractAddress: string, proxyContractAbi: Abi, blockNumber: number): Promise<string | undefined> {
     let ret = undefined
 
     const constructors = DatabaseAbiProvider.getImplementationConstructors(proxyContractAbi)
 
     if(constructors.length != 1) {
-      console.warn(`cannot getImplementation from ${constructors.length} constructors in abi for ${proxyContractAddress} before block ${blockNumber}`)
+      console.warn(`cannot getImplementation from ${constructors.length} constructors in abi for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
     } else {
       const constructorAbi = constructors[0]
       const constructorName = constructorAbi.name
@@ -102,12 +146,12 @@ export class DatabaseAbiProvider implements AbiProvider {
       console.debug(tx)
 
       if(!tx) {
-        console.warn(`cannot getImplementation from empty query looking for deployment transaction for ${proxyContractAddress} before block ${blockNumber}`)
+        console.warn(`cannot getImplementation from empty query looking for deployment transaction for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
       } else {
         const calldata = tx.constructor_calldata
 
         if(calldata.length != 1) {
-          console.warn(`cannot getImplementation from ${calldata.length} length calldata for deployment transaction ${tx.transaction_hash} for ${proxyContractAddress} before block ${blockNumber}`)
+          console.warn(`cannot getImplementation from ${calldata.length} length calldata for deployment transaction ${tx.transaction_hash} for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
         } else {
           //TODO should parse constructor calldata into function inputs and look for '%implementation%' input, don't rely on just a single input
           /*
@@ -137,7 +181,7 @@ export class DatabaseAbiProvider implements AbiProvider {
     const upgradeEvents = DatabaseAbiProvider.getUpgradeEvents(proxyContractAbi)
 
     if(upgradeEvents.length != 1) {
-      console.warn(`cannot getImplementation from ${upgradeEvents.length} upgradeEvents in abi for ${proxyContractAddress} before block ${blockNumber}`)
+      console.warn(`cannot getImplementation from ${upgradeEvents.length} upgradeEvents in abi for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
     } else {
       const upgradeEventAbi = upgradeEvents[0]
       const upgradeEventName = upgradeEventAbi.name
@@ -159,7 +203,7 @@ export class DatabaseAbiProvider implements AbiProvider {
       console.debug(arg)
 
       if(!arg) {
-        console.warn(`cannot getImplementation from empty query looking for argument ${argName} in event ${upgradeEventName} for ${proxyContractAddress} before block ${blockNumber}`)
+        console.warn(`cannot getImplementation from empty query looking for argument ${argName} in event ${upgradeEventName} for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
       } else {
         ret = arg.value
       }
@@ -168,37 +212,35 @@ export class DatabaseAbiProvider implements AbiProvider {
     return ret
   }
 
-  async findImplementationContractAddressByGetter(proxyContractAddress: string, proxyContractAbi: Abi, blockNumber?: number): Promise<string | undefined> {
+  async findImplementationContractAddressByGetter(proxyContractAddress: string, proxyContractAbi: Abi, blockNumber: number): Promise<string | undefined> {
     let ret = undefined
 
     const viewFunctions = DatabaseAbiProvider.getImplementationGetters(proxyContractAbi)
 
     if(viewFunctions.length != 1) {
-      console.warn(`cannot getImplementation from ${viewFunctions.length} viewFunctions in abi for ${proxyContractAddress}`)
+      console.warn(`cannot findImplementationContractAddressByGetter from ${viewFunctions.length} viewFunctions in abi for proxy contract ${proxyContractAddress}`)
     } else {
       const viewFnAbi = viewFunctions[0]
       const viewFn = viewFnAbi.name
 
-      const implementations = await this.callViewFn(proxyContractAddress, viewFn)
-      if(implementations.length != 1) {
-        console.warn(`cannot getImplementation from ${implementations.length} implementations in results from ${viewFn} for ${proxyContractAddress}`)
-      } else {
-        ret = implementations[0]
+      try {
+        const rawRes = await this.provider.callContract({contractAddress: proxyContractAddress, entrypoint: viewFn}, {blockIdentifier: blockNumber})
+
+        console.debug(rawRes)
+
+        const implementations = rawRes.result
+
+        if(implementations.length != 1) {
+          console.warn(`cannot findImplementationContractAddressByGetter from ${implementations.length} implementations in results from ${viewFn} for proxy contract ${proxyContractAddress} at block ${blockNumber}`)
+        } else {
+          ret = implementations[0]
+        }
+      } catch(err) {
+        console.warn(`cannot findImplementationContractAddressByGetter from api call to ${viewFn} for proxy contract ${proxyContractAddress} at block ${blockNumber}`)
       }
     }
 
     return ret
-  }
-
-  async callViewFn(contractAddress: string, entrypoint: string) {
-    const { result: rawRes } = await this.provider.callContract({
-      contractAddress: contractAddress,
-      entrypoint
-    })
-
-    console.debug(rawRes)
-
-    return rawRes;
   }
 
   static getUpgradeEvents(abi: Abi) {
