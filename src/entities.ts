@@ -360,3 +360,31 @@ export const RawAbiEntity = new EntitySchema<RawAbi>({
     }
   }
 })
+
+export interface RawView {
+  block_number: number
+  contract_address: string
+  view_function: string
+  raw: any
+}
+
+export const RawViewEntity = new EntitySchema<RawView>({
+  name: "raw_view",
+  columns: {
+    block_number: {
+      type: Number,
+      primary: true
+    },
+    contract_address: {
+      type: String,
+      primary: true
+    },
+    view_function: {
+      type: String,
+      primary: true
+    },
+    raw: {
+      type: 'jsonb'
+    }
+  }
+})

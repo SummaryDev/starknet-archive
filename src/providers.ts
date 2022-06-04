@@ -4,47 +4,20 @@ import {FunctionAbi, Provider} from "starknet"
 import * as console from 'starknet-parser/lib/helpers/console'
 import {Cache} from 'starknet-parser/lib/helpers/helpers'
 import {DataSource, ILike, LessThanOrEqual, Like, Repository} from "typeorm"
-import {RawAbi, RawAbiEntity, RawBlock, RawBlockEntity, InputEntity, ArgumentEntity, TransactionEntity} from "./entities"
+import {RawView, RawViewEntity, RawAbi, RawAbiEntity, RawBlock, RawBlockEntity, InputEntity, ArgumentEntity, TransactionEntity} from "./entities"
 import {OrganizedEvent,OrganizedTransaction,EventArgument,FunctionInput} from "starknet-parser/src/types/organizedStarknet"
-
-export interface BlockProvider {
-  get(blockNumber: number): Promise<GetBlockResponse>
-}
-
-export class OnlineBlockProvider implements BlockProvider {
-  constructor(private readonly provider: Provider) {}
-
-  async get(blockNumber: number) {
-    const res = this.provider.getBlock(blockNumber) as any
-    return res as GetBlockResponse
-  }
-}
-
-export class MockBlockProvider implements BlockProvider {
-  private readonly cache: Cache<GetBlockResponse>
-
-  constructor() {
-    this.cache = new Cache<GetBlockResponse>()
-  }
-
-  async get(blockNumber: number) {
-    return this.cache.get(blockNumber)
-  }
-
-  set(o: GetBlockResponse, blockNumber: number) {
-    this.cache.set(o, blockNumber)
-  }
-}
 
 export class DatabaseAbiProvider implements AbiProvider {
   private readonly abiCache: Cache<Abi>
+  private readonly viewProvider: ViewProvider
   private readonly repository: Repository<RawAbi>
   private readonly txRepository: Repository<OrganizedTransaction>
   private readonly inputRepository: Repository<FunctionInput>
   private readonly argumentRepository: Repository<EventArgument>
 
-  constructor(private readonly provider: Provider, ds: DataSource) {
+  constructor(private readonly provider: Provider, viewProvider: ViewProvider, ds: DataSource) {
     this.abiCache = new Cache<Abi>()
+    this.viewProvider = viewProvider
     this.repository = ds.getRepository<RawAbi>(RawAbiEntity)
     this.txRepository = ds.getRepository<OrganizedTransaction>(TransactionEntity)
     this.inputRepository = ds.getRepository<FunctionInput>(InputEntity)
@@ -281,11 +254,7 @@ export class DatabaseAbiProvider implements AbiProvider {
       const viewFn = viewFnAbi.name
 
       try {
-        const rawRes = await this.provider.callContract({contractAddress: proxyContractAddress, entrypoint: viewFn}, {blockIdentifier: blockNumber})
-
-        console.debug(rawRes)
-
-        const implementations = rawRes.result
+        const implementations = await this.viewProvider.get(proxyContractAddress, viewFn, blockNumber)
 
         if(implementations.length != 1) {
           console.warn(`cannot findImplementationContractAddressByGetter from ${implementations.length} implementations in results from ${viewFn} for proxy contract ${proxyContractAddress} at block ${blockNumber}`)
@@ -357,6 +326,35 @@ export class DatabaseAbiProvider implements AbiProvider {
 
 }
 
+export interface BlockProvider {
+  get(blockNumber: number): Promise<GetBlockResponse>
+}
+
+export class OnlineBlockProvider implements BlockProvider {
+  constructor(private readonly provider: Provider) {}
+
+  async get(blockNumber: number) {
+    const res = this.provider.getBlock(blockNumber) as any
+    return res as GetBlockResponse
+  }
+}
+
+export class MockBlockProvider implements BlockProvider {
+  private readonly cache: Cache<GetBlockResponse>
+
+  constructor() {
+    this.cache = new Cache<GetBlockResponse>()
+  }
+
+  async get(blockNumber: number) {
+    return this.cache.get(blockNumber)
+  }
+
+  set(o: GetBlockResponse, blockNumber: number) {
+    this.cache.set(o, blockNumber)
+  }
+}
+
 export class DatabaseBlockProvider implements BlockProvider {
   private readonly repository: Repository<RawBlock>
 
@@ -378,6 +376,45 @@ export class DatabaseBlockProvider implements BlockProvider {
     } else {
       ret = fromDb.raw
       console.debug(`from db for ${blockNumber}`)
+    }
+
+    return ret
+  }
+}
+
+export interface ViewProvider {
+  get(contractAddress: string, viewFunction: string, blockNumber: number): Promise<string[]>
+}
+
+export class OnlineViewProvider implements ViewProvider {
+  constructor(private readonly provider: Provider) {}
+
+  async get(contractAddress: string, viewFunction: string, blockNumber: number) {
+    const rawRes = await this.provider.callContract({contractAddress: contractAddress, entrypoint: viewFunction}, {blockIdentifier: blockNumber})
+    return rawRes.result
+  }
+}
+export class DatabaseViewProvider implements ViewProvider {
+  private readonly repository: Repository<RawView>
+
+  constructor(private readonly provider: Provider, ds: DataSource) {
+    this.repository = ds.getRepository<RawView>(RawViewEntity)
+  }
+
+  async get(contractAddress: string, viewFunction: string, blockNumber: number) {
+    let ret
+
+    const fromDb = await this.repository.findOneBy({block_number: blockNumber, contract_address: contractAddress, view_function: viewFunction})
+
+    if(!fromDb) {
+      const rawRes = await this.provider.callContract({contractAddress: contractAddress, entrypoint: viewFunction}, {blockIdentifier: blockNumber})
+      const fromApi = rawRes.result
+      await this.repository.save({block_number: blockNumber, contract_address: contractAddress, view_function: viewFunction, raw: fromApi})
+      ret = fromApi
+      console.debug(`from api for ${contractAddress} ${viewFunction} ${blockNumber}`)
+    } else {
+      ret = fromDb.raw
+      console.debug(`from db for ${contractAddress} ${viewFunction} ${blockNumber}`)
     }
 
     return ret

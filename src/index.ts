@@ -6,7 +6,7 @@ import { BlockOrganizer } from 'starknet-parser/lib/organizers/BlockOrganizer'
 import * as console from 'starknet-parser/lib/helpers/console'
 import {sleep} from 'starknet-parser/lib/helpers/helpers'
 import {BlockEntity} from './entities'
-import {OnlineBlockProvider, DatabaseAbiProvider, DatabaseBlockProvider} from "./providers"
+import {OnlineBlockProvider, DatabaseAbiProvider, DatabaseBlockProvider, DatabaseViewProvider} from "./providers"
 import axios, { AxiosError } from 'axios';
 
 function main() {
@@ -32,7 +32,8 @@ async function processBlocks(ds: DataSource) {
   console.info(`processing blocks ${startBlock} to ${finishBlock}`)
 
   const blockProvider = new DatabaseBlockProvider(defaultProvider, ds) //OnlineBlockProvider(defaultProvider)
-  const abiProvider = new DatabaseAbiProvider(defaultProvider, ds) //OnlineAbiProvider(defaultProvider)
+  const viewProvider = new DatabaseViewProvider(defaultProvider, ds)
+  const abiProvider = new DatabaseAbiProvider(defaultProvider, viewProvider, ds) //OnlineAbiProvider(defaultProvider)
 
   const blockOrganizer = new BlockOrganizer(abiProvider)
 
