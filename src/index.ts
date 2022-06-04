@@ -7,6 +7,7 @@ import * as console from 'starknet-parser/lib/helpers/console'
 import {sleep} from 'starknet-parser/lib/helpers/helpers'
 import {BlockEntity} from './entities'
 import {OnlineBlockProvider, DatabaseAbiProvider, DatabaseBlockProvider} from "./providers"
+import axios, { AxiosError } from 'axios';
 
 function main() {
   return getConnectionOptions().then(connectionOptions => {
@@ -26,7 +27,7 @@ async function processBlocks(ds: DataSource) {
 
   const startBlock = Number.parseInt(process.env.START_BLOCK || '0')
   const finishBlock = Number.parseInt(process.env.FINISH_BLOCK || '0')
-  const retryWait = Number.parseInt(process.env.RETRY_WAIT || '1000')
+  const retryWait = Number.parseInt(process.env.RETRY_WAIT || '5000')
 
   console.info(`processing blocks ${startBlock} to ${finishBlock}`)
 
@@ -44,28 +45,32 @@ async function processBlocks(ds: DataSource) {
       const block = await blockProvider.get(blockNumber) as any
       organizedBlock = await blockOrganizer.organizeBlock(block)
     } catch(err) {
-      let message = 'Unknown Error'
-      if (err instanceof Error) message = err.message
-      if (message.includes('Request failed with status code'))  {
-        console.error(`cannot getBlock ${blockNumber}, retrying ${message}`/*, err*/)
+      if(canRetry(err)) {
+        console.info(`retrying ${blockNumber} for ${err}`/*, err*/)
         await sleep(retryWait)
         continue
-      } else {
-        console.error(`cannot getBlock ${blockNumber}, exiting ${err}`, err)
-        return
       }
+      console.error(`cannot get or organize ${blockNumber}, exiting for ${err}`, err)
+      return
     }
 
     try {
       await blockRepository.save(organizedBlock)
       console.info(`saved ${blockNumber}`)
     } catch (err) {
-      console.error(`cannot save ${blockNumber}`, err)
+      console.error(`cannot save ${blockNumber}, exiting for ${err}`, err)
       return
     }
 
     blockNumber++
   } // thru blockNumber range
 
+}
+
+function canRetry(err: any): boolean {
+  if (err instanceof Error)
+    return axios.isAxiosError(err) || err.message.includes('Request failed with status code')
+  else
+    return false
 }
 
