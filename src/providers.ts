@@ -166,46 +166,67 @@ export class DatabaseAbiProvider implements AbiProvider {
     if(constructors.length != 1) {
       console.warn(`cannot getImplementation from ${constructors.length} constructors in abi for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
     } else {
-      const constructorAbi = constructors[0]
-      const constructorName = constructorAbi.name
-      const argName = '%implement%'
+      //TODO not using constructor input name that we know from the abi instead searching for '%implement%' -- fork in logic?
+      // const constructorAbi = constructors[0]
+      // const constructorName = constructorAbi.name
+      const inputName = '%implement%'
 
-      const tx = await this.txRepository.createQueryBuilder('t')
+      const input = await this.inputRepository.createQueryBuilder('i')
+        .leftJoin('i.transaction', 't')
         .leftJoin('t.block', 'b')
         .where('b.block_number <= :blockNumber', {blockNumber: blockNumber})
         .andWhere('t.contract_address = :proxyContractAddress', {proxyContractAddress: proxyContractAddress})
         .andWhere('t.type = :txType', {txType: 'DEPLOY'})
+        .andWhere('i.name ilike :inputName', {inputName: inputName})
+        .andWhere('i.type = :type', {type: 'felt'})
         .orderBy('b.block_number', 'DESC')
         .limit(1)
         .getOne()
 
-      console.debug(tx)
+      console.debug(input)
 
-      if(!tx) {
-        console.warn(`cannot getImplementation from empty query looking for deployment transaction for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
+      if(!input) {
+        console.warn(`cannot getImplementation from empty query looking for input like ${inputName} of the deployment transaction for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
       } else {
-        const calldata = tx.constructor_calldata
-
-        if(calldata.length != 1) {
-          console.warn(`cannot getImplementation from ${calldata.length} length calldata for deployment transaction ${tx.transaction_hash} for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
-        } else {
-          //TODO should parse constructor calldata into function inputs and look for '%implementation%' input, don't rely on just a single input
-          /*
-          {
-            "name": "constructor",
-            "type": "constructor",
-            "inputs": [
-              {
-                "name": "implementation_address",
-                "type": "felt"
-              }
-            ],
-            "outputs": []
-          }
-           */
-          ret = calldata[0]
-        }
+        ret = input.value
       }
+
+      // const tx = await this.txRepository.createQueryBuilder('t')
+      //   .leftJoin('t.block', 'b')
+      //   .where('b.block_number <= :blockNumber', {blockNumber: blockNumber})
+      //   .andWhere('t.contract_address = :proxyContractAddress', {proxyContractAddress: proxyContractAddress})
+      //   .andWhere('t.type = :txType', {txType: 'DEPLOY'})
+      //   .orderBy('b.block_number', 'DESC')
+      //   .limit(1)
+      //   .getOne()
+      //
+      // console.debug(tx)
+
+      // if(!tx) {
+      //   console.warn(`cannot getImplementation from empty query looking for deployment transaction for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
+      // } else {
+      //   const calldata = tx.constructor_calldata
+      //
+      //   if(calldata.length != 1) {
+      //     console.warn(`cannot getImplementation from ${calldata.length} length calldata for deployment transaction ${tx.transaction_hash} for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
+      //   } else {
+      //     //TODO should parse constructor calldata into function inputs and look for '%implementation%' input, don't rely on just a single input
+      //     /*
+      //     {
+      //       "name": "constructor",
+      //       "type": "constructor",
+      //       "inputs": [
+      //         {
+      //           "name": "implementation_address",
+      //           "type": "felt"
+      //         }
+      //       ],
+      //       "outputs": []
+      //     }
+      //      */
+      //     ret = calldata[0]
+      //   }
+      // }
     }
 
     return ret
@@ -287,7 +308,7 @@ export class DatabaseAbiProvider implements AbiProvider {
       return o.type == 'event' && regex.test(o.name)
     })
 
-    // console.debug(upgradeEvents)
+    console.debug(upgradeEvents)
 
     return upgradeEvents
   }
@@ -306,7 +327,7 @@ export class DatabaseAbiProvider implements AbiProvider {
       return a.type == 'constructor' && implementInputs.length > 0
     })
 
-    // console.debug(implementationConstructors)
+    console.debug(implementationConstructors)
 
     return implementationConstructors
   }
@@ -317,15 +338,15 @@ export class DatabaseAbiProvider implements AbiProvider {
 
     const implementationGetters = abi.filter(o => {
       const a = o as FunctionAbi
-      if(!a.outputs)
-        return false
-      const implementOutputs = a.outputs.filter(i => {
-        return regex.test(i.name)
-      })
-      return a.type == 'function' && a.name.includes('implement') && a.stateMutability == 'view' && implementOutputs.length > 0
+      // if(!a.outputs)
+      //   return false
+      // const implementOutputs = a.outputs.filter(i => {
+      //   return regex.test(i.name)
+      // })
+      return a.type == 'function' && regex.test(a.name) && a.stateMutability == 'view' /*&& implementOutputs.length > 0*/
     })
 
-    // console.debug(implementationGetters)
+    console.debug(implementationGetters)
 
     return implementationGetters
   }

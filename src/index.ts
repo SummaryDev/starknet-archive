@@ -1,13 +1,12 @@
 import 'dotenv/config'
 import {createConnection, getConnectionOptions, DataSource} from "typeorm"
 import {defaultProvider} from 'starknet'
-import {GetBlockResponse} from 'starknet-parser/src/types/rawStarknet'
 import { OrganizedBlock } from 'starknet-parser/src/types/organizedStarknet'
 import { BlockOrganizer } from 'starknet-parser/lib/organizers/BlockOrganizer'
-import {AbiProvider, OnlineAbiProvider} from 'starknet-parser/lib/organizers/AbiProvider'
 import * as console from 'starknet-parser/lib/helpers/console'
+import {sleep} from 'starknet-parser/lib/helpers/helpers'
 import {BlockEntity} from './entities'
-import {OnlineBlockProvider, DatabaseAbiProvider, DatabaseBlockProvider} from "./providers";
+import {OnlineBlockProvider, DatabaseAbiProvider, DatabaseBlockProvider} from "./providers"
 
 function main() {
   return getConnectionOptions().then(connectionOptions => {
@@ -25,8 +24,9 @@ main()
 async function processBlocks(ds: DataSource) {
   const blockRepository = ds.getRepository<OrganizedBlock>(BlockEntity)
 
-  const startBlock = Number.parseInt(process.env.START_BLOCK!)
-  const finishBlock = Number.parseInt(process.env.FINISH_BLOCK!)
+  const startBlock = Number.parseInt(process.env.START_BLOCK || '0')
+  const finishBlock = Number.parseInt(process.env.FINISH_BLOCK || '0')
+  const retryWait = Number.parseInt(process.env.RETRY_WAIT || '1000')
 
   console.info(`processing blocks ${startBlock} to ${finishBlock}`)
 
@@ -43,10 +43,17 @@ async function processBlocks(ds: DataSource) {
     try {
       const block = await blockProvider.get(blockNumber) as any
       organizedBlock = await blockOrganizer.organizeBlock(block)
-    } catch (err) {
-      console.error(`cannot getBlock ${blockNumber}, retrying`, err)
-      await sleep()
-      continue
+    } catch(err) {
+      let message = 'Unknown Error'
+      if (err instanceof Error) message = err.message
+      if (message.includes('Request failed with status code'))  {
+        console.error(`cannot getBlock ${blockNumber}, retrying ${message}`/*, err*/)
+        await sleep(retryWait)
+        continue
+      } else {
+        console.error(`cannot getBlock ${blockNumber}, exiting ${err}`, err)
+        return
+      }
     }
 
     try {
@@ -62,6 +69,3 @@ async function processBlocks(ds: DataSource) {
 
 }
 
-async function sleep() {
-  return new Promise(resolve => setTimeout(resolve, Number.parseInt(process.env.RETRY_TIMEOUT || '1000')))
-}

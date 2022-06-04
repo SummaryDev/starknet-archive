@@ -39,6 +39,8 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
 docker build -t starknet-archive . && docker save starknet-archive | gzip > starknet-archive.tgz && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@54.144.42.135: && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@52.23.151.184: && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@3.82.55.48: && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@3.81.123.149:
 
+docker build -t starknet-archive . && docker save starknet-archive | gzip > starknet-archive.tgz && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@52.207.223.4:
+
 scp -i ~/oleg-hp-ubuntu.pem install.sh aws.env starknet-archive.tgz ubuntu@54.144.42.135:
 scp -i ~/oleg-hp-ubuntu.pem install.sh aws.env starknet-archive.tgz ubuntu@52.23.151.184:
 scp -i ~/oleg-hp-ubuntu.pem install.sh aws.env starknet-archive.tgz ubuntu@3.82.55.48:
@@ -82,3 +84,12 @@ sudo docker run --env-file aws.env --network host -e START_BLOCK=130001 -e FINIS
 
 
 START_BLOCK=164233 FINISH_BLOCK=164233 npm run start && START_BLOCK=161300 FINISH_BLOCK=161300 npm run start && START_BLOCK=146407 FINISH_BLOCK=146407 npm run start && START_BLOCK=134018 FINISH_BLOCK=134018 npm run start && START_BLOCK=100000 FINISH_BLOCK=100000 npm run start && START_BLOCK=200000 FINISH_BLOCK=200000 npm run start
+
+0x1317354276941f7f799574c73fd8fe53fa3f251084b4c04d88cf601b6bd915e
+error in 70056 correct is 0x2c30ac04ab60b7b2be19854f9c7129cc40ff95dd167816fb3be1ea94d7110c8
+deployed in
+START_BLOCK=62135 FINISH_BLOCK=62135 npm run start
+
+START_BLOCK=70056 FINISH_BLOCK=70056 npm run start
+
+

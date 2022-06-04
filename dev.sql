@@ -3,6 +3,7 @@
 -- drop table event;
 -- drop table transaction;
 -- drop table block;
+
 -- drop table raw_block;
 -- drop table raw_abi;
 
@@ -29,6 +30,8 @@ SELECT reltuples AS input FROM pg_class where relname = 'input';
 SELECT reltuples AS event FROM pg_class where relname = 'event';
 SELECT reltuples AS transaction FROM pg_class where relname = 'transaction';
 SELECT reltuples AS block FROM pg_class where relname = 'block';
+SELECT reltuples AS raw_block FROM pg_class where relname = 'raw_block';
+SELECT reltuples AS raw_abi FROM pg_class where relname = 'raw_abi';
 
 
 SELECT  block_number + 1
@@ -70,3 +73,13 @@ select * from argument as a, event as e where e.transmitter_contract = '0x328edd
 select * from argument as a, event as e, transaction as t, block as b where e.transmitter_contract = '0x328eddfaf2c85bd63f814c25b5b81fd21a5ca04993440b24c6b87b6fb93c921' and a."eventId" = e.id and e.name ilike '%upgrade%' and e."transactionTransactionHash" = t.transaction_hash and t."blockBlockNumber" = b.block_number;
 
 select * from block;
+
+SELECT "i"."id" AS "i_id", "i"."name" AS "i_name", "i"."type" AS "i_type", "i"."value" AS "i_value", "i"."transaction_hash" AS "i_transaction_hash" FROM "input" "i"
+  LEFT JOIN "transaction" "t" ON "t"."transaction_hash"="i"."transaction_hash"
+  LEFT JOIN "block" "b" ON "b"."block_number"="t"."block_number"
+WHERE "b"."block_number" <= 62135
+      AND "t"."contract_address" = '0x1317354276941f7f799574c73fd8fe53fa3f251084b4c04d88cf601b6bd915e'
+      AND "t"."type" = 'DEPLOY'
+      AND "i"."name" ilike '%implement%'
+      AND "i"."type" = 'felt'
+ORDER BY "b"."block_number" DESC LIMIT 1
