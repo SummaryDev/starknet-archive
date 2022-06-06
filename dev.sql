@@ -12,8 +12,10 @@ select * from input;
 select * from event;
 select * from transaction;
 select * from block;
+
 select * from raw_block;
 select * from raw_abi;
+select * from raw_view;
 
 select count(*) from argument;
 select count(*) from input;
@@ -21,9 +23,9 @@ select count(*) from event;
 select count(*) from transaction;
 select count(*) from block;
 
-select count(*) from block where block_number <= 210000;
-
--- select * from block where block_number < 140010;
+select count(*) from raw_block;
+select count(*) from raw_abi;
+select count(*) from raw_view;
 
 SELECT reltuples AS argument FROM pg_class where relname = 'argument';
 SELECT reltuples AS input FROM pg_class where relname = 'input';
@@ -32,7 +34,15 @@ SELECT reltuples AS transaction FROM pg_class where relname = 'transaction';
 SELECT reltuples AS block FROM pg_class where relname = 'block';
 SELECT reltuples AS raw_block FROM pg_class where relname = 'raw_block';
 SELECT reltuples AS raw_abi FROM pg_class where relname = 'raw_abi';
+SELECT reltuples AS raw_view FROM pg_class where relname = 'raw_view';
 
+select distinct function from transaction;
+
+select t.function, count(t.function) as ct from transaction t group by t.function order by ct desc;
+
+select * from transaction t where t.function = 'anonymous' order by block_number asc;
+
+select distinct contract_address, entry_point_selector, transaction_hash from transaction t where t.function = 'anonymous';
 
 SELECT  block_number + 1
 FROM    block mo
@@ -83,3 +93,25 @@ WHERE "b"."block_number" <= 62135
       AND "i"."name" ilike '%implement%'
       AND "i"."type" = 'felt'
 ORDER BY "b"."block_number" DESC LIMIT 1
+
+select distinct function from transaction;
+
+select t.function, count(t.function) as ct from transaction t group by t.function;
+
+select * from transaction t where t.function = 'anonymous' order by block_number asc;
+
+select distinct entry_point_selector from transaction t where t.function = 'anonymous';
+
+SELECT current_user;
+
+create database test with template dev owner 'postgres';
+
+select t.function, count(t.function) as ct from transaction t group by t.function order by ct desc;
+
+select * from transaction t where t.function = 'anonymous' order by block_number asc;
+
+select distinct contract_address, entry_point_selector, transaction_hash from transaction t where t.function = 'anonymous';
+
+select distinct contract_address, entry_point_selector from transaction t where t.function = 'anonymous';
+
+select distinct entry_point_selector from transaction t where t.function = 'anonymous';
