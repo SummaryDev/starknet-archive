@@ -73,7 +73,7 @@ export class DatabaseAbiProvider implements AbiProvider {
     const fromDb = await this.repository.findOneBy({contract_address: contractAddress, block_number: blockNumber})
 
     if(!fromDb) {
-      const getCodeResponse = await this.provider.getCode(contractAddress) as any
+      const getCodeResponse = await this.provider.getCode(contractAddress, blockNumber) as any
       const code = getCodeResponse as GetCodeResponse
       const fromApi = code.abi
 
@@ -96,11 +96,11 @@ export class DatabaseAbiProvider implements AbiProvider {
 
     //TODO revisit logic which result is more reliable byEvent || byGetter || byConstructor
 
-    if(DatabaseAbiProvider.getImplementationGetters(proxyContractAbi).length > 0) {
+    if(DatabaseAbiProvider.getImplementationGetters(proxyContractAbi).length == 1) {
       ret = await this.findImplementationContractAddressByGetter(proxyContractAddress, proxyContractAbi, blockNumber)
-    } else if (DatabaseAbiProvider.getUpgradeEvents(proxyContractAbi).length > 0) {
+    } else if (DatabaseAbiProvider.getUpgradeEvents(proxyContractAbi).length == 1) {
       ret = await this.findImplementationContractAddressByEvent(proxyContractAddress, proxyContractAbi, blockNumber)
-    } else if (DatabaseAbiProvider.getImplementationConstructors(proxyContractAbi).length > 0) {
+    } else if (DatabaseAbiProvider.getImplementationConstructors(proxyContractAbi).length == 1) {
       ret = await this.findImplementationContractAddressByConstructor(proxyContractAddress, proxyContractAbi, blockNumber)
     } else {
       console.warn(`cannot findImplementationContractAddress no hints found neither by getter nor by upgrade event nor by constructor for proxy contract ${proxyContractAddress} block ${blockNumber}`)
@@ -321,7 +321,7 @@ export class DatabaseAbiProvider implements AbiProvider {
   }
 
   static isProxy(abi: Abi | undefined) {
-    return abi && (DatabaseAbiProvider.getImplementationGetters(abi).length > 0 || DatabaseAbiProvider.getImplementationConstructors(abi).length > 0 || DatabaseAbiProvider.getUpgradeEvents(abi).length > 0)
+    return abi && (DatabaseAbiProvider.getImplementationGetters(abi).length == 1 || DatabaseAbiProvider.getImplementationConstructors(abi).length == 1 || DatabaseAbiProvider.getUpgradeEvents(abi).length == 1)
   }
 
 }
