@@ -37,7 +37,7 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.
 sudo apt-get update -y
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
 
-docker build -t starknet-archive . && docker save starknet-archive | gzip > starknet-archive.tgz && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@34.207.140.84: && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@3.84.147.124: && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@3.94.4.43: && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@34.207.200.164:
+docker build -t starknet-archive . && docker save starknet-archive | gzip > starknet-archive.tgz && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@34.207.140.84: && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@3.84.147.124: && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@3.94.4.43: && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@34.207.200.164: && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@52.207.223.4:
 
 docker build -t starknet-archive . && docker save starknet-archive | gzip > starknet-archive.tgz && scp -i ~/oleg-hp-ubuntu.pem starknet-archive.tgz ubuntu@52.207.223.4:
 
@@ -73,6 +73,8 @@ ssh -i ~/oleg-hp-ubuntu.pem ubuntu@52.207.223.4
 sudo docker rm -f $(sudo docker ps -a -q)
 sudo docker volume rm $(sudo docker volume ls -q)
 docker system prune -a
+
+sudo docker run --network host --env-file dev.env -e START_BLOCK=110007 -e FINISH_BLOCK=120000 -d starknet-archive
 
 sudo docker load < starknet-archive.tgz && sudo docker images
 

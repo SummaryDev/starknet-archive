@@ -253,16 +253,12 @@ export class DatabaseAbiProvider implements AbiProvider {
       const viewFnAbi = viewFunctions[0]
       const viewFn = viewFnAbi.name
 
-      try {
-        const implementations = await this.viewProvider.get(proxyContractAddress, viewFn, blockNumber)
+      const implementations = await this.viewProvider.get(proxyContractAddress, viewFn, blockNumber)
 
-        if(implementations.length != 1) {
-          console.warn(`cannot findImplementationContractAddressByGetter from ${implementations.length} implementations in results from ${viewFn} for proxy contract ${proxyContractAddress} at block ${blockNumber}`)
-        } else {
-          ret = implementations[0]
-        }
-      } catch(err) {
-        console.warn(`cannot findImplementationContractAddressByGetter from api call to ${viewFn} for proxy contract ${proxyContractAddress} at block ${blockNumber}`)
+      if(implementations.length != 1) {
+        console.warn(`cannot findImplementationContractAddressByGetter from ${implementations.length} implementations in results from ${viewFn} for proxy contract ${proxyContractAddress} at block ${blockNumber}`)
+      } else {
+        ret = implementations[0]
       }
     }
 

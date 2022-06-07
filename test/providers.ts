@@ -302,7 +302,7 @@ describe('providers', function() {
     })
 
     it('organizeBlock problem blocks', async function () {
-      const blocks = [200501/*1564/*1064/*86*/]
+      const blocks = [38172/*36568/*27592/*17281/*71368/*71405/*200501/*1564/*1064/*86*/]
 
       const blockOrganizer = new BlockOrganizer(new DatabaseAbiProvider(defaultProvider, new DatabaseViewProvider(defaultProvider, ds), ds) /*new OnlineAbiProvider(defaultProvider)*/)
 

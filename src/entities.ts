@@ -356,7 +356,8 @@ export const RawAbiEntity = new EntitySchema<RawAbi>({
       primary: true
     },
     raw: {
-      type: 'jsonb'
+      type: 'jsonb',
+      nullable: true
     }
   }
 })

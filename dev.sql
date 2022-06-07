@@ -115,3 +115,5 @@ select distinct contract_address, entry_point_selector, transaction_hash from tr
 select distinct contract_address, entry_point_selector from transaction t where t.function = 'anonymous';
 
 select distinct entry_point_selector from transaction t where t.function = 'anonymous';
+
+ALTER TABLE public.raw_abi ALTER COLUMN raw DROP NOT NULL;
