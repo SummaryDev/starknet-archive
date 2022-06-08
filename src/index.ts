@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import {createConnection, getConnectionOptions, DataSource} from "typeorm"
-import {defaultProvider} from 'starknet'
+import {defaultProvider, Provider} from 'starknet'
 import * as console from 'starknet-parser/lib/helpers/console'
 import {sleep} from 'starknet-parser/lib/helpers/helpers'
 import {ArchiveAbiProcessor, ArchiveBlockProcessor, BlockProcessor, OrganizeBlockProcessor} from "./processors";
@@ -20,17 +20,19 @@ async function iterateBlocks(ds: DataSource) {
 
   const startBlock = Number.parseInt(process.env.START_BLOCK || '0')
   const finishBlock = Number.parseInt(process.env.FINISH_BLOCK || '0')
-  const retryWait = Number.parseInt(process.env.RETRY_WAIT || '5000')
+  const retryWait = Number.parseInt(process.env.RETRY_WAIT || '1000')
   const cmd = process.env.STARKNET_ARCHIVE_CMD || 'organize'
 
   let p: BlockProcessor
 
+  const apiProvider = defaultProvider /*new Provider({ baseUrl: 'http://52.207.223.4:9545'})*/
+
   if(cmd == 'organize')
-    p = new OrganizeBlockProcessor(defaultProvider, ds)
+    p = new OrganizeBlockProcessor(apiProvider, ds)
   else if(cmd == 'archive_block')
-    p = new ArchiveBlockProcessor(defaultProvider, ds)
+    p = new ArchiveBlockProcessor(apiProvider, ds)
   else if(cmd == 'archive_abi')
-    p = new ArchiveAbiProcessor(defaultProvider, ds)
+    p = new ArchiveAbiProcessor(apiProvider, ds)
   else {
     console.error(`unknown cmd ${cmd}`)
     return

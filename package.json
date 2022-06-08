@@ -23,13 +23,14 @@
       "pg": "^8.4.0",
       "reflect-metadata": "^0.1.13",
       "starknet": "^3.9.0",
-      "starknet-parser": "^0.0.12",
+      "starknet-parser": "^0.0.13",
       "typeorm": "0.3.6"
    },
    "scripts": {
       "start": "node lib/index.js",
       "typeorm": "typeorm-ts-node-commonjs",
       "build": "rm -rf lib && tsc",
+      "rebuild": "rm -rf node_modules && rm package-lock.json && npm install && npm run build",
       "test": "ts-mocha test/*.ts"
    }
 }

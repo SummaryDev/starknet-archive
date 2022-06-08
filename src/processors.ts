@@ -1,5 +1,5 @@
 import {DataSource, Repository} from "typeorm";
-import {defaultProvider, Provider} from "starknet";
+import {Provider} from "starknet";
 import {BlockEntity, RawAbi, RawAbiEntity, RawBlock, RawBlockEntity, TransactionEntity} from "./entities";
 import {OrganizedBlock, OrganizedTransaction} from "starknet-parser/src/types/organizedStarknet";
 import {BlockProvider, DatabaseAbiProvider, DatabaseBlockProvider, DatabaseViewProvider} from "./providers";
@@ -19,9 +19,9 @@ export class OrganizeBlockProcessor implements BlockProcessor {
 
   constructor(private readonly provider: Provider, private readonly ds: DataSource) {
     this.blockRepository = ds.getRepository<OrganizedBlock>(BlockEntity)
-    this.blockProvider = new DatabaseBlockProvider(defaultProvider, ds) //OnlineBlockProvider(defaultProvider)
-    const viewProvider = new DatabaseViewProvider(defaultProvider, ds)
-    const abiProvider = new DatabaseAbiProvider(defaultProvider, viewProvider, ds) //OnlineAbiProvider(defaultProvider)
+    this.blockProvider = new DatabaseBlockProvider(provider, ds) //OnlineBlockProvider(defaultProvider)
+    const viewProvider = new DatabaseViewProvider(provider, ds)
+    const abiProvider = new DatabaseAbiProvider(provider, viewProvider, ds) //OnlineAbiProvider(defaultProvider)
     this.blockOrganizer = new BlockOrganizer(abiProvider)
   }
 

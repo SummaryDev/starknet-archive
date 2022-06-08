@@ -74,7 +74,28 @@ sudo docker rm -f $(sudo docker ps -a -q)
 sudo docker volume rm $(sudo docker volume ls -q)
 docker system prune -a
 
-sudo docker run --network host --env-file dev.env -e START_BLOCK=110007 -e FINISH_BLOCK=120000 -d starknet-archive
+docker build -t olegabu/starknet-archive . && docker push olegabu/starknet-archive
+
+sudo docker run --network host --env-file dev.env -e START_BLOCK=83638 -e FINISH_BLOCK=90000 -d olegabu/starknet-archive
+sudo docker run --network host --env-file dev.env -e START_BLOCK=92466 -e FINISH_BLOCK=100000 -d olegabu/starknet-archive
+
+sudo docker run --network host --env-file dev.env -e START_BLOCK=64034 -e FINISH_BLOCK=70000 -d olegabu/starknet-archive
+sudo docker run --network host --env-file dev.env -e START_BLOCK=111570 -e FINISH_BLOCK=120000 -d olegabu/starknet-archive
+
+sudo docker run --network host --env-file dev.env -e START_BLOCK=58224 -e FINISH_BLOCK=60000 -d olegabu/starknet-archive
+sudo docker run --network host --env-file dev.env -e START_BLOCK=101793 -e FINISH_BLOCK=110000 -d olegabu/starknet-archive
+
+sudo docker run --network host --env-file dev.env -e START_BLOCK=120574 -e FINISH_BLOCK=130000 -d olegabu/starknet-archive
+sudo docker run --network host --env-file dev.env -e START_BLOCK=76622 -e FINISH_BLOCK=80000 -d olegabu/starknet-archive
+
+sudo docker run --network host --env-file dev.env -e START_BLOCK=130001 -e FINISH_BLOCK=140000 -d olegabu/starknet-archive
+sudo docker run --network host --env-file dev.env -e START_BLOCK=140001 -e FINISH_BLOCK=150000 -d olegabu/starknet-archive
+sudo docker run --network host --env-file dev.env -e START_BLOCK=150001 -e FINISH_BLOCK=160000 -d olegabu/starknet-archive
+sudo docker run --network host --env-file dev.env -e START_BLOCK=160001 -e FINISH_BLOCK=170000 -d olegabu/starknet-archive
+sudo docker run --network host --env-file dev.env -e START_BLOCK=170001 -e FINISH_BLOCK=180000 -d olegabu/starknet-archive
+sudo docker run --network host --env-file dev.env -e START_BLOCK=180001 -e FINISH_BLOCK=190000 -d olegabu/starknet-archive
+sudo docker run --network host --env-file dev.env -e START_BLOCK=190001 -e FINISH_BLOCK=200000 -d olegabu/starknet-archive
+
 
 sudo docker load < starknet-archive.tgz && sudo docker images
 
@@ -96,3 +117,8 @@ START_BLOCK=62135 FINISH_BLOCK=62135 npm run start
 START_BLOCK=70056 FINISH_BLOCK=70056 npm run start
 
 
+https://github.com/NethermindEth/warp/blob/455af70b2c769447b8e5c73b369bef470bdffb5b/src/warp/cairo-src/evm/utils.cairo#L55
+
+func uint256_to_address_felt(x : Uint256) -> (address : felt):
+    return (x.low + x.high * 2 ** 128)
+end
