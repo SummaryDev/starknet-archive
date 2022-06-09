@@ -30,10 +30,10 @@ export class DatabaseAbiProvider implements AbiProvider {
     const fromCache = this.abiCache.get(blockNumber, contractAddress)
 
     if(!fromCache) {
-      const fromDbOrApi = await this.getBare(contractAddress, blockNumber)
+      const fromDbOrApi = await this.getBare(contractAddress)
 
       if(!fromDbOrApi) {
-        console.warn(`getFromDbOrApi returned no result for contract ${contractAddress} block ${blockNumber}`)
+        console.warn(`getBare returned no result for contract ${contractAddress}`)
       } else {
         ret = fromDbOrApi
 
@@ -41,16 +41,22 @@ export class DatabaseAbiProvider implements AbiProvider {
           const implementationContractAddress = await this.findImplementationContractAddress(contractAddress, fromDbOrApi, blockNumber)
 
           if(!implementationContractAddress) {
-            console.warn(`findImplementationContractAddress returned no result for proxy contract ${contractAddress} block ${blockNumber}`)
+            console.warn(`findImplementationContractAddress returned no result for proxy contract ${contractAddress} at block ${blockNumber}`)
           } else {
-            const implementationFromDbOrApi = await this.getBare(implementationContractAddress, blockNumber)
+            const implementationFromDbOrApi = await this.getBare(implementationContractAddress)
 
             if(!implementationFromDbOrApi) {
-              console.warn(`getFromDbOrApi returned no result for implementation contract ${implementationContractAddress} block ${blockNumber}`)
+              console.warn(`getBare returned no result for implementation contract ${implementationContractAddress} at block ${blockNumber}`)
             } else {
               ret = implementationFromDbOrApi
 
-              console.debug(`found implementation abi for contract ${implementationContractAddress} of proxy ${contractAddress} at ${blockNumber}`)
+              const proxyConstructor = DatabaseAbiProvider.findConstructor(fromDbOrApi as FunctionAbi[])
+              const implementationConstructor = DatabaseAbiProvider.findConstructor(implementationFromDbOrApi as FunctionAbi[])
+
+              if(proxyConstructor && !implementationConstructor)
+                ret.push(proxyConstructor)
+
+              console.debug(`found implementation abi for contract ${implementationContractAddress} of proxy ${contractAddress} at block ${blockNumber}`)
             }
           }
         }
@@ -66,23 +72,30 @@ export class DatabaseAbiProvider implements AbiProvider {
     return ret
   }
 
-  async getBare(contractAddress: string, blockNumber: number): Promise<Abi> {
+  static findConstructor(a: FunctionAbi[]) {
+    if(a && Array.isArray(a))
+      return a.find(o => {return o.type === 'constructor'})
+    else
+      return undefined
+  }
+
+  async getBare(contractAddress: string): Promise<Abi> {
     let ret
 
     //TODO use find() and cache query?
-    const fromDb = await this.repository.findOneBy({contract_address: contractAddress, block_number: blockNumber})
+    const fromDb = await this.repository.findOneBy({contract_address: contractAddress})
 
     if(!fromDb) {
-      const getCodeResponse = await this.provider.getCode(contractAddress, blockNumber) as any
+      const getCodeResponse = await this.provider.getCode(contractAddress) as any
       const code = getCodeResponse as GetCodeResponse
       const fromApi = code.abi
 
-      await this.repository.save({contract_address: contractAddress, block_number: blockNumber, raw: fromApi})
+      await this.repository.save({contract_address: contractAddress, raw: fromApi})
       ret = fromApi
-      console.debug(`from api for ${contractAddress} at ${blockNumber}`)
+      console.debug(`from api for ${contractAddress}`)
     } else {
       ret = fromDb.raw
-      console.debug(`from db for ${contractAddress} at ${blockNumber}`)
+      console.debug(`from db for ${contractAddress}`)
     }
 
     return ret
@@ -163,43 +176,6 @@ export class DatabaseAbiProvider implements AbiProvider {
       } else {
         ret = input.value
       }
-
-      // const tx = await this.txRepository.createQueryBuilder('t')
-      //   .leftJoin('t.block', 'b')
-      //   .where('b.block_number <= :blockNumber', {blockNumber: blockNumber})
-      //   .andWhere('t.contract_address = :proxyContractAddress', {proxyContractAddress: proxyContractAddress})
-      //   .andWhere('t.type = :txType', {txType: 'DEPLOY'})
-      //   .orderBy('b.block_number', 'DESC')
-      //   .limit(1)
-      //   .getOne()
-      //
-      // console.debug(tx)
-
-      // if(!tx) {
-      //   console.warn(`cannot getImplementation from empty query looking for deployment transaction for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
-      // } else {
-      //   const calldata = tx.constructor_calldata
-      //
-      //   if(calldata.length != 1) {
-      //     console.warn(`cannot getImplementation from ${calldata.length} length calldata for deployment transaction ${tx.transaction_hash} for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
-      //   } else {
-      //     //TODO should parse constructor calldata into function inputs and look for '%implementation%' input, don't rely on just a single input
-      //     /*
-      //     {
-      //       "name": "constructor",
-      //       "type": "constructor",
-      //       "inputs": [
-      //         {
-      //           "name": "implementation_address",
-      //           "type": "felt"
-      //         }
-      //       ],
-      //       "outputs": []
-      //     }
-      //      */
-      //     ret = calldata[0]
-      //   }
-      // }
     }
 
     return ret
