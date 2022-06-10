@@ -95,16 +95,16 @@ export class DatabaseAbiProvider implements AbiProvider {
     if(!proxyContractAbi)
       return ret
 
-    //TODO revisit logic which result is more reliable byEvent || byGetter || byConstructor
-
     if(DatabaseAbiProvider.getImplementationGetters(proxyContractAbi).length == 1) {
       ret = await this.findImplementationContractAddressByGetter(proxyContractAddress, proxyContractAbi, blockNumber)
-    } else if (DatabaseAbiProvider.getUpgradeEvents(proxyContractAbi).length == 1) {
+    }
+
+    if(!ret && DatabaseAbiProvider.getUpgradeEvents(proxyContractAbi).length == 1) {
       ret = await this.findImplementationContractAddressByEvent(proxyContractAddress, proxyContractAbi, blockNumber)
-    } else if (DatabaseAbiProvider.getImplementationConstructors(proxyContractAbi).length == 1) {
+    }
+
+    if(!ret && DatabaseAbiProvider.getImplementationConstructors(proxyContractAbi).length == 1) {
       ret = await this.findImplementationContractAddressByConstructor(proxyContractAddress, proxyContractAbi, blockNumber)
-    } else {
-      console.warn(`cannot findImplementationContractAddress no hints found neither by getter nor by upgrade event nor by constructor for proxy contract ${proxyContractAddress} block ${blockNumber}`)
     }
 
     return ret
