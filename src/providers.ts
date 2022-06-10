@@ -8,7 +8,6 @@ import {RawView, RawViewEntity, RawAbi, RawAbiEntity, RawBlock, RawBlockEntity, 
 import {OrganizedEvent,OrganizedTransaction,EventArgument,FunctionInput} from "starknet-parser/src/types/organizedStarknet"
 
 export class DatabaseAbiProvider implements AbiProvider {
-  private readonly abiCache: Cache<Abi>
   private readonly viewProvider: ViewProvider
   private readonly repository: Repository<RawAbi>
   private readonly txRepository: Repository<OrganizedTransaction>
@@ -16,7 +15,6 @@ export class DatabaseAbiProvider implements AbiProvider {
   private readonly argumentRepository: Repository<EventArgument>
 
   constructor(private readonly provider: Provider, viewProvider: ViewProvider, ds: DataSource) {
-    this.abiCache = new Cache<Abi>()
     this.viewProvider = viewProvider
     this.repository = ds.getRepository<RawAbi>(RawAbiEntity)
     this.txRepository = ds.getRepository<OrganizedTransaction>(TransactionEntity)
@@ -27,46 +25,36 @@ export class DatabaseAbiProvider implements AbiProvider {
   async get(contractAddress: string, blockNumber: number): Promise<Abi | undefined> {
     let ret
 
-    const fromCache = this.abiCache.get(blockNumber, contractAddress)
+    const fromDbOrApi = await this.getBare(contractAddress)
 
-    if(!fromCache) {
-      const fromDbOrApi = await this.getBare(contractAddress)
+    if(!fromDbOrApi) {
+      console.warn(`getBare returned no result for contract ${contractAddress}`)
+    } else {
+      ret = fromDbOrApi
 
-      if(!fromDbOrApi) {
-        console.warn(`getBare returned no result for contract ${contractAddress}`)
-      } else {
-        ret = fromDbOrApi
+      if(DatabaseAbiProvider.isProxy(fromDbOrApi)) {
+        const implementationContractAddress = await this.findImplementationContractAddress(contractAddress, fromDbOrApi, blockNumber)
 
-        if(DatabaseAbiProvider.isProxy(fromDbOrApi)) {
-          const implementationContractAddress = await this.findImplementationContractAddress(contractAddress, fromDbOrApi, blockNumber)
+        if(!implementationContractAddress) {
+          console.warn(`findImplementationContractAddress returned no result for proxy contract ${contractAddress} at block ${blockNumber}`)
+        } else {
+          const implementationFromDbOrApi = await this.getBare(implementationContractAddress)
 
-          if(!implementationContractAddress) {
-            console.warn(`findImplementationContractAddress returned no result for proxy contract ${contractAddress} at block ${blockNumber}`)
+          if(!implementationFromDbOrApi) {
+            console.warn(`getBare returned no result for implementation contract ${implementationContractAddress} at block ${blockNumber}`)
           } else {
-            const implementationFromDbOrApi = await this.getBare(implementationContractAddress)
+            ret = implementationFromDbOrApi
 
-            if(!implementationFromDbOrApi) {
-              console.warn(`getBare returned no result for implementation contract ${implementationContractAddress} at block ${blockNumber}`)
-            } else {
-              ret = implementationFromDbOrApi
+            const proxyConstructor = DatabaseAbiProvider.findConstructor(fromDbOrApi as FunctionAbi[])
+            const implementationConstructor = DatabaseAbiProvider.findConstructor(implementationFromDbOrApi as FunctionAbi[])
 
-              const proxyConstructor = DatabaseAbiProvider.findConstructor(fromDbOrApi as FunctionAbi[])
-              const implementationConstructor = DatabaseAbiProvider.findConstructor(implementationFromDbOrApi as FunctionAbi[])
+            if(proxyConstructor && !implementationConstructor)
+              ret.push(proxyConstructor)
 
-              if(proxyConstructor && !implementationConstructor)
-                ret.push(proxyConstructor)
-
-              console.debug(`found implementation abi for contract ${implementationContractAddress} of proxy ${contractAddress} at block ${blockNumber}`)
-            }
+            console.debug(`found implementation abi for contract ${implementationContractAddress} of proxy ${contractAddress} at block ${blockNumber}`)
           }
         }
-
-        this.abiCache.set(ret, blockNumber, contractAddress)
       }
-
-    } else {
-      ret = fromCache
-      console.debug(`from cache for ${contractAddress} at ${blockNumber}`)
     }
 
     return ret
