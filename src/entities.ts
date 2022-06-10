@@ -11,7 +11,7 @@ export const BlockEntity = new EntitySchema<OrganizedBlock>({
     block_hash: {
       type: String
     },
-    previous_block_hash: {
+    parent_block_hash: {
       type: String,
       nullable: true
     },
@@ -39,12 +39,17 @@ export const BlockEntity = new EntitySchema<OrganizedBlock>({
       type: "one-to-many",
       target: "transaction",
       inverseSide: 'block',
-      cascade: true
+      cascade: true,
+      eager: true
     }
   }
 })
 
-export const TransactionEntity = new EntitySchema<OrganizedTransaction & {block: OrganizedBlock, blockBlockNumber: number}>({
+interface OrganizedTransactionData extends OrganizedTransaction {
+  block: OrganizedBlock, block_number: number
+}
+
+export const TransactionEntity = new EntitySchema<OrganizedTransactionData>({
   name: "transaction",
   columns: {
     transaction_hash: {
@@ -58,9 +63,14 @@ export const TransactionEntity = new EntitySchema<OrganizedTransaction & {block:
       type: String
     },
     entry_point_selector: {
-      type: String
+      type: String,
+      nullable: true
     },
     entry_point_type: {
+      type: String,
+      nullable: true
+    },
+    nonce: {
       type: String,
       nullable: true
     },
@@ -68,39 +78,78 @@ export const TransactionEntity = new EntitySchema<OrganizedTransaction & {block:
       type: String,
       nullable: true
     },
+    version: {
+      type: String,
+      nullable: true
+    },
+    signature: {
+      type: 'jsonb',
+      nullable: true
+    },
     function: {
       type: String,
       nullable: true
     },
-    blockBlockNumber: {
-      type: Number
+    actual_fee: {
+      type: String,
+      nullable: true
     },
+    l2_to_l1_messages: {
+      type: 'jsonb',
+      nullable: true
+    },
+    execution_resources: {
+      type: 'jsonb',
+      nullable: true
+    },
+    contract_definition: {
+      type: 'jsonb',
+      nullable: true
+    },
+    contract_address_salt: {
+      type: String,
+      nullable: true
+    },
+    class_hash: {
+      type: String,
+      nullable: true
+    },
+    constructor_calldata: {
+      type: 'jsonb',
+      nullable: true
+    },
+    block_number: {
+      type: Number
+    }
   },
   relations: {
     block: {
       type: "many-to-one",
       target: "block",
-      joinColumn: true,
+      joinColumn: {name: 'block_number'},
+      nullable: false,
       inverseSide: 'transactions',
     },
     inputs: {
       type: "one-to-many",
       target: "input",
       inverseSide: 'transaction',
-      cascade: true
+      cascade: true,
+      eager: true,
     },
     events: {
       type: "one-to-many",
       target: "event",
       inverseSide: 'transaction',
-      cascade: true
+      cascade: true,
+      eager: true,
     }
   },
   indices: [
     {
-      name: 'transaction_blockBlockNumber_index',
+      name: 'transaction_block_number_index',
       columns: [
-        'blockBlockNumber'
+        'block_number'
       ]
     },
     {
@@ -118,7 +167,11 @@ export const TransactionEntity = new EntitySchema<OrganizedTransaction & {block:
   ]
 })
 
-export const InputEntity = new EntitySchema<FunctionInput & {id: number, transaction: OrganizedTransaction, transactionTransactionHash: string}>({
+interface FunctionInputData extends FunctionInput {
+  id: number, transaction: OrganizedTransactionData, transaction_hash: string
+}
+
+export const InputEntity = new EntitySchema<FunctionInputData>({
   name: "input",
   columns: {
     id: {
@@ -128,7 +181,6 @@ export const InputEntity = new EntitySchema<FunctionInput & {id: number, transac
     },
     name: {
       type: String,
-      // primary: true
     },
     type: {
       type: String,
@@ -138,33 +190,34 @@ export const InputEntity = new EntitySchema<FunctionInput & {id: number, transac
       type: "jsonb",
       nullable: true
     },
-    transactionTransactionHash: {
-      type: String,
-      nullable: true
+    transaction_hash: {
+      type: String
     }
-    // transactionHash: {
-    //   primary: true
-    // }
   },
   relations: {
     transaction: {
       type: "many-to-one",
       target: "transaction",
-      joinColumn: true,
+      joinColumn: {name: 'transaction_hash'},
+      nullable: false,
       inverseSide: 'inputs',
     }
   },
   indices: [
     {
-      name: 'input_transactionTransactionHash_index',
+      name: 'input_transaction_hash_index',
       columns: [
-        'transactionTransactionHash'
+        'transaction_hash'
       ]
     }
   ]
 })
 
-export const EventEntity = new EntitySchema<OrganizedEvent & {id: number, transaction: OrganizedTransaction, transactionTransactionHash: string}>({
+interface OrganizedEventData extends OrganizedEvent {
+  id: number, transaction: OrganizedTransactionData, transaction_hash: string
+}
+
+export const EventEntity = new EntitySchema<OrganizedEventData>({
   name: "event",
   columns: {
     id: {
@@ -174,40 +227,35 @@ export const EventEntity = new EntitySchema<OrganizedEvent & {id: number, transa
     },
     name: {
       type: String,
-      // primary: true
     },
     transmitter_contract: {
       type: String,
-      // primary: true
     },
-    transactionTransactionHash: {
-      type: String,
-      nullable: true
+    transaction_hash: {
+      type: String
     }
-    // transactionHash: {
-    //   primary: true,
-    //   type: String
-    // }
   },
   relations: {
     transaction: {
       type: "many-to-one",
       target: "transaction",
-      joinColumn: true,
+      joinColumn: {name: 'transaction_hash'},
+      nullable: false,
       inverseSide: 'events',
     },
     arguments: {
       type: "one-to-many",
       target: "argument",
       inverseSide: 'event',
-      cascade: true
+      cascade: true,
+      eager: true
     }
   },
   indices: [
     {
-      name: 'event_transactionTransactionHash_index',
+      name: 'event_transaction_hash_index',
       columns: [
-        'transactionTransactionHash'
+        'transaction_hash'
       ]
     },
     {
@@ -225,7 +273,11 @@ export const EventEntity = new EntitySchema<OrganizedEvent & {id: number, transa
   ]
 })
 
-export const ArgumentEntity = new EntitySchema<EventArgument & {id: number, event: OrganizedEvent, eventId: number}>({
+interface EventArgumentData extends EventArgument {
+  id: number, event: OrganizedEventData, event_id: number
+}
+
+export const ArgumentEntity = new EntitySchema<EventArgumentData>({
   name: "argument",
   columns: {
     id: {
@@ -245,36 +297,90 @@ export const ArgumentEntity = new EntitySchema<EventArgument & {id: number, even
       type: "jsonb",
       nullable: true
     },
-    eventId: {
+    event_id: {
       type: Number
     }
-    // eventTransactionHash: {
-    //   primary: true,
-    //   type: String
-    // },
-    // eventTransmitterContract: {
-    //   primary: true,
-    //   type: String
-    // },
-    // eventName: {
-    //   primary: true,
-    //   type: String
-    // }
   },
   relations: {
     event: {
       type: "many-to-one",
       target: "event",
-      joinColumn: true,
+      joinColumn: {name: 'event_id'},
+      nullable: false,
       inverseSide: 'arguments',
     }
   },
   indices: [
     {
-      name: 'argument_eventId_index',
+      name: 'argument_event_id_index',
       columns: [
-        'eventId'
+        'event_id'
       ]
     }
   ]
+})
+
+export interface RawBlock {
+  block_number: number
+  raw: any
+}
+
+export const RawBlockEntity = new EntitySchema<RawBlock>({
+  name: "raw_block",
+  columns: {
+    block_number: {
+      type: Number,
+      primary: true
+    },
+    raw: {
+      type: 'jsonb'
+    }
+  }
+})
+
+export interface RawAbi {
+  contract_address: string
+  raw: any
+}
+
+export const RawAbiEntity = new EntitySchema<RawAbi>({
+  name: "raw_abi",
+  columns: {
+    contract_address: {
+      type: String,
+      primary: true
+    },
+    raw: {
+      type: 'jsonb',
+      nullable: true
+    }
+  }
+})
+
+export interface RawView {
+  block_number: number
+  contract_address: string
+  view_function: string
+  raw: any
+}
+
+export const RawViewEntity = new EntitySchema<RawView>({
+  name: "raw_view",
+  columns: {
+    block_number: {
+      type: Number,
+      primary: true
+    },
+    contract_address: {
+      type: String,
+      primary: true
+    },
+    view_function: {
+      type: String,
+      primary: true
+    },
+    raw: {
+      type: 'jsonb'
+    }
+  }
 })
