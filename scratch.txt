@@ -122,3 +122,16 @@ https://github.com/NethermindEth/warp/blob/455af70b2c769447b8e5c73b369bef470bdff
 func uint256_to_address_felt(x : Uint256) -> (address : felt):
     return (x.low + x.high * 2 ** 128)
 end
+
+
+
+
+
+
+
+cannot getImplementation from empty query looking for argument %implement% in event account_upgraded for proxy contract 0xdc489ed04e2b3431b33f8f8201eb432c57ea0640dcbb876a611efa30ad6256 before block 190290
+
+cannot getImplementation from empty query looking for argument %implement% in event account_upgraded for proxy contract 0xdc489ed04e2b3431b33f8f8201eb432c57ea0640dcbb876a611efa30ad6256 before block 210004
+findImplementationContractAddress returned no result for proxy contract 0xdc489ed04e2b3431b33f8f8201eb432c57ea0640dcbb876a611efa30ad6256 at block 210004
+
+

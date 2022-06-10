@@ -40,7 +40,7 @@ export class DatabaseAbiProvider implements AbiProvider {
         } else {
           const implementationFromDbOrApi = await this.getBare(implementationContractAddress)
 
-          if(!implementationFromDbOrApi) {
+          if(!implementationFromDbOrApi || !Array.isArray(implementationFromDbOrApi) || implementationFromDbOrApi.length == 0) {
             console.warn(`getBare returned no result for implementation contract ${implementationContractAddress} at block ${blockNumber}`)
           } else {
             ret = implementationFromDbOrApi
