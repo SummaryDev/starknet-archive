@@ -2,8 +2,14 @@ import {DataSource, Repository} from "typeorm";
 import {Provider} from "starknet";
 import {BlockEntity, RawAbi, RawAbiEntity, RawBlock, RawBlockEntity, TransactionEntity} from "./entities";
 import {OrganizedBlock, OrganizedTransaction} from "starknet-parser/src/types/organizedStarknet";
-import {ApiProvider, BlockProvider, DatabaseAbiProvider, DatabaseBlockProvider, DatabaseViewProvider} from "./providers";
-import axios from "axios";
+import {
+  ApiError,
+  ApiProvider,
+  BlockProvider,
+  DatabaseAbiProvider,
+  DatabaseBlockProvider,
+  DatabaseViewProvider
+} from "./providers";
 import * as console from "starknet-parser/lib/helpers/console";
 import {BlockOrganizer} from "starknet-parser/lib/organizers/BlockOrganizer";
 import {GetBlockResponse, GetCodeResponse} from "starknet-parser/src/types/rawStarknet";
@@ -34,7 +40,7 @@ export class OrganizeBlockProcessor implements BlockProcessor {
       await this.blockRepository.save(organizedBlock)
       console.info(`saved organized ${blockNumber}`)
     } catch(err) {
-      if(axios.isAxiosError(err)) {
+      if(err instanceof ApiError) {
         console.info(`retrying ${blockNumber} for ${err}`/*, err*/)
         return false
       }
@@ -60,7 +66,7 @@ export class ArchiveBlockProcessor implements BlockProcessor {
       await this.repository.save({block_number: blockNumber, raw: fromApi})
       console.info(`saved raw ${blockNumber}`)
     } catch(err) {
-      if(axios.isAxiosError(err)) {
+      if(err instanceof ApiError) {
         console.info(`retrying ${blockNumber} for ${err}`/*, err*/)
         return false
       }
@@ -110,7 +116,7 @@ export class ArchiveAbiProcessor implements BlockProcessor {
         console.info(`saved abi from api for ${contractAddress} at ${blockNumber}`)
       }
     } catch(err) {
-      if(axios.isAxiosError(err)) {
+      if(err instanceof ApiError) {
         console.info(`retrying ${blockNumber} for ${err}`/*, err*/)
         return false
       }
