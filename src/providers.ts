@@ -2,45 +2,60 @@ import {GetBlockResponse, GetCodeResponse, Abi} from "starknet-parser/src/types/
 import {AbiProvider} from "starknet-parser/lib/organizers/AbiProvider"
 import {FunctionAbi, Provider} from "starknet"
 import * as console from 'starknet-parser/lib/helpers/console'
-import {Cache} from 'starknet-parser/lib/helpers/helpers'
+import {Cache, getFullSelector} from 'starknet-parser/lib/helpers/helpers'
 import {DataSource, ILike, LessThanOrEqual, Like, Repository} from "typeorm"
-import {RawView, RawViewEntity, RawAbi, RawAbiEntity, RawBlock, RawBlockEntity, InputEntity, ArgumentEntity, TransactionEntity} from "./entities"
-import {OrganizedEvent,OrganizedTransaction,EventArgument,FunctionInput} from "starknet-parser/src/types/organizedStarknet"
+import {
+  RawView,
+  RawViewEntity,
+  RawAbi,
+  RawAbiEntity,
+  RawBlock,
+  RawBlockEntity,
+  InputEntity,
+  ArgumentEntity,
+  TransactionEntity
+} from "./entities"
+import {
+  OrganizedEvent,
+  OrganizedTransaction,
+  EventArgument,
+  FunctionInput
+} from "starknet-parser/src/types/organizedStarknet"
+import {CallContractResponse} from "starknet/dist/types";
+import axios from "axios";
 
 export class DatabaseAbiProvider implements AbiProvider {
-  private readonly viewProvider: ViewProvider
   private readonly repository: Repository<RawAbi>
   private readonly txRepository: Repository<OrganizedTransaction>
   private readonly inputRepository: Repository<FunctionInput>
   private readonly argumentRepository: Repository<EventArgument>
 
-  constructor(private readonly provider: Provider, viewProvider: ViewProvider, ds: DataSource) {
-    this.viewProvider = viewProvider
+  constructor(private readonly apiProvider: ApiProvider, private readonly viewProvider: ViewProvider, ds: DataSource) {
     this.repository = ds.getRepository<RawAbi>(RawAbiEntity)
     this.txRepository = ds.getRepository<OrganizedTransaction>(TransactionEntity)
     this.inputRepository = ds.getRepository<FunctionInput>(InputEntity)
     this.argumentRepository = ds.getRepository<EventArgument>(ArgumentEntity)
   }
 
-  async get(contractAddress: string, blockNumber: number): Promise<Abi | undefined> {
+  async get(contractAddress: string, blockNumber: number, blockHash?: string): Promise<Abi | undefined> {
     let ret
 
     const fromDbOrApi = await this.getBare(contractAddress)
 
-    if(!fromDbOrApi) {
+    if (!fromDbOrApi) {
       console.warn(`getBare returned no result for contract ${contractAddress}`)
     } else {
       ret = fromDbOrApi
 
-      if(DatabaseAbiProvider.isProxy(fromDbOrApi)) {
-        const implementationContractAddress = await this.findImplementationContractAddress(contractAddress, fromDbOrApi, blockNumber)
+      if (DatabaseAbiProvider.isProxy(fromDbOrApi)) {
+        const implementationContractAddress = await this.findImplementationContractAddress(contractAddress, fromDbOrApi, blockNumber, blockHash)
 
-        if(!implementationContractAddress) {
+        if (!implementationContractAddress) {
           console.warn(`findImplementationContractAddress returned no result for proxy contract ${contractAddress} at block ${blockNumber}`)
         } else {
           const implementationFromDbOrApi = await this.getBare(implementationContractAddress)
 
-          if(!implementationFromDbOrApi || !Array.isArray(implementationFromDbOrApi) || implementationFromDbOrApi.length == 0) {
+          if (!implementationFromDbOrApi || !Array.isArray(implementationFromDbOrApi) || implementationFromDbOrApi.length == 0) {
             console.warn(`getBare returned no result for implementation contract ${implementationContractAddress} at block ${blockNumber}`)
           } else {
             ret = implementationFromDbOrApi
@@ -48,7 +63,7 @@ export class DatabaseAbiProvider implements AbiProvider {
             const proxyConstructor = DatabaseAbiProvider.findConstructor(fromDbOrApi as FunctionAbi[])
             const implementationConstructor = DatabaseAbiProvider.findConstructor(implementationFromDbOrApi as FunctionAbi[])
 
-            if(proxyConstructor && !implementationConstructor)
+            if (proxyConstructor && !implementationConstructor)
               ret.push(proxyConstructor)
 
             console.debug(`found implementation abi for contract ${implementationContractAddress} of proxy ${contractAddress} at block ${blockNumber}`)
@@ -61,8 +76,10 @@ export class DatabaseAbiProvider implements AbiProvider {
   }
 
   static findConstructor(a: FunctionAbi[]) {
-    if(a && Array.isArray(a))
-      return a.find(o => {return o.type === 'constructor'})
+    if (a && Array.isArray(a))
+      return a.find(o => {
+        return o.type === 'constructor'
+      })
     else
       return undefined
   }
@@ -73,10 +90,8 @@ export class DatabaseAbiProvider implements AbiProvider {
     //TODO use find() and cache query?
     const fromDb = await this.repository.findOneBy({contract_address: contractAddress})
 
-    if(!fromDb) {
-      const getCodeResponse = await this.provider.getCode(contractAddress) as any
-      const code = getCodeResponse as GetCodeResponse
-      const fromApi = code.abi
+    if (!fromDb) {
+      const fromApi = await this.apiProvider.getAbi(contractAddress)
 
       await this.repository.save({contract_address: contractAddress, raw: fromApi})
       ret = fromApi
@@ -89,21 +104,21 @@ export class DatabaseAbiProvider implements AbiProvider {
     return ret
   }
 
-  async findImplementationContractAddress(proxyContractAddress: string, proxyContractAbi: Abi | undefined, blockNumber: number): Promise<string | undefined> {
+  async findImplementationContractAddress(proxyContractAddress: string, proxyContractAbi: Abi | undefined, blockNumber: number, blockHash?: string): Promise<string | undefined> {
     let ret = undefined
 
-    if(!proxyContractAbi)
+    if (!proxyContractAbi)
       return ret
 
-    if(DatabaseAbiProvider.getImplementationGetters(proxyContractAbi).length == 1) {
-      ret = await this.findImplementationContractAddressByGetter(proxyContractAddress, proxyContractAbi, blockNumber)
+    if (DatabaseAbiProvider.getImplementationGetters(proxyContractAbi).length == 1) {
+      ret = await this.findImplementationContractAddressByGetter(proxyContractAddress, proxyContractAbi, blockNumber, blockHash)
     }
 
-    if(!ret && DatabaseAbiProvider.getUpgradeEvents(proxyContractAbi).length == 1) {
+    if (!ret && DatabaseAbiProvider.getUpgradeEvents(proxyContractAbi).length == 1) {
       ret = await this.findImplementationContractAddressByEvent(proxyContractAddress, proxyContractAbi, blockNumber)
     }
 
-    if(!ret && DatabaseAbiProvider.getImplementationConstructors(proxyContractAbi).length == 1) {
+    if (!ret && DatabaseAbiProvider.getImplementationConstructors(proxyContractAbi).length == 1) {
       ret = await this.findImplementationContractAddressByConstructor(proxyContractAddress, proxyContractAbi, blockNumber)
     }
 
@@ -115,15 +130,15 @@ export class DatabaseAbiProvider implements AbiProvider {
     const byEvent = await this.findImplementationContractAddressByEvent(proxyContractAddress, proxyContractAbi, blockNumber)
     const byConstructor = await this.findImplementationContractAddressByConstructor(proxyContractAddress, proxyContractAbi, blockNumber)
 
-    if(byGetter && byEvent && byGetter !== byEvent) {
+    if (byGetter && byEvent && byGetter !== byEvent) {
       console.warn(`findImplementationContractAddress results differ byGetter ${byGetter} and byEvent ${byEvent}`)
     }
 
-    if(byGetter && byConstructor && byGetter !== byConstructor) {
+    if (byGetter && byConstructor && byGetter !== byConstructor) {
       console.warn(`findImplementationContractAddress results differ byGetter ${byGetter} and byConstructor ${byConstructor}`)
     }
 
-    if(byEvent && byConstructor && byEvent !== byConstructor) {
+    if (byEvent && byConstructor && byEvent !== byConstructor) {
       console.warn(`findImplementationContractAddress results differ byEvent ${byEvent} and byConstructor ${byConstructor}`)
     }
 
@@ -137,7 +152,7 @@ export class DatabaseAbiProvider implements AbiProvider {
 
     const constructors = DatabaseAbiProvider.getImplementationConstructors(proxyContractAbi)
 
-    if(constructors.length != 1) {
+    if (constructors.length != 1) {
       console.warn(`cannot getImplementation from ${constructors.length} constructors in abi for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
     } else {
       //TODO not using constructor input name that we know from the abi instead searching for '%implement%' -- fork in logic?
@@ -159,7 +174,7 @@ export class DatabaseAbiProvider implements AbiProvider {
 
       console.debug(input)
 
-      if(!input) {
+      if (!input) {
         console.warn(`cannot getImplementation from empty query looking for input like ${inputName} of the deployment transaction for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
       } else {
         ret = input.value
@@ -174,7 +189,7 @@ export class DatabaseAbiProvider implements AbiProvider {
 
     const upgradeEvents = DatabaseAbiProvider.getUpgradeEvents(proxyContractAbi)
 
-    if(upgradeEvents.length != 1) {
+    if (upgradeEvents.length != 1) {
       console.warn(`cannot getImplementation from ${upgradeEvents.length} upgradeEvents in abi for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
     } else {
       const upgradeEventAbi = upgradeEvents[0]
@@ -196,7 +211,7 @@ export class DatabaseAbiProvider implements AbiProvider {
 
       console.debug(arg)
 
-      if(!arg) {
+      if (!arg) {
         console.warn(`cannot getImplementation from empty query looking for argument ${argName} in event ${upgradeEventName} for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
       } else {
         ret = arg.value
@@ -206,20 +221,20 @@ export class DatabaseAbiProvider implements AbiProvider {
     return ret
   }
 
-  async findImplementationContractAddressByGetter(proxyContractAddress: string, proxyContractAbi: Abi, blockNumber: number): Promise<string | undefined> {
+  async findImplementationContractAddressByGetter(proxyContractAddress: string, proxyContractAbi: Abi, blockNumber: number, blockHash?: string): Promise<string | undefined> {
     let ret = undefined
 
     const viewFunctions = DatabaseAbiProvider.getImplementationGetters(proxyContractAbi)
 
-    if(viewFunctions.length != 1) {
+    if (viewFunctions.length != 1) {
       console.warn(`cannot findImplementationContractAddressByGetter from ${viewFunctions.length} viewFunctions in abi for proxy contract ${proxyContractAddress}`)
     } else {
       const viewFnAbi = viewFunctions[0]
       const viewFn = viewFnAbi.name
 
-      const implementations = await this.viewProvider.get(proxyContractAddress, viewFn, blockNumber)
+      const implementations = await this.viewProvider.get(proxyContractAddress, viewFn, blockNumber, blockHash)
 
-      if(implementations.length != 1) {
+      if (implementations.length != 1) {
         console.warn(`cannot findImplementationContractAddressByGetter from ${implementations.length} implementations in results from ${viewFn} for proxy contract ${proxyContractAddress} at block ${blockNumber}`)
       } else {
         ret = implementations[0]
@@ -231,7 +246,7 @@ export class DatabaseAbiProvider implements AbiProvider {
 
   static getUpgradeEvents(abi: Abi) {
     const filterstrings = ['upgrade']
-    const regex = new RegExp( filterstrings.join( '|' ), 'i')
+    const regex = new RegExp(filterstrings.join('|'), 'i')
 
     const upgradeEvents = abi.filter(o => {
       return o.type == 'event' && regex.test(o.name)
@@ -244,11 +259,11 @@ export class DatabaseAbiProvider implements AbiProvider {
 
   static getImplementationConstructors(abi: Abi) {
     const filterstrings = ['implement']
-    const regex = new RegExp( filterstrings.join( '|' ), 'i')
+    const regex = new RegExp(filterstrings.join('|'), 'i')
 
     const implementationConstructors = abi.filter(o => {
       const a = o as FunctionAbi
-      if(!a.inputs)
+      if (!a.inputs)
         return false
       const implementInputs = a.inputs.filter(i => {
         return regex.test(i.name)
@@ -263,7 +278,7 @@ export class DatabaseAbiProvider implements AbiProvider {
 
   static getImplementationGetters(abi: Abi) {
     const filterstrings = ['implement']
-    const regex = new RegExp( filterstrings.join( '|' ), 'i')
+    const regex = new RegExp(filterstrings.join('|'), 'i')
 
     const implementationGetters = abi.filter(o => {
       const a = o as FunctionAbi
@@ -272,7 +287,8 @@ export class DatabaseAbiProvider implements AbiProvider {
       // const implementOutputs = a.outputs.filter(i => {
       //   return regex.test(i.name)
       // })
-      return a.type == 'function' && regex.test(a.name) && a.stateMutability == 'view' /*&& implementOutputs.length > 0*/
+      return a.type == 'function' && regex.test(a.name) && a.stateMutability == 'view'
+      /*&& implementOutputs.length > 0*/
     })
 
     console.debug(implementationGetters)
@@ -290,12 +306,141 @@ export interface BlockProvider {
   get(blockNumber: number): Promise<GetBlockResponse>
 }
 
-export class OnlineBlockProvider implements BlockProvider {
-  constructor(private readonly provider: Provider) {}
+export interface ApiProvider {
+  getBlock(blockNumber: number): Promise<GetBlockResponse>
+
+  getAbi(contractAddress: string): Promise<Abi>
+
+  callView(contractAddress: string, viewFn: string, blockNumber?: number, blockHash?: string): Promise<string[]>
+}
+
+export class FeederApiProvider implements ApiProvider {
+  constructor(private readonly provider: Provider) {
+  }
+
+  async getBlock(blockNumber: number) {
+    let ret
+    try {
+      const res  = this.provider.getBlock(blockNumber) as any
+      ret = res as GetBlockResponse
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        throw new ApiError(err.message)
+      } else
+        throw (err)
+    }
+    return ret
+  }
+
+  async getAbi(contractAddress: string) {
+    let ret
+    try {
+      const res = await this.provider.getCode(contractAddress)
+      ret = res.abi
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        throw new ApiError(err.message)
+      } else
+        throw (err)
+    }
+    return ret
+  }
+
+  async callView(contractAddress: string, viewFn: string, blockNumber?: number) {
+    let ret
+    try {
+      const res = await this.provider.callContract({
+        contractAddress: contractAddress,
+        entrypoint: viewFn
+      }, {blockIdentifier: blockNumber})
+      ret = res.result
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        throw new ApiError(err.message)
+      } else
+        throw (err)
+    }
+    return ret
+  }
+}
+
+export class PathfinderApiProvider implements ApiProvider {
+  constructor(private readonly url: string) {
+  }
+
+  async call(method: string, params: any) {
+    console.debug(`call ${method}`)
+
+    const data = {
+      jsonrpc: '2.0',
+      id: +new Date(),
+      method: method,
+      params: params
+    }
+    const config = {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }
+    const res = await axios.post(this.url, data, config)
+
+    if (res.data.error) {
+      const m = `error from pathfinder ${method} ${res.data.error.code} ${res.data.error.message}`
+      if (res.data.error.code === -32603)
+        throw new ApiError(m)
+      else
+        throw new Error(m)
+    }
+
+    return res.data.result
+  }
+
+  async getBlock(blockNumber: number) {
+    const res = await this.call('starknet_getBlockByNumber', [blockNumber, 'FULL_TXN_AND_RECEIPTS'])
+    return res as GetBlockResponse
+  }
+
+  async getAbi(contractAddress: string) {
+    const res = await this.call('starknet_getCode', [contractAddress])
+    return JSON.parse(res.abi)
+  }
+
+  async callView(contractAddress: string, viewFn: string, blockNumber?: number, blockHash?: string) {
+    if (blockHash === undefined) {
+      if (blockNumber !== undefined) {
+        const b = await this.call('starknet_getBlockByNumber', [blockNumber])
+        blockHash = b.block_hash
+      } else {
+        blockHash = 'latest'
+      }
+    }
+
+    const entrypoint = getFullSelector(viewFn)
+    const params = {
+      request: {
+        contract_address: contractAddress,
+        entry_point_selector: entrypoint,
+        calldata: []
+      },
+      block_hash: blockHash
+    }
+    return await this.call('starknet_call', params)
+  }
+}
+
+export class ApiError extends Error {
+  name = 'ApiError'
+  constructor(message: string) {
+    super(message)
+  }
+}
+
+export class ApiBlockProvider implements BlockProvider {
+  constructor(private readonly provider: ApiProvider) {
+  }
 
   async get(blockNumber: number) {
-    const res = this.provider.getBlock(blockNumber) as any
-    return res as GetBlockResponse
+    return this.provider.getBlock(blockNumber)
   }
 }
 
@@ -318,7 +463,7 @@ export class MockBlockProvider implements BlockProvider {
 export class DatabaseBlockProvider implements BlockProvider {
   private readonly repository: Repository<RawBlock>
 
-  constructor(private readonly provider: Provider, ds: DataSource) {
+  constructor(private readonly apiProvider: ApiProvider, ds: DataSource) {
     this.repository = ds.getRepository<RawBlock>(RawBlockEntity)
   }
 
@@ -327,9 +472,8 @@ export class DatabaseBlockProvider implements BlockProvider {
 
     const fromDb = await this.repository.findOneBy({block_number: blockNumber})
 
-    if(!fromDb) {
-      const res = await this.provider.getBlock(blockNumber) as any
-      const fromApi = res as GetBlockResponse
+    if (!fromDb) {
+      const fromApi = await this.apiProvider.getBlock(blockNumber)
       await this.repository.save({block_number: blockNumber, raw: fromApi})
       ret = fromApi
       console.debug(`from api for ${blockNumber}`)
@@ -343,33 +487,42 @@ export class DatabaseBlockProvider implements BlockProvider {
 }
 
 export interface ViewProvider {
-  get(contractAddress: string, viewFunction: string, blockNumber: number): Promise<string[]>
+  get(contractAddress: string, viewFunction: string, blockNumber?: number, blockHash?: string): Promise<string[]>
 }
 
-export class OnlineViewProvider implements ViewProvider {
-  constructor(private readonly provider: Provider) {}
+export class ApiViewProvider implements ViewProvider {
+  constructor(private readonly provider: ApiProvider) {
+  }
 
-  async get(contractAddress: string, viewFunction: string, blockNumber: number) {
-    const rawRes = await this.provider.callContract({contractAddress: contractAddress, entrypoint: viewFunction}, {blockIdentifier: blockNumber})
-    return rawRes.result
+  async get(contractAddress: string, viewFunction: string, blockNumber?: number, blockHash?: string) {
+    return await this.provider.callView(contractAddress, viewFunction, blockNumber, blockHash)
   }
 }
+
 export class DatabaseViewProvider implements ViewProvider {
   private readonly repository: Repository<RawView>
 
-  constructor(private readonly provider: Provider, ds: DataSource) {
+  constructor(private readonly apiProvider: ApiProvider, ds: DataSource) {
     this.repository = ds.getRepository<RawView>(RawViewEntity)
   }
 
-  async get(contractAddress: string, viewFunction: string, blockNumber: number) {
+  async get(contractAddress: string, viewFunction: string, blockNumber?: number, blockHash?: string) {
     let ret
 
-    const fromDb = await this.repository.findOneBy({block_number: blockNumber, contract_address: contractAddress, view_function: viewFunction})
+    const fromDb = await this.repository.findOneBy({
+      block_number: blockNumber,
+      contract_address: contractAddress,
+      view_function: viewFunction
+    })
 
-    if(!fromDb) {
-      const rawRes = await this.provider.callContract({contractAddress: contractAddress, entrypoint: viewFunction}, {blockIdentifier: blockNumber})
-      const fromApi = rawRes.result
-      await this.repository.save({block_number: blockNumber, contract_address: contractAddress, view_function: viewFunction, raw: fromApi})
+    if (!fromDb) {
+      const fromApi = await this.apiProvider.callView(contractAddress, viewFunction, blockNumber, blockHash)
+      await this.repository.save({
+        block_number: blockNumber,
+        contract_address: contractAddress,
+        view_function: viewFunction,
+        raw: fromApi
+      })
       ret = fromApi
       console.debug(`from api for ${contractAddress} ${viewFunction} ${blockNumber}`)
     } else {

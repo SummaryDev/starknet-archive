@@ -2,8 +2,14 @@ import {DataSource, Repository} from "typeorm";
 import {Provider} from "starknet";
 import {BlockEntity, RawAbi, RawAbiEntity, RawBlock, RawBlockEntity, TransactionEntity} from "./entities";
 import {OrganizedBlock, OrganizedTransaction} from "starknet-parser/src/types/organizedStarknet";
-import {BlockProvider, DatabaseAbiProvider, DatabaseBlockProvider, DatabaseViewProvider} from "./providers";
-import axios from "axios";
+import {
+  ApiError,
+  ApiProvider,
+  BlockProvider,
+  DatabaseAbiProvider,
+  DatabaseBlockProvider,
+  DatabaseViewProvider
+} from "./providers";
 import * as console from "starknet-parser/lib/helpers/console";
 import {BlockOrganizer} from "starknet-parser/lib/organizers/BlockOrganizer";
 import {GetBlockResponse, GetCodeResponse} from "starknet-parser/src/types/rawStarknet";
@@ -14,14 +20,14 @@ export interface BlockProcessor {
 
 export class OrganizeBlockProcessor implements BlockProcessor {
   private readonly blockRepository: Repository<OrganizedBlock>
-  private readonly blockProvider: BlockProvider
   private readonly blockOrganizer: BlockOrganizer
+  private blockProvider: BlockProvider
 
-  constructor(private readonly provider: Provider, private readonly ds: DataSource) {
+  constructor(private readonly blockApiProvider: ApiProvider, private readonly apiProvider: ApiProvider, private readonly ds: DataSource) {
     this.blockRepository = ds.getRepository<OrganizedBlock>(BlockEntity)
-    this.blockProvider = new DatabaseBlockProvider(provider, ds) //OnlineBlockProvider(defaultProvider)
-    const viewProvider = new DatabaseViewProvider(provider, ds)
-    const abiProvider = new DatabaseAbiProvider(provider, viewProvider, ds) //OnlineAbiProvider(defaultProvider)
+    this.blockProvider = new DatabaseBlockProvider(blockApiProvider, ds)
+    const viewProvider = new DatabaseViewProvider(apiProvider, ds)
+    const abiProvider = new DatabaseAbiProvider(apiProvider, viewProvider, ds)
     this.blockOrganizer = new BlockOrganizer(abiProvider)
   }
 
@@ -34,7 +40,7 @@ export class OrganizeBlockProcessor implements BlockProcessor {
       await this.blockRepository.save(organizedBlock)
       console.info(`saved organized ${blockNumber}`)
     } catch(err) {
-      if(axios.isAxiosError(err)) {
+      if(err instanceof ApiError) {
         console.info(`retrying ${blockNumber} for ${err}`/*, err*/)
         return false
       }
@@ -49,19 +55,18 @@ export class OrganizeBlockProcessor implements BlockProcessor {
 export class ArchiveBlockProcessor implements BlockProcessor {
   private readonly repository: Repository<RawBlock>
 
-  constructor(private readonly provider: Provider, ds: DataSource) {
+  constructor(private readonly apiProvider: ApiProvider, ds: DataSource) {
     this.repository = ds.getRepository<RawBlock>(RawBlockEntity)
   }
 
   async process(blockNumber: number): Promise<boolean> {
 
     try {
-      const res = await this.provider.getBlock(blockNumber) as any
-      const fromApi = res as GetBlockResponse
+      const fromApi = await this.apiProvider.getBlock(blockNumber)
       await this.repository.save({block_number: blockNumber, raw: fromApi})
       console.info(`saved raw ${blockNumber}`)
     } catch(err) {
-      if(axios.isAxiosError(err)) {
+      if(err instanceof ApiError) {
         console.info(`retrying ${blockNumber} for ${err}`/*, err*/)
         return false
       }
@@ -77,7 +82,7 @@ export class ArchiveAbiProcessor implements BlockProcessor {
   private readonly repository: Repository<RawAbi>
   private readonly txRepository: Repository<OrganizedTransaction>
 
-  constructor(private readonly provider: Provider, ds: DataSource) {
+  constructor(private readonly apiProvider: ApiProvider, ds: DataSource) {
     this.repository = ds.getRepository<RawAbi>(RawAbiEntity)
     this.txRepository = ds.getRepository<OrganizedTransaction>(TransactionEntity)
   }
@@ -105,15 +110,13 @@ export class ArchiveAbiProcessor implements BlockProcessor {
 
       for(let i=0; i < contractAddresses.length; i++) {
         const contractAddress = contractAddresses[i]
-        const getCodeResponse = await this.provider.getCode(contractAddress, blockNumber) as any
-        const code = getCodeResponse as GetCodeResponse
-        const fromApi = code.abi
+        const fromApi = await this.apiProvider.getAbi(contractAddress)
 
-        await this.repository.save({contract_address: contractAddress, block_number: blockNumber, raw: fromApi})
+        await this.repository.save({contract_address: contractAddress, raw: fromApi})
         console.info(`saved abi from api for ${contractAddress} at ${blockNumber}`)
       }
     } catch(err) {
-      if(axios.isAxiosError(err)) {
+      if(err instanceof ApiError) {
         console.info(`retrying ${blockNumber} for ${err}`/*, err*/)
         return false
       }
