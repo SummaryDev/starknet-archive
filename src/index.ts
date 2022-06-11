@@ -1,61 +1,62 @@
 import 'dotenv/config'
 import {createConnection, getConnectionOptions, DataSource} from "typeorm"
-import {defaultProvider} from 'starknet'
-import {GetBlockResponse} from 'starknet-parser/src/types/rawStarknet'
-import { OrganizedBlock } from 'starknet-parser/src/types/organizedStarknet'
-import { BlockOrganizer } from 'starknet-parser/lib/organizers/BlockOrganizer'
+import {defaultProvider, Provider} from 'starknet'
 import * as console from 'starknet-parser/lib/helpers/console'
-import {BlockEntity} from './entities'
+import {sleep} from 'starknet-parser/lib/helpers/helpers'
+import {ArchiveAbiProcessor, ArchiveBlockProcessor, BlockProcessor, OrganizeBlockProcessor} from "./processors";
+import {FeederApiProvider, PathfinderApiProvider} from "./providers";
 
 function main() {
-  getConnectionOptions().then(connectionOptions => {
-    createConnection(connectionOptions).then(async ds => {
-      console.info(ds.options)
-      await processBlocks(ds)
-    }).catch(err => console.error('cannot getConnection', err))
-  }).catch(err => console.error('cannot getConnectionOptions', err))
+  (async () => {
+    const connectionOptions = await getConnectionOptions()
+    const ds = await createConnection(connectionOptions)
+    console.info(ds.options)
+    await iterateBlocks(ds)
+  })()
 }
 
 main()
 
-async function processBlocks(ds: DataSource) {
-  const blockRepository = ds.getRepository<OrganizedBlock>(BlockEntity);
+async function iterateBlocks(ds: DataSource) {
 
-  const startBlock = Number.parseInt(process.env.START_BLOCK!)
-  const finishBlock = Number.parseInt(process.env.FINISH_BLOCK!)
+  const startBlock = Number.parseInt(process.env.STARKNET_ARCHIVE_START_BLOCK || '0')
+  const finishBlock = Number.parseInt(process.env.STARKNET_ARCHIVE_FINISH_BLOCK || '0')
+  const retryWait = Number.parseInt(process.env.STARKNET_ARCHIVE_RETRY_WAIT || '1000')
+  const cmd = process.env.STARKNET_ARCHIVE_CMD || 'organize'
+  const feederUrl = process.env.STARKNET_ARCHIVE_FEEDER_URL || 'https://alpha4.starknet.io'
+  const pathfinderUrl = process.env.STARKNET_ARCHIVE_PATHFINDER_URL || 'https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a'
 
-  console.info(`processing blocks ${startBlock} to ${finishBlock}`)
+  const blockApiProvider = new FeederApiProvider(/*defaultProvider*/ new Provider({ baseUrl: feederUrl}))
+  const apiProvider =  new PathfinderApiProvider(pathfinderUrl)
 
-  const blockOrganizer = new BlockOrganizer(defaultProvider);
+  let p: BlockProcessor
+
+  if(cmd == 'organize')
+    p = new OrganizeBlockProcessor(blockApiProvider, apiProvider, ds)
+  else if(cmd == 'archive_block')
+    p = new ArchiveBlockProcessor(apiProvider, ds)
+  else if(cmd == 'archive_abi')
+    p = new ArchiveAbiProcessor(apiProvider, ds)
+  else {
+    console.error(`unknown cmd ${cmd}`)
+    return
+  }
+
+  console.info(`processing blocks ${startBlock} to ${finishBlock} with ${cmd} from ${feederUrl} and ${pathfinderUrl}`)
 
   for (let blockNumber = startBlock; blockNumber <= finishBlock; ) {
     console.info(`processing ${blockNumber}`)
 
-    let organizedBlock: OrganizedBlock
-
     try {
-      const getBlockResponse = await defaultProvider.getBlock(blockNumber) as any
-      const block = getBlockResponse as GetBlockResponse
-      organizedBlock = await blockOrganizer.organizeBlock(block)
-    } catch (err) {
-      console.error(`cannot getBlock ${blockNumber}, retrying`, err)
-      await sleep()
-      continue
-    }
-
-    try {
-      await blockRepository.save(organizedBlock)
-      console.info(`saved ${blockNumber}`)
-    } catch (err) {
-      console.error(`cannot save ${blockNumber}`, err)
+      if (await p.process(blockNumber)) {
+        blockNumber++
+      } else {
+        await sleep(retryWait)
+      }
+    } catch(err) {
+      console.error(`cannot process ${blockNumber}, exiting for ${err}`, err)
       return
     }
-
-    blockNumber++
   } // thru blockNumber range
 
-}
-
-async function sleep() {
-  return new Promise(resolve => setTimeout(resolve, Number.parseInt(process.env.RETRY_TIMEOUT || '1000')));
 }
