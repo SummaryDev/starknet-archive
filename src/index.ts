@@ -4,6 +4,7 @@ import {defaultProvider, Provider} from 'starknet'
 import * as console from 'starknet-parser/lib/helpers/console'
 import {sleep} from 'starknet-parser/lib/helpers/helpers'
 import {ArchiveAbiProcessor, ArchiveBlockProcessor, BlockProcessor, OrganizeBlockProcessor} from "./processors";
+import {FeederApiProvider, PathfinderApiProvider} from "./providers";
 
 function main() {
   (async () => {
@@ -23,12 +24,13 @@ async function iterateBlocks(ds: DataSource) {
   const retryWait = Number.parseInt(process.env.RETRY_WAIT || '1000')
   const cmd = process.env.STARKNET_ARCHIVE_CMD || 'organize'
 
+  const blockApiProvider = new FeederApiProvider(defaultProvider /*new Provider({ baseUrl: 'https://alpha4.starknet.io'})*/)
+  const apiProvider =  new PathfinderApiProvider('https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a')
+
   let p: BlockProcessor
 
-  const apiProvider = defaultProvider /*new Provider({ baseUrl: 'http://52.207.223.4:9545'})*/
-
   if(cmd == 'organize')
-    p = new OrganizeBlockProcessor(apiProvider, ds)
+    p = new OrganizeBlockProcessor(blockApiProvider, apiProvider, ds)
   else if(cmd == 'archive_block')
     p = new ArchiveBlockProcessor(apiProvider, ds)
   else if(cmd == 'archive_abi')

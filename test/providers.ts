@@ -1,8 +1,14 @@
 import {expect} from 'chai'
 import {defaultProvider} from "starknet"
 import {createConnection, DataSource} from "typeorm"
-import {DatabaseAbiProvider, DatabaseViewProvider} from '../src/providers'
-// import * as console from 'starknet-parser/lib/helpers/console'
+import {
+  FeederApiProvider,
+  PathfinderApiProvider,
+  DatabaseAbiProvider,
+  DatabaseViewProvider,
+  ApiProvider
+} from '../src/providers'
+import * as console from 'starknet-parser/lib/helpers/console'
 import {Abi, GetBlockResponse, TransactionReceipt} from 'starknet-parser/src/types/rawStarknet'
 import {TransactionCallOrganizer} from 'starknet-parser/lib/organizers/TransactionCallOrganizer'
 import {BlockOrganizer} from 'starknet-parser/lib/organizers/BlockOrganizer'
@@ -15,18 +21,19 @@ function log(o: any) {
 describe('providers', function() {
   this.timeout(6000000)
 
-  describe('DatabaseAbiProvider', async() => {
-    let ds:DataSource
+  let ds:DataSource
 
-    before(() => {
-      return createConnection().then(o => {
-        ds = o
-        log(`connected to db`)
-      })
+  before(() => {
+    return createConnection().then(o => {
+      ds = o
+      log(`connected to db`)
     })
+  })
+
+  describe('DatabaseAbiProvider', async() => {
 
     it('finds implementation contract address for proxy contract with a getter view function', async() => {
-      const p = new DatabaseAbiProvider(defaultProvider, new DatabaseViewProvider(defaultProvider, ds), ds)
+      const p = new DatabaseAbiProvider(new FeederApiProvider(defaultProvider), new DatabaseViewProvider(new FeederApiProvider(defaultProvider), ds), ds)
 
       const blockNumber = 119485 // <-- WAS DEPLOYED IN THIS BLOCK https://goerli.voyager.online/tx/0x3d86f1b062475dc31f57ad8666ee78c332ed2588ad360f6316108702a066123
       const contractAddressProxy = '0x47495c732aa419dfecb43a2a78b4df926fddb251c7de0e88eab90d8a0399cd8'
@@ -48,7 +55,7 @@ describe('providers', function() {
     })
 
     it('finds implementation contract address for proxy contract with a constructor and events', async() => {
-      const p = new DatabaseAbiProvider(defaultProvider, new DatabaseViewProvider(defaultProvider, ds), ds)
+      const p = new DatabaseAbiProvider(new FeederApiProvider(defaultProvider), new DatabaseViewProvider(new FeederApiProvider(defaultProvider), ds), ds)
 
       const blockNumber = 134018
       const contractAddressProxy = '0x328eddfaf2c85bd63f814c25b5b81fd21a5ca04993440b24c6b87b6fb93c921'
@@ -64,7 +71,7 @@ describe('providers', function() {
     })
 
     it('finds implementation contract address from proxy constructor', async() => {
-      const p = new DatabaseAbiProvider(defaultProvider, new DatabaseViewProvider(defaultProvider, ds), ds)
+      const p = new DatabaseAbiProvider(new FeederApiProvider(defaultProvider), new DatabaseViewProvider(new FeederApiProvider(defaultProvider), ds), ds)
 
       const blockNumber = 134018
       const contractAddressProxy = '0x328eddfaf2c85bd63f814c25b5b81fd21a5ca04993440b24c6b87b6fb93c921'
@@ -86,7 +93,7 @@ describe('providers', function() {
     })
 
     it('finds implementation contract address from proxy constructor with multiple inputs', async() => {
-      const p = new DatabaseAbiProvider(defaultProvider, new DatabaseViewProvider(defaultProvider, ds), ds)
+      const p = new DatabaseAbiProvider(new FeederApiProvider(defaultProvider), new DatabaseViewProvider(new FeederApiProvider(defaultProvider), ds), ds)
 
       const blockNumber = 62135
       const contractAddressProxy = '0x1317354276941f7f799574c73fd8fe53fa3f251084b4c04d88cf601b6bd915e'
@@ -108,7 +115,7 @@ describe('providers', function() {
     })
 
     it('finds implementation contract address from upgrade event', async() => {
-      const p = new DatabaseAbiProvider(defaultProvider, new DatabaseViewProvider(defaultProvider, ds), ds)
+      const p = new DatabaseAbiProvider(new FeederApiProvider(defaultProvider), new DatabaseViewProvider(new FeederApiProvider(defaultProvider), ds), ds)
 
       const contractAddressProxy = '0x328eddfaf2c85bd63f814c25b5b81fd21a5ca04993440b24c6b87b6fb93c921'
       const abiProxy = await p.getBare(contractAddressProxy)
@@ -141,7 +148,7 @@ describe('providers', function() {
     })
 
     it('finds implementation contract address from a getter view function', async() => {
-      const p = new DatabaseAbiProvider(defaultProvider, new DatabaseViewProvider(defaultProvider, ds), ds)
+      const p = new DatabaseAbiProvider(new FeederApiProvider(defaultProvider), new DatabaseViewProvider(new FeederApiProvider(defaultProvider), ds), ds)
 
 
       let contractAddressProxy = '0x47495c732aa419dfecb43a2a78b4df926fddb251c7de0e88eab90d8a0399cd8'
@@ -201,7 +208,7 @@ describe('providers', function() {
     })
 
     it('detects proxy contract', async() => {
-      const p = new DatabaseAbiProvider(defaultProvider, new DatabaseViewProvider(defaultProvider, ds), ds)
+      const p = new DatabaseAbiProvider(new FeederApiProvider(defaultProvider), new DatabaseViewProvider(new FeederApiProvider(defaultProvider), ds), ds)
 
       const blockNumber = 200000
 
@@ -231,7 +238,7 @@ describe('providers', function() {
     })
 
     it('gets abi for regular contract', async() => {
-      const p = new DatabaseAbiProvider(defaultProvider, new DatabaseViewProvider(defaultProvider, ds), ds)
+      const p = new DatabaseAbiProvider(new FeederApiProvider(defaultProvider), new DatabaseViewProvider(new FeederApiProvider(defaultProvider), ds), ds)
 
       const blockNumber = 200000
       const contractAddress = '0x4e34321e0bce0e4ff8ff0bcb3a9a030d423bca29a9d99cbcdd60edb9a2bf03a'
@@ -247,7 +254,7 @@ describe('providers', function() {
     })
 
     it('gets abi for proxy contract', async() => {
-      const p = new DatabaseAbiProvider(defaultProvider, new DatabaseViewProvider(defaultProvider, ds), ds)
+      const p = new DatabaseAbiProvider(new FeederApiProvider(defaultProvider), new DatabaseViewProvider(new FeederApiProvider(defaultProvider), ds), ds)
 
       const blockNumber = 200000
       const contractAddress = '0x328eddfaf2c85bd63f814c25b5b81fd21a5ca04993440b24c6b87b6fb93c921'
@@ -271,7 +278,7 @@ describe('providers', function() {
       const receipt = getTransactionReceiptResponse as TransactionReceipt
       log(receipt)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(new DatabaseAbiProvider(defaultProvider, new DatabaseViewProvider(defaultProvider, ds), ds) /*new OnlineAbiProvider(defaultProvider)*/)
+      const transactionCallOrganizer = new TransactionCallOrganizer(new DatabaseAbiProvider(new FeederApiProvider(defaultProvider), new DatabaseViewProvider(new FeederApiProvider(defaultProvider), ds), ds) /*new OnlineAbiProvider(defaultProvider)*/)
 
       const organizedEvents = await transactionCallOrganizer.organizeEvents(receipt, blockNumber)
 
@@ -295,14 +302,15 @@ describe('providers', function() {
     it('organizeBlock problem blocks', async function () {
       const blocks = [190290/*161308/*164233/*62135/*111570/*38172/*36568/*27592/*17281/*71368/*71405/*200501/*1564/*1064/*86*/]
 
-      const blockOrganizer = new BlockOrganizer(new DatabaseAbiProvider(defaultProvider, new DatabaseViewProvider(defaultProvider, ds), ds) /*new OnlineAbiProvider(defaultProvider)*/)
+      const apiProvider = new FeederApiProvider(defaultProvider)
+
+      const blockOrganizer = new BlockOrganizer(new DatabaseAbiProvider(apiProvider, new DatabaseViewProvider(apiProvider, ds), ds) /*new OnlineAbiProvider(defaultProvider)*/)
 
       for(let i=0; i < blocks.length; i++) {
         const blockNumber = blocks[i]
         console.info(`organizing block ${blockNumber}`)
 
-        const getBlockResponseApi = await defaultProvider.getBlock(blockNumber) as any
-        const getBlockResponse = getBlockResponseApi as GetBlockResponse
+        const getBlockResponse = await apiProvider.getBlock(blockNumber)
         // log(getBlockResponse)
 
         const organizedBlock = await blockOrganizer.organizeBlock(getBlockResponse)
@@ -313,4 +321,83 @@ describe('providers', function() {
     })
 
   })
+
+  describe('ApiProvider', async function() {
+    const p = new PathfinderApiProvider('https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a')
+    const f = new FeederApiProvider(defaultProvider)
+
+    it('getBlock', async () => {
+      const rp = await p.getBlock(1)
+      log(rp)
+      expect(rp).deep.eq(JSON.parse('{"block_hash":"0x75e00250d4343326f322e370df4c9c73c7be105ad9f532eeb97891a34d9e4a5","parent_hash":"0x7d328a71faf48c5c3857e99f20a77b18522480956d1cd5bff1ff2df3c8b427b","block_number":1,"status":"ACCEPTED_ON_L1","sequencer":"0x0","new_root":"0x3f04ffa63e188d602796505a2ee4f6e1f294ee29a914b057af8e75b17259d9f","old_root":"0x2c2bb91714f8448ed814bdac274ab6fcdbafc22d835f9e847e5bee8c2e5444e","accepted_time":1636989916,"gas_price":"0x0","transactions":[{"txn_hash":"0x4dd12d3b82c3d0b216503c6abf63f1ccad222461582eac82057d46c327331d2","contract_address":"0x543e54f26ae33686f57da2ceebed98b340c3a78e9390931bd84fb711d5caabc","status":"ACCEPTED_ON_L1","status_data":"","messages_sent":[],"events":[]},{"txn_hash":"0x1a5f7247cc207f5b5c2e48b7605e46b872b83a2fa842955aea42d3cd80dbff","contract_address":"0x2fb7ff5b1b474e8e691f5bebad9aa7aa3009f6ef22ccc2816f96cdfe217604d","status":"ACCEPTED_ON_L1","status_data":"","messages_sent":[],"events":[]},{"txn_hash":"0x5ea9bca61575eeb4ed38a16cefcbf66ba1ed642642df1a1c07b44316791b378","contract_address":"0x1bb929cc5e6d80f0c71e90365ab77e9cbb2e0a290d72255a3f4d34060b5ed52","status":"ACCEPTED_ON_L1","status_data":"","messages_sent":[],"events":[]},{"txn_hash":"0x6525d9aa309e5c80abbdafcc434d53202e06866597cd6dbbc91e5894fad7155","contract_address":"0x2fb7ff5b1b474e8e691f5bebad9aa7aa3009f6ef22ccc2816f96cdfe217604d","entry_point_selector":"0x12ead94ae9d3f9d2bdb6b847cf255f1f398193a1f88884a0ae8e18f24a037b6","calldata":["0xe3402af6cc1bca3f22d738ab935a5dd8ad1fb230"],"status":"ACCEPTED_ON_L1","status_data":"","messages_sent":[{"to_address":"0xe3402af6cc1bca3f22d738ab935a5dd8ad1fb230","payload":["0xc","0x22"]}],"events":[]}]}'))
+
+      const rf = await f.getBlock(1)
+      log(rf)
+    })
+
+    it('getAbi', async () => {
+      const rp = await p.getAbi('0x328eddfaf2c85bd63f814c25b5b81fd21a5ca04993440b24c6b87b6fb93c921')
+      log(rp)
+      expect(rp).deep.eq(JSON.parse('[{"data":[{"name":"implementation","type":"felt"}],"keys":[],"name":"Upgraded","type":"event"},{"inputs":[{"name":"implementation_address","type":"felt"}],"name":"constructor","outputs":[],"type":"constructor"},{"inputs":[{"name":"selector","type":"felt"},{"name":"calldata_size","type":"felt"},{"name":"calldata","type":"felt*"}],"name":"__default__","outputs":[{"name":"retdata_size","type":"felt"},{"name":"retdata","type":"felt*"}],"type":"function"},{"inputs":[{"name":"selector","type":"felt"},{"name":"calldata_size","type":"felt"},{"name":"calldata","type":"felt*"}],"name":"__l1_default__","outputs":[],"type":"l1_handler"}]'))
+
+      const rf = await f.getAbi('0x328eddfaf2c85bd63f814c25b5b81fd21a5ca04993440b24c6b87b6fb93c921')
+      log(rf)
+
+      expect(rp).deep.eq(rf)
+    })
+
+    it('callView', async () => {
+      let contractAddressProxy = '0x47495c732aa419dfecb43a2a78b4df926fddb251c7de0e88eab90d8a0399cd8'
+      let blockNumber = 200000
+
+      let rp = await p.callView(contractAddressProxy, 'get_implementation', blockNumber)
+      log(rp)
+      expect(rp).deep.eq([
+        "0x70a61892f03b34f88894f0fb9bb4ae0c63a53f5042f79997862d1dffb8d6a30"
+      ])
+
+      let rf = await f.callView(contractAddressProxy, 'get_implementation', blockNumber)
+      log(rf)
+      expect(rp).deep.eq(rf)
+
+      rp = await p.callView(contractAddressProxy, 'get_implementation') // latest
+      log(rp)
+      expect(rp).deep.eq([
+        "0x70a61892f03b34f88894f0fb9bb4ae0c63a53f5042f79997862d1dffb8d6a30"
+      ])
+
+      blockNumber = 119485 // <-- deployed
+
+      rp = await p.callView(contractAddressProxy, 'get_implementation', blockNumber)
+      log(rp)
+      expect(rp).deep.eq([
+        "0x90aa7a9203bff78bfb24f0753c180a33d4bad95b1f4f510b36b00993815704"
+      ])
+
+      blockNumber = 100000
+
+      expect(p.callView(contractAddressProxy, 'get_implementation', blockNumber)).to.throw
+    })
+
+    xit('mix api providers', async () => {
+      const feederApiProvider = new FeederApiProvider(defaultProvider)
+      const pathfinderApiProvider = new PathfinderApiProvider('https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a')
+
+      const blockOrganizer = new BlockOrganizer(new DatabaseAbiProvider(pathfinderApiProvider, new DatabaseViewProvider(pathfinderApiProvider, ds), ds))
+
+      for (let blockNumber = 200024; blockNumber <= 200100; blockNumber++) {
+        console.info(`organizing block ${blockNumber}`)
+
+        const getBlockResponse = await feederApiProvider.getBlock(blockNumber)
+        console.info(`from feederApiProvider ${blockNumber}`)
+
+        const organizedBlock = await blockOrganizer.organizeBlock(getBlockResponse)
+
+        console.info(`done with block ${blockNumber}`)
+      }
+
+    })
+
+  })
+
 })

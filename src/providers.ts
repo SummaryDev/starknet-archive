@@ -2,27 +2,27 @@ import {GetBlockResponse, GetCodeResponse, Abi} from "starknet-parser/src/types/
 import {AbiProvider} from "starknet-parser/lib/organizers/AbiProvider"
 import {FunctionAbi, Provider} from "starknet"
 import * as console from 'starknet-parser/lib/helpers/console'
-import {Cache} from 'starknet-parser/lib/helpers/helpers'
+import {Cache, getFullSelector} from 'starknet-parser/lib/helpers/helpers'
 import {DataSource, ILike, LessThanOrEqual, Like, Repository} from "typeorm"
 import {RawView, RawViewEntity, RawAbi, RawAbiEntity, RawBlock, RawBlockEntity, InputEntity, ArgumentEntity, TransactionEntity} from "./entities"
 import {OrganizedEvent,OrganizedTransaction,EventArgument,FunctionInput} from "starknet-parser/src/types/organizedStarknet"
+import {CallContractResponse} from "starknet/dist/types";
+import axios from "axios";
 
 export class DatabaseAbiProvider implements AbiProvider {
-  private readonly viewProvider: ViewProvider
   private readonly repository: Repository<RawAbi>
   private readonly txRepository: Repository<OrganizedTransaction>
   private readonly inputRepository: Repository<FunctionInput>
   private readonly argumentRepository: Repository<EventArgument>
 
-  constructor(private readonly provider: Provider, viewProvider: ViewProvider, ds: DataSource) {
-    this.viewProvider = viewProvider
+  constructor(private readonly apiProvider: ApiProvider, private readonly viewProvider: ViewProvider, ds: DataSource) {
     this.repository = ds.getRepository<RawAbi>(RawAbiEntity)
     this.txRepository = ds.getRepository<OrganizedTransaction>(TransactionEntity)
     this.inputRepository = ds.getRepository<FunctionInput>(InputEntity)
     this.argumentRepository = ds.getRepository<EventArgument>(ArgumentEntity)
   }
 
-  async get(contractAddress: string, blockNumber: number): Promise<Abi | undefined> {
+  async get(contractAddress: string, blockNumber: number, blockHash?: string): Promise<Abi | undefined> {
     let ret
 
     const fromDbOrApi = await this.getBare(contractAddress)
@@ -33,7 +33,7 @@ export class DatabaseAbiProvider implements AbiProvider {
       ret = fromDbOrApi
 
       if(DatabaseAbiProvider.isProxy(fromDbOrApi)) {
-        const implementationContractAddress = await this.findImplementationContractAddress(contractAddress, fromDbOrApi, blockNumber)
+        const implementationContractAddress = await this.findImplementationContractAddress(contractAddress, fromDbOrApi, blockNumber, blockHash)
 
         if(!implementationContractAddress) {
           console.warn(`findImplementationContractAddress returned no result for proxy contract ${contractAddress} at block ${blockNumber}`)
@@ -74,9 +74,7 @@ export class DatabaseAbiProvider implements AbiProvider {
     const fromDb = await this.repository.findOneBy({contract_address: contractAddress})
 
     if(!fromDb) {
-      const getCodeResponse = await this.provider.getCode(contractAddress) as any
-      const code = getCodeResponse as GetCodeResponse
-      const fromApi = code.abi
+      const fromApi = await this.apiProvider.getAbi(contractAddress)
 
       await this.repository.save({contract_address: contractAddress, raw: fromApi})
       ret = fromApi
@@ -89,14 +87,14 @@ export class DatabaseAbiProvider implements AbiProvider {
     return ret
   }
 
-  async findImplementationContractAddress(proxyContractAddress: string, proxyContractAbi: Abi | undefined, blockNumber: number): Promise<string | undefined> {
+  async findImplementationContractAddress(proxyContractAddress: string, proxyContractAbi: Abi | undefined, blockNumber: number, blockHash?: string): Promise<string | undefined> {
     let ret = undefined
 
     if(!proxyContractAbi)
       return ret
 
     if(DatabaseAbiProvider.getImplementationGetters(proxyContractAbi).length == 1) {
-      ret = await this.findImplementationContractAddressByGetter(proxyContractAddress, proxyContractAbi, blockNumber)
+      ret = await this.findImplementationContractAddressByGetter(proxyContractAddress, proxyContractAbi, blockNumber, blockHash)
     }
 
     if(!ret && DatabaseAbiProvider.getUpgradeEvents(proxyContractAbi).length == 1) {
@@ -206,7 +204,7 @@ export class DatabaseAbiProvider implements AbiProvider {
     return ret
   }
 
-  async findImplementationContractAddressByGetter(proxyContractAddress: string, proxyContractAbi: Abi, blockNumber: number): Promise<string | undefined> {
+  async findImplementationContractAddressByGetter(proxyContractAddress: string, proxyContractAbi: Abi, blockNumber: number, blockHash?: string): Promise<string | undefined> {
     let ret = undefined
 
     const viewFunctions = DatabaseAbiProvider.getImplementationGetters(proxyContractAbi)
@@ -217,7 +215,7 @@ export class DatabaseAbiProvider implements AbiProvider {
       const viewFnAbi = viewFunctions[0]
       const viewFn = viewFnAbi.name
 
-      const implementations = await this.viewProvider.get(proxyContractAddress, viewFn, blockNumber)
+      const implementations = await this.viewProvider.get(proxyContractAddress, viewFn, blockNumber, blockHash)
 
       if(implementations.length != 1) {
         console.warn(`cannot findImplementationContractAddressByGetter from ${implementations.length} implementations in results from ${viewFn} for proxy contract ${proxyContractAddress} at block ${blockNumber}`)
@@ -290,12 +288,94 @@ export interface BlockProvider {
   get(blockNumber: number): Promise<GetBlockResponse>
 }
 
-export class OnlineBlockProvider implements BlockProvider {
+export interface ApiProvider {
+  getBlock(blockNumber: number): Promise<GetBlockResponse>
+  getAbi(contractAddress: string): Promise<Abi>
+  callView(contractAddress: string, viewFn: string, blockNumber?: number, blockHash?: string): Promise<string[]>
+}
+
+export class FeederApiProvider implements ApiProvider {
   constructor(private readonly provider: Provider) {}
 
-  async get(blockNumber: number) {
+  async getBlock(blockNumber: number) {
     const res = this.provider.getBlock(blockNumber) as any
     return res as GetBlockResponse
+  }
+
+  async getAbi(contractAddress: string) {
+    const res = await this.provider.getCode(contractAddress)
+    return res.abi
+  }
+
+  async callView(contractAddress: string, viewFn: string, blockNumber?: number) {
+    const res = await this.provider.callContract({contractAddress: contractAddress, entrypoint: viewFn}, {blockIdentifier: blockNumber})
+    return res.result
+  }
+}
+
+export class PathfinderApiProvider implements ApiProvider {
+  constructor(private readonly url: string) {}
+
+  async call(method: string, params: any) {
+    console.debug(`call ${method}`)
+
+    const data = {
+      jsonrpc: '2.0',
+      id: + new Date(),
+      method: method,
+      params: params
+    }
+    const config = {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }
+    const res = await axios.post(this.url, data, config)
+
+    if(res.data.error)
+      throw new Error(`returned from pathfinder ${method} error ${res.data.error.code} ${res.data.error.message}`)
+
+    return res.data.result
+  }
+
+  async getBlock(blockNumber: number) {
+    const res = await this.call('starknet_getBlockByNumber', [blockNumber, 'FULL_TXN_AND_RECEIPTS'])
+    return res as GetBlockResponse
+  }
+
+  async getAbi(contractAddress: string) {
+    const res = await this.call('starknet_getCode', [contractAddress])
+    return JSON.parse(res.abi)
+  }
+
+  async callView(contractAddress: string, viewFn: string, blockNumber?: number, blockHash?: string) {
+    if(blockHash === undefined) {
+      if(blockNumber !== undefined) {
+        const b = await this.call('starknet_getBlockByNumber', [blockNumber])
+        blockHash = b.block_hash
+      } else {
+        blockHash = 'latest'
+      }
+    }
+
+    const entrypoint = getFullSelector(viewFn)
+    const params = {
+      request: {
+        contract_address: contractAddress,
+        entry_point_selector: entrypoint,
+        calldata: []
+      },
+      block_hash: blockHash
+    }
+    return await this.call('starknet_call', params)
+  }
+}
+
+export class ApiBlockProvider implements BlockProvider {
+  constructor(private readonly provider: ApiProvider) {}
+
+  async get(blockNumber: number) {
+    return this.provider.getBlock(blockNumber)
   }
 }
 
@@ -318,7 +398,7 @@ export class MockBlockProvider implements BlockProvider {
 export class DatabaseBlockProvider implements BlockProvider {
   private readonly repository: Repository<RawBlock>
 
-  constructor(private readonly provider: Provider, ds: DataSource) {
+  constructor(private readonly apiProvider: ApiProvider, ds: DataSource) {
     this.repository = ds.getRepository<RawBlock>(RawBlockEntity)
   }
 
@@ -328,8 +408,7 @@ export class DatabaseBlockProvider implements BlockProvider {
     const fromDb = await this.repository.findOneBy({block_number: blockNumber})
 
     if(!fromDb) {
-      const res = await this.provider.getBlock(blockNumber) as any
-      const fromApi = res as GetBlockResponse
+      const fromApi = await this.apiProvider.getBlock(blockNumber)
       await this.repository.save({block_number: blockNumber, raw: fromApi})
       ret = fromApi
       console.debug(`from api for ${blockNumber}`)
@@ -343,32 +422,30 @@ export class DatabaseBlockProvider implements BlockProvider {
 }
 
 export interface ViewProvider {
-  get(contractAddress: string, viewFunction: string, blockNumber: number): Promise<string[]>
+  get(contractAddress: string, viewFunction: string, blockNumber?: number, blockHash?: string): Promise<string[]>
 }
 
-export class OnlineViewProvider implements ViewProvider {
-  constructor(private readonly provider: Provider) {}
+export class ApiViewProvider implements ViewProvider {
+  constructor(private readonly provider: ApiProvider) {}
 
-  async get(contractAddress: string, viewFunction: string, blockNumber: number) {
-    const rawRes = await this.provider.callContract({contractAddress: contractAddress, entrypoint: viewFunction}, {blockIdentifier: blockNumber})
-    return rawRes.result
+  async get(contractAddress: string, viewFunction: string, blockNumber?: number, blockHash?: string) {
+    return await this.provider.callView(contractAddress, viewFunction, blockNumber, blockHash)
   }
 }
 export class DatabaseViewProvider implements ViewProvider {
   private readonly repository: Repository<RawView>
 
-  constructor(private readonly provider: Provider, ds: DataSource) {
+  constructor(private readonly apiProvider: ApiProvider, ds: DataSource) {
     this.repository = ds.getRepository<RawView>(RawViewEntity)
   }
 
-  async get(contractAddress: string, viewFunction: string, blockNumber: number) {
+  async get(contractAddress: string, viewFunction: string, blockNumber?: number, blockHash?: string) {
     let ret
 
     const fromDb = await this.repository.findOneBy({block_number: blockNumber, contract_address: contractAddress, view_function: viewFunction})
 
     if(!fromDb) {
-      const rawRes = await this.provider.callContract({contractAddress: contractAddress, entrypoint: viewFunction}, {blockIdentifier: blockNumber})
-      const fromApi = rawRes.result
+      const fromApi = await this.apiProvider.callView(contractAddress, viewFunction, blockNumber, blockHash)
       await this.repository.save({block_number: blockNumber, contract_address: contractAddress, view_function: viewFunction, raw: fromApi})
       ret = fromApi
       console.debug(`from api for ${contractAddress} ${viewFunction} ${blockNumber}`)
