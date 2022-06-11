@@ -19,13 +19,15 @@ main()
 
 async function iterateBlocks(ds: DataSource) {
 
-  const startBlock = Number.parseInt(process.env.START_BLOCK || '0')
-  const finishBlock = Number.parseInt(process.env.FINISH_BLOCK || '0')
-  const retryWait = Number.parseInt(process.env.RETRY_WAIT || '1000')
+  const startBlock = Number.parseInt(process.env.STARKNET_ARCHIVE_START_BLOCK || '0')
+  const finishBlock = Number.parseInt(process.env.STARKNET_ARCHIVE_FINISH_BLOCK || '0')
+  const retryWait = Number.parseInt(process.env.STARKNET_ARCHIVE_RETRY_WAIT || '1000')
   const cmd = process.env.STARKNET_ARCHIVE_CMD || 'organize'
+  const feederUrl = process.env.STARKNET_ARCHIVE_FEEDER_URL || 'https://alpha4.starknet.io'
+  const pathfinderUrl = process.env.STARKNET_ARCHIVE_PATHFINDER_URL || 'https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a'
 
-  const blockApiProvider = new FeederApiProvider(defaultProvider /*new Provider({ baseUrl: 'https://alpha4.starknet.io'})*/)
-  const apiProvider =  new PathfinderApiProvider('https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a')
+  const blockApiProvider = new FeederApiProvider(/*defaultProvider*/ new Provider({ baseUrl: feederUrl}))
+  const apiProvider =  new PathfinderApiProvider(pathfinderUrl)
 
   let p: BlockProcessor
 
@@ -40,7 +42,7 @@ async function iterateBlocks(ds: DataSource) {
     return
   }
 
-  console.info(`processing blocks ${startBlock} to ${finishBlock} with ${cmd}`)
+  console.info(`processing blocks ${startBlock} to ${finishBlock} with ${cmd} from ${feederUrl} and ${pathfinderUrl}`)
 
   for (let blockNumber = startBlock; blockNumber <= finishBlock; ) {
     console.info(`processing ${blockNumber}`)
