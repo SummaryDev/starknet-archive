@@ -18,6 +18,11 @@ export interface BlockProcessor {
   process(blockNumber: number): Promise<boolean>
 }
 
+function canRetry(err: any): boolean {
+  console.info(`retrying for ${err}`/*, err*/)
+  return (err instanceof Error && err.message !== undefined && err.message !== null && err.message.includes('ECONNRESET')) || err instanceof ApiError
+}
+
 export class OrganizeBlockProcessor implements BlockProcessor {
   private readonly blockRepository: Repository<OrganizedBlock>
   private readonly blockOrganizer: BlockOrganizer
@@ -40,10 +45,8 @@ export class OrganizeBlockProcessor implements BlockProcessor {
       await this.blockRepository.save(organizedBlock)
       console.info(`saved organized ${blockNumber}`)
     } catch(err) {
-      if(err instanceof ApiError) {
-        console.info(`retrying ${blockNumber} for ${err}`/*, err*/)
+      if (canRetry(err))
         return false
-      }
       console.error(`cannot get or organize or save ${blockNumber}, rethrowing ${err}`/*, err*/)
       throw err
     }
@@ -66,10 +69,8 @@ export class ArchiveBlockProcessor implements BlockProcessor {
       await this.repository.save({block_number: blockNumber, raw: fromApi})
       console.info(`saved raw ${blockNumber}`)
     } catch(err) {
-      if(err instanceof ApiError) {
-        console.info(`retrying ${blockNumber} for ${err}`/*, err*/)
+      if (canRetry(err))
         return false
-      }
       console.error(`cannot get or save raw ${blockNumber}, rethrowing ${err}`/*, err*/)
       throw err
     }
@@ -116,10 +117,8 @@ export class ArchiveAbiProcessor implements BlockProcessor {
         console.info(`saved abi from api for ${contractAddress} at ${blockNumber}`)
       }
     } catch(err) {
-      if(err instanceof ApiError) {
-        console.info(`retrying ${blockNumber} for ${err}`/*, err*/)
+      if (canRetry(err))
         return false
-      }
       console.error(`cannot get or save raw abi for ${contractAddresses.length} distinct contractAddresses in block ${blockNumber}, rethrowing ${err}`/*, err*/)
       throw err
     }
