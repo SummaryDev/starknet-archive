@@ -305,9 +305,10 @@ describe('providers', function() {
     })
 
     it('organizeBlock problem blocks', async function () {
-      const blocks = [190290/*161308/*164233/*62135/*111570/*38172/*36568/*27592/*17281/*71368/*71405/*200501/*1564/*1064/*86*/]
+      const blocks = [167434/*183423/*190290/*161308/*164233/*62135/*111570/*38172/*36568/*27592/*17281/*71368/*71405/*200501/*1564/*1064/*86*/]
 
-      const apiProvider = new FeederApiProvider(defaultProvider)
+      const blockApiProvider = new FeederApiProvider(defaultProvider)
+      const apiProvider =  new PathfinderApiProvider('https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a')
 
       const blockOrganizer = new BlockOrganizer(new DatabaseAbiProvider(apiProvider, new DatabaseViewProvider(apiProvider, ds), ds) /*new OnlineAbiProvider(defaultProvider)*/)
 
@@ -315,7 +316,7 @@ describe('providers', function() {
         const blockNumber = blocks[i]
         console.info(`organizing block ${blockNumber}`)
 
-        const getBlockResponse = await apiProvider.getBlock(blockNumber)
+        const getBlockResponse = await blockApiProvider.getBlock(blockNumber)
         // log(getBlockResponse)
 
         const organizedBlock = await blockOrganizer.organizeBlock(getBlockResponse)
