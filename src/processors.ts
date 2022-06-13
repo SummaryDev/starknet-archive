@@ -19,8 +19,12 @@ export interface BlockProcessor {
 }
 
 function canRetry(err: any): boolean {
-  console.info(`retrying for ${err}`/*, err*/)
-  return (err instanceof Error && err.message !== undefined && err.message !== null && err.message.includes('ECONNRESET')) || err instanceof ApiError
+  const ret = (err instanceof Error && err.message !== undefined && err.message !== null && (err.message.includes('ECONNRESET') || err.message.includes('EAI_AGAIN'))) || err instanceof ApiError
+  if(ret)
+    console.info(`retrying for ${err}`/*, err*/)
+  else
+    console.info(`cannot retry for ${err}`/*, err*/)
+  return ret
 }
 
 export class OrganizeBlockProcessor implements BlockProcessor {

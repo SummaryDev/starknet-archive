@@ -22,7 +22,7 @@ import {
   FunctionInput
 } from "starknet-parser/src/types/organizedStarknet"
 import {CallContractResponse} from "starknet/dist/types";
-import axios from "axios";
+import axios, {AxiosResponse} from "axios";
 
 export class DatabaseAbiProvider implements AbiProvider {
   private readonly repository: Repository<RawAbi>
@@ -42,7 +42,7 @@ export class DatabaseAbiProvider implements AbiProvider {
 
     const fromDbOrApi = await this.getBare(contractAddress)
 
-    if (!fromDbOrApi) {
+    if (!fromDbOrApi || !Array.isArray(fromDbOrApi) || fromDbOrApi.length == 0) {
       console.warn(`getBare returned no result for contract ${contractAddress}`)
     } else {
       ret = fromDbOrApi
@@ -384,32 +384,44 @@ export class PathfinderApiProvider implements ApiProvider {
     }
     const res = await axios.post(this.url, data, config)
 
-    if (res.data.error) {
-      const m = `error from pathfinder ${method} ${res.data.error.code} ${res.data.error.message}`
-      if (res.data.error.code === -32603)
-        throw new ApiError(m)
-      else
-        throw new Error(m)
-    }
+    if (res.data.error && res.data.error.code === -32603)
+      throw new ApiError(`error from pathfinder ${method} ${res.data.error.code} ${res.data.error.message}`)
 
-    return res.data.result
+    return res.data
   }
 
   async getBlock(blockNumber: number) {
-    const res = await this.call('starknet_getBlockByNumber', [blockNumber, 'FULL_TXN_AND_RECEIPTS'])
-    return res as GetBlockResponse
+    const data = await this.call('starknet_getBlockByNumber', [blockNumber, 'FULL_TXN_AND_RECEIPTS'])
+
+    if (data.error)
+      throw new Error(`error from pathfinder starknet_getBlockByNumber ${blockNumber} ${data.error.code} ${data.error.message}`)
+
+    return data.result as GetBlockResponse
   }
 
   async getAbi(contractAddress: string) {
-    const res = await this.call('starknet_getCode', [contractAddress])
-    return JSON.parse(res.abi)
+    let ret = undefined
+
+    const data = await this.call('starknet_getCode', [contractAddress])
+
+    if (data.error) {
+      const m = `error from pathfinder starknet_getCode ${contractAddress} ${data.error.code} ${data.error.message}`
+      if (data.error.code === 20)
+       console.warn(m)
+      else
+        throw new Error(m)
+    } else if (data.result.abi) {
+      ret = JSON.parse(data.result.abi)
+    }
+
+    return ret
   }
 
   async callView(contractAddress: string, viewFn: string, blockNumber?: number, blockHash?: string) {
     if (blockHash === undefined) {
       if (blockNumber !== undefined) {
         const b = await this.call('starknet_getBlockByNumber', [blockNumber])
-        blockHash = b.block_hash
+        blockHash = b.result.block_hash
       } else {
         blockHash = 'latest'
       }
@@ -424,7 +436,13 @@ export class PathfinderApiProvider implements ApiProvider {
       },
       block_hash: blockHash
     }
-    return await this.call('starknet_call', params)
+
+    const data = await this.call('starknet_call', params)
+
+    if (data.error)
+      throw new Error(`error from pathfinder starknet_call ${viewFn} at block ${blockNumber} ${data.error.code} ${data.error.message}`)
+
+    return data.result
   }
 }
 
