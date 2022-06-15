@@ -104,6 +104,8 @@ select distinct entry_point_selector from transaction t where t.function = 'anon
 
 SELECT current_user;
 
+drop database test;
+
 create database test with template dev owner 'postgres';
 
 select t.function, count(t.function) as ct from transaction t group by t.function order by ct desc;
@@ -117,3 +119,4 @@ select distinct contract_address, entry_point_selector from transaction t where 
 select distinct entry_point_selector from transaction t where t.function = 'anonymous';
 
 ALTER TABLE public.raw_abi ALTER COLUMN raw DROP NOT NULL;
+

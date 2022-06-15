@@ -285,11 +285,6 @@ export interface EventArgumentData extends EventArgument {
   event_id: number;
 }
 
-export const numeric: ValueTransformer = {
-  to: (entityValue: BigNumber) => entityValue.toString(),
-  from: (databaseValue: string): BigNumber => BigNumber.from(databaseValue)
-}
-
 export const ArgumentEntity = new EntitySchema<EventArgumentData>({
   name: "argument",
   columns: {
@@ -315,11 +310,9 @@ export const ArgumentEntity = new EntitySchema<EventArgumentData>({
       precision: 78,
       scale: 0,
       nullable: true,
-      transformer: numeric
     },
     event_id: {
-      type: Number,
-      nullable: true
+      type: Number
     }
   },
   relations: {

@@ -23,7 +23,7 @@
       "pg": "^8.4.0",
       "reflect-metadata": "^0.1.13",
       "starknet": "^3.9.0",
-      "starknet-parser": "^0.0.18",
+      "starknet-parser": "^0.0.19",
       "typeorm": "0.3.6"
    },
    "scripts": {

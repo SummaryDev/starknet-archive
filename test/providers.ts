@@ -304,8 +304,8 @@ describe('providers', function() {
        */
     })
 
-    it('organizeBlock problem blocks', async function () {
-      const blocks = [167434/*183423/*190290/*161308/*164233/*62135/*111570/*38172/*36568/*27592/*17281/*71368/*71405/*200501/*1564/*1064/*86*/]
+    it( 'organizeBlock problem blocks', async function () {
+      const blocks = [231539/*167434/*183423/*190290/*161308/*164233/*62135/*111570/*38172/*36568/*27592/*17281/*71368/*71405/*200501/*1564/*1064/*86*/]
 
       const blockApiProvider = new FeederApiProvider(defaultProvider)
       const apiProvider =  new PathfinderApiProvider('https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a')
@@ -317,7 +317,7 @@ describe('providers', function() {
         console.info(`organizing block ${blockNumber}`)
 
         const getBlockResponse = await blockApiProvider.getBlock(blockNumber)
-        // log(getBlockResponse)
+        log(getBlockResponse)
 
         const organizedBlock = await blockOrganizer.organizeBlock(getBlockResponse)
         log(organizedBlock)
@@ -409,7 +409,8 @@ describe('providers', function() {
 
     it('saves decimal', async () => {
       let n = 'test-2'
-      let d: BigNumber = BigNumber.from('0xdc489ed04e2b3431b33f8f8201eb432c57ea0640dcbb876a611efa30ad6256')
+      let bn: BigNumber = BigNumber.from('0xdc489ed04e2b3431b33f8f8201eb432c57ea0640dcbb876a611efa30ad6256')
+      let d = bn.toString()
       let a = {name: n, type:'test', value: 'test', decimal: d} as EventArgument
       let r = ds.getRepository<EventArgument>(ArgumentEntity)
       let saved = await r.save(a)
