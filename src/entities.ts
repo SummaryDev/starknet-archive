@@ -1,5 +1,6 @@
-import {EntitySchema} from 'typeorm';
+import {EntitySchema, ValueTransformer} from 'typeorm';
 import {OrganizedBlock, OrganizedTransaction, OrganizedEvent, FunctionInput, EventArgument} from "starknet-parser/src/types/organizedStarknet";
+import {BigNumber} from "ethers";
 
 export const BlockEntity = new EntitySchema<OrganizedBlock>({
   name: "block",
@@ -45,8 +46,9 @@ export const BlockEntity = new EntitySchema<OrganizedBlock>({
   }
 })
 
-interface OrganizedTransactionData extends OrganizedTransaction {
-  block: OrganizedBlock, block_number: number
+export interface OrganizedTransactionData extends OrganizedTransaction {
+  block: OrganizedBlock;
+  block_number: number;
 }
 
 export const TransactionEntity = new EntitySchema<OrganizedTransactionData>({
@@ -167,8 +169,10 @@ export const TransactionEntity = new EntitySchema<OrganizedTransactionData>({
   ]
 })
 
-interface FunctionInputData extends FunctionInput {
-  id: number, transaction: OrganizedTransactionData, transaction_hash: string
+export interface FunctionInputData extends FunctionInput {
+  id: number;
+  transaction: OrganizedTransactionData;
+  transaction_hash: string;
 }
 
 export const InputEntity = new EntitySchema<FunctionInputData>({
@@ -213,8 +217,10 @@ export const InputEntity = new EntitySchema<FunctionInputData>({
   ]
 })
 
-interface OrganizedEventData extends OrganizedEvent {
-  id: number, transaction: OrganizedTransactionData, transaction_hash: string
+export interface OrganizedEventData extends OrganizedEvent {
+  id: number;
+  transaction: OrganizedTransactionData;
+  transaction_hash: string;
 }
 
 export const EventEntity = new EntitySchema<OrganizedEventData>({
@@ -273,8 +279,10 @@ export const EventEntity = new EntitySchema<OrganizedEventData>({
   ]
 })
 
-interface EventArgumentData extends EventArgument {
-  id: number, event: OrganizedEventData, event_id: number
+export interface EventArgumentData extends EventArgument {
+  id: number;
+  event: OrganizedEventData;
+  event_id: number;
 }
 
 export const ArgumentEntity = new EntitySchema<EventArgumentData>({
@@ -296,6 +304,12 @@ export const ArgumentEntity = new EntitySchema<EventArgumentData>({
     value: {
       type: "jsonb",
       nullable: true
+    },
+    decimal: {
+      type: "numeric",
+      precision: 78,
+      scale: 0,
+      nullable: true,
     },
     event_id: {
       type: Number
@@ -321,8 +335,8 @@ export const ArgumentEntity = new EntitySchema<EventArgumentData>({
 })
 
 export interface RawBlock {
-  block_number: number
-  raw: any
+  block_number: number;
+  raw: any;
 }
 
 export const RawBlockEntity = new EntitySchema<RawBlock>({
@@ -339,8 +353,8 @@ export const RawBlockEntity = new EntitySchema<RawBlock>({
 })
 
 export interface RawAbi {
-  contract_address: string
-  raw: any
+  contract_address: string;
+  raw: any;
 }
 
 export const RawAbiEntity = new EntitySchema<RawAbi>({
@@ -358,10 +372,10 @@ export const RawAbiEntity = new EntitySchema<RawAbi>({
 })
 
 export interface RawView {
-  block_number: number
-  contract_address: string
-  view_function: string
-  raw: any
+  block_number: number;
+  contract_address: string;
+  view_function: string;
+  raw: any;
 }
 
 export const RawViewEntity = new EntitySchema<RawView>({
