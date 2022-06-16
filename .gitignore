@@ -1,7 +1,7 @@
 test*.json
 test.env
 dev.env
-scratch.txt
+scratch*.txt
 
 test/*js
 test/*.d.ts

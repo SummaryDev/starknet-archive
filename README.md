@@ -16,11 +16,7 @@ Build docker image
 ```bash
 docker build -t starknet-archive .
 ```
-Save docker image
+Run docker
 ```bash
-docker save starknet-archive | gzip > starknet-archive.tgz
-```
-Run
-```bash
-docker run --env-file .env --network host -e START_BLOCK=100000 -e FINISH_BLOCK=100003 starknet-archive
+docker run --env-file .env --network host -e STARKNET_ARCHIVE_START_BLOCK=100000 -e STARKNET_ARCHIVE_FINISH_BLOCK=100003 starknet-archive
 ```
