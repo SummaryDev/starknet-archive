@@ -22,8 +22,8 @@
       "dotenv": "^16.0.1",
       "pg": "^8.4.0",
       "reflect-metadata": "^0.1.13",
-      "starknet": "^3.9.0",
-      "starknet-parser": "^0.0.20",
+      "starknet": "3.9.0",
+      "starknet-parser": "^0.0.21",
       "typeorm": "0.3.6"
    },
    "scripts": {
@@ -31,6 +31,7 @@
       "typeorm": "typeorm-ts-node-commonjs",
       "build": "rm -rf lib && tsc",
       "rebuild": "rm -rf node_modules && rm package-lock.json && npm install && npm run build",
+      "docker": "docker build -t olegabu/starknet-archive . && docker push olegabu/starknet-archive",
       "test": "ts-mocha test/*.ts"
    }
 }
