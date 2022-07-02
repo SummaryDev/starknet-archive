@@ -321,7 +321,7 @@ export class FeederApiProvider implements ApiProvider {
   async getBlock(blockNumber: number) {
     let ret
     try {
-      const res  = this.provider.getBlock(blockNumber) as any
+      const res  = await this.provider.getBlock(blockNumber) as any
       ret = res as GetBlockResponse
     } catch (err) {
       if (axios.isAxiosError(err)) {

@@ -13,7 +13,7 @@ import {Abi, GetBlockResponse, TransactionReceipt} from 'starknet-parser/src/typ
 import {TransactionCallOrganizer} from 'starknet-parser/lib/organizers/TransactionCallOrganizer'
 import {BlockOrganizer} from 'starknet-parser/lib/organizers/BlockOrganizer'
 import {OnlineAbiProvider} from 'starknet-parser/lib/organizers/AbiProvider'
-// import JSON = require("json5")
+import JSON = require("json5")
 import {EventArgument} from "starknet-parser/src/types/organizedStarknet";
 import {ArgumentEntity} from "../src/entities";
 import {BigNumberish} from "starknet/utils/number";
@@ -305,7 +305,7 @@ describe('providers', function() {
     })
 
     it( 'organizeBlock problem blocks', async function () {
-      const blocks = [231539/*167434/*183423/*190290/*161308/*164233/*62135/*111570/*38172/*36568/*27592/*17281/*71368/*71405/*200501/*1564/*1064/*86*/]
+      const blocks = [231612/*231579/*167434/*183423/*190290/*161308/*164233/*62135/*111570/*38172/*36568/*27592/*17281/*71368/*71405/*200501/*1564/*1064/*86*/]
 
       const blockApiProvider = new FeederApiProvider(defaultProvider)
       const apiProvider =  new PathfinderApiProvider('https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a')
