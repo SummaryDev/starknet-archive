@@ -120,3 +120,25 @@ select distinct entry_point_selector from transaction t where t.function = 'anon
 
 ALTER TABLE public.raw_abi ALTER COLUMN raw DROP NOT NULL;
 
+create recursive view daily_mint(amount0, dt) as
+select sum(a.decimal) as sum, (to_timestamp((b."timestamp")))::date AS dt
+from argument a left join event e on a.event_id = e.id left join transaction t on e.transaction_hash = t.transaction_hash left join block b on t.block_number = b.block_number
+where e.transmitter_contract = '0x4b05cce270364e2e4bf65bde3e9429b50c97ea3443b133442f838045f41e733' and e.name = 'Mint' and a.name = 'amount0'
+group by dt order by dt desc;
+
+create recursive view daily_transactions (count, date) as
+select count(t.transaction_hash), to_timestamp(b.timestamp)::date as dt from transaction as t
+left join block b on t.block_number = b.block_number
+group by dt order by dt desc;
+
+select * from daily_transactions;
+
+create recursive view top_functions (function, ct) as
+select t.function, count(t.function) ct from transaction t group by t.function order by ct desc;
+
+select * from top_functions;
+
+select distinct type from input;
+
+select i.name, i.value, t.contract_address, t.function from input i left join transaction t on i.transaction_hash = t.transaction_hash where i.type = 'IndexAndValues';
+

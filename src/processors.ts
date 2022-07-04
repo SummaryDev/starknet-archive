@@ -19,7 +19,11 @@ export interface BlockProcessor {
 }
 
 function canRetry(err: any): boolean {
-  const ret = (err instanceof Error && err.message !== undefined && err.message !== null && (err.message.includes('ECONNRESET') || err.message.includes('EAI_AGAIN'))) || err instanceof ApiError
+  const ret = err instanceof ApiError // communication failures
+    || (err instanceof Error && err.message !== undefined && err.message !== null && (err.message.includes('ECONNRESET') || err.message.includes('EAI_AGAIN')
+      || err.message.includes('BLOCK_NOT_FOUND') // feeder api: block is not there yet
+        || err.message.includes('Invalid block hash')) // pathfinder api code 24: block is not there yet
+    )
   if(ret)
     console.info(`retrying for ${err}`/*, err*/)
   else

@@ -384,7 +384,7 @@ export class PathfinderApiProvider implements ApiProvider {
     }
     const res = await axios.post(this.url, data, config)
 
-    if (res.data.error && res.data.error.code === -32603)
+    if (res.data.error && res.data.error.code === -32603) // Internal error: database is locked
       throw new ApiError(`error from pathfinder ${method} ${res.data.error.code} ${res.data.error.message}`)
 
     return res.data
