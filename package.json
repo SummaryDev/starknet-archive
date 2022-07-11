@@ -20,6 +20,8 @@
    "dependencies": {
       "axios": "^0.27.2",
       "dotenv": "^16.0.1",
+      "node-ts-cache": "^4.4.0",
+      "node-ts-cache-storage-memory": "^4.4.0",
       "pg": "^8.4.0",
       "reflect-metadata": "^0.1.13",
       "starknet": "3.9.0",

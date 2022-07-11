@@ -18,6 +18,8 @@ import {EventArgument} from "starknet-parser/src/types/organizedStarknet";
 import {ArgumentEntity} from "../src/entities";
 import {BigNumberish} from "starknet/utils/number";
 import {BigNumber} from "ethers";
+import { MemoryCache } from "../src/helpers/cache";
+
 // import {BN} from "bn";
 
 function log(o: any) {
@@ -324,6 +326,20 @@ describe('providers', function() {
 
         console.info(`done with block ${blockNumber}`)
       }
+    })
+
+    it('gets abi for contract and check memory cache', async() => {
+      const p = new DatabaseAbiProvider(new FeederApiProvider(defaultProvider), new DatabaseViewProvider(new FeederApiProvider(defaultProvider), ds), ds)
+      const mc = MemoryCache.getInstance()
+
+      const contractAddress = '0x4e34321e0bce0e4ff8ff0bcb3a9a030d423bca29a9d99cbcdd60edb9a2bf03a'
+      const abiBare = await p.getBare(contractAddress)
+      log(abiBare)
+
+      const abiFromCache = await mc.get(contractAddress)
+      log(abiFromCache)
+
+      expect(abiBare).deep.eq(abiFromCache)
     })
 
   })
