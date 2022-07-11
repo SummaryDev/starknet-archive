@@ -95,7 +95,6 @@ export class DatabaseAbiProvider implements AbiProvider {
 
     const fromMemory = await this.memoryCache.get(contractAddress);
     if (fromMemory) {
-      console.log(`from memory: ${JSON.stringify(fromMemory)}`)
       return fromMemory as Abi
     }
     const fromDb = await this.repository.findOneBy({contract_address: contractAddress})
