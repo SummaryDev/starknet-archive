@@ -4,7 +4,8 @@ import {defaultProvider, Provider} from 'starknet'
 import * as console from 'starknet-parser/lib/helpers/console'
 import {sleep} from 'starknet-parser/lib/helpers/helpers'
 import {ArchiveAbiProcessor, ArchiveBlockProcessor, BlockProcessor, OrganizeBlockProcessor} from "./processors";
-import {FeederApiProvider, PathfinderApiProvider} from "./providers";
+import { PathfinderApiProvider } from "./providers/api/pathfinder";
+import { FeederApiProvider } from "./providers/api/feeder";
 
 function main() {
   (async () => {
