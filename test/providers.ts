@@ -1,13 +1,10 @@
 import {expect} from 'chai'
 import {defaultProvider} from "starknet"
 import {createConnection, DataSource} from "typeorm"
-import {
-  FeederApiProvider,
-  PathfinderApiProvider,
-  DatabaseAbiProvider,
-  DatabaseViewProvider,
-  ApiProvider
-} from '../src/providers'
+import { FeederApiProvider } from "../src/providers/api/feeder";
+import { PathfinderApiProvider } from "../src/providers/api/pathfinder";
+import { DatabaseAbiProvider } from "../src/providers/abi/database";
+import { DatabaseViewProvider } from "../src/providers/view/database";
 import * as console from 'starknet-parser/lib/helpers/console'
 import {Abi, GetBlockResponse, TransactionReceipt} from 'starknet-parser/src/types/rawStarknet'
 import {TransactionCallOrganizer} from 'starknet-parser/lib/organizers/TransactionCallOrganizer'

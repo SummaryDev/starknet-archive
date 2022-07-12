@@ -2,14 +2,11 @@ import {DataSource, Repository} from "typeorm";
 import {Provider} from "starknet";
 import {BlockEntity, RawAbi, RawAbiEntity, RawBlock, RawBlockEntity, TransactionEntity} from "./entities";
 import {OrganizedBlock, OrganizedTransaction} from "starknet-parser/src/types/organizedStarknet";
-import {
-  ApiError,
-  ApiProvider,
-  BlockProvider,
-  DatabaseAbiProvider,
-  DatabaseBlockProvider,
-  DatabaseViewProvider
-} from "./providers";
+import { ApiProvider, BlockProvider } from './providers/interfaces';
+import { ApiError } from './helpers/error';
+import { DatabaseBlockProvider } from './providers/block/database';
+import { DatabaseViewProvider } from './providers/view/database';
+import { DatabaseAbiProvider } from './providers/abi/database';
 import * as console from "starknet-parser/lib/helpers/console";
 import {BlockOrganizer} from "starknet-parser/lib/organizers/BlockOrganizer";
 import {GetBlockResponse, GetCodeResponse} from "starknet-parser/src/types/rawStarknet";
