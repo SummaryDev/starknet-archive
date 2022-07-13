@@ -1,10 +1,10 @@
 import { BlockProvider, ApiProvider  } from "../interfaces";
 
 export class ApiBlockProvider implements BlockProvider {
-    constructor(private readonly provider: ApiProvider) {
-    }
+  constructor(private readonly provider: ApiProvider) {
+  }
 
-    async get(blockNumber: number) {
-        return this.provider.getBlock(blockNumber)
-    }
+  async get(blockNumber: number) {
+    return this.provider.getBlock(blockNumber)
+  }
 }
