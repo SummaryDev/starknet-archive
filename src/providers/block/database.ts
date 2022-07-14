@@ -1,7 +1,7 @@
 import { BlockProvider, ApiProvider  } from '../interfaces'
 import { DataSource, Repository } from "typeorm";
 import { RawBlock, RawBlockEntity } from "../../entities";
-import * as console from "starknet-parser/lib/helpers/console";
+import * as console from "../../helpers/console";
 
 export class DatabaseBlockProvider implements BlockProvider {
     private readonly repository: Repository<RawBlock>

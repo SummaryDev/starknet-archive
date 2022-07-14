@@ -5,13 +5,12 @@ import { FeederApiProvider } from "../src/providers/api/feeder";
 import { PathfinderApiProvider } from "../src/providers/api/pathfinder";
 import { DatabaseAbiProvider } from "../src/providers/abi/database";
 import { DatabaseViewProvider } from "../src/providers/view/database";
-import * as console from 'starknet-parser/lib/helpers/console'
-import {Abi, GetBlockResponse, TransactionReceipt} from 'starknet-parser/src/types/rawStarknet'
-import {TransactionCallOrganizer} from 'starknet-parser/lib/organizers/TransactionCallOrganizer'
-import {BlockOrganizer} from 'starknet-parser/lib/organizers/BlockOrganizer'
-import {OnlineAbiProvider} from 'starknet-parser/lib/organizers/AbiProvider'
+import * as console from '../src/helpers/console'
+import {Abi, GetBlockResponse, TransactionReceipt} from '../src/types/raw-starknet'
+import {TransactionCallOrganizer} from '../src/organizers/transaction-call'
+import {BlockOrganizer} from '../src/organizers/block'
 import JSON = require("json5")
-import {EventArgument} from "starknet-parser/src/types/organizedStarknet";
+import {EventArgument} from "../src/types/organize-starknet";
 import {ArgumentEntity} from "../src/entities";
 import {BigNumberish} from "starknet/utils/number";
 import {BigNumber} from "ethers";
