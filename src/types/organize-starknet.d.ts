@@ -1,11 +1,11 @@
 import {BigNumber} from "ethers";
-import {FunctionAbi, AbiEntry} from 'starknet';
+import {AbiEntry} from 'starknet';
 import {
   EventAbi,
   TransactionReceipt,
   GetBlockResponse,
   InvokeFunctionTransaction,
-  DeployTransaction
+  DeployTransaction, FunctionAbi
 } from "./raw-starknet";
 import {BigNumberish} from 'starknet/utils'
 import {

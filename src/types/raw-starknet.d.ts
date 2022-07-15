@@ -2,12 +2,11 @@ import {
   Transaction,
   BlockNumber,
   Status,
-  FunctionAbi,
   StructAbi,
   ExecutionResources
 } from "starknet"
 import {BigNumberish} from "starknet/dist/utils/number";
-import {CompressedCompiledContract, EntryPointType, RawCalldata, Signature} from "starknet/dist/types/lib";
+import {AbiEntry, CompressedCompiledContract, EntryPointType, RawCalldata, Signature} from "starknet/dist/types/lib";
 
 export declare type Event = {
   from_address: string;
@@ -76,6 +75,14 @@ export declare type EventAbi = {
   keys: string[],
   name: string,
   type: 'event'
+};
+
+export declare type FunctionAbi = {
+  inputs: AbiEntry[];
+  name: string;
+  outputs: AbiEntry[];
+  stateMutability?: 'view';
+  type: 'function' | 'constructor' | 'l1_handler';
 };
 
 export declare type Abi = Array<FunctionAbi | StructAbi | EventAbi>;
