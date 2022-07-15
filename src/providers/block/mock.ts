@@ -1,6 +1,6 @@
 import { BlockProvider } from '../interfaces'
-import { Cache } from "starknet-parser/lib/helpers/helpers";
-import { GetBlockResponse } from "starknet-parser/src/types/rawStarknet";
+import { Cache } from "../../helpers/helpers";
+import { GetBlockResponse } from "../../types/raw-starknet";
 
 export class MockBlockProvider implements BlockProvider {
   private readonly cache: Cache<GetBlockResponse>

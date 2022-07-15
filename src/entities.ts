@@ -1,5 +1,5 @@
 import {EntitySchema, ValueTransformer} from 'typeorm';
-import {OrganizedBlock, OrganizedTransaction, OrganizedEvent, FunctionInput, EventArgument} from "starknet-parser/src/types/organizedStarknet";
+import {OrganizedBlock, OrganizedTransaction, OrganizedEvent, FunctionInput, EventArgument} from "./types/organize-starknet";
 import {BigNumber} from "ethers";
 
 export const BlockEntity = new EntitySchema<OrganizedBlock>({

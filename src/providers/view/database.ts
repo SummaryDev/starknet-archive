@@ -1,6 +1,6 @@
 import { DataSource, Repository } from "typeorm";
 import { RawView, RawViewEntity } from "../../entities";
-import * as console from "starknet-parser/lib/helpers/console";
+import * as console from "../../helpers/console";
 import { ViewProvider, ApiProvider } from "../interfaces";
 
 export class DatabaseViewProvider implements ViewProvider {

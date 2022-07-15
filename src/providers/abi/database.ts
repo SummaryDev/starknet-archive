@@ -1,10 +1,10 @@
-import { AbiProvider } from "starknet-parser/lib/organizers/AbiProvider";
+import { AbiProvider } from "../interfaces";
 import { DataSource, Repository } from "typeorm";
 import { ArgumentEntity, InputEntity, RawAbi, RawAbiEntity, TransactionEntity } from "../../entities";
-import { EventArgument, FunctionInput, OrganizedTransaction } from "starknet-parser/src/types/organizedStarknet";
+import { EventArgument, FunctionInput, OrganizedTransaction } from "../../types/organize-starknet";
 import { MemoryCache } from "../../helpers/cache";
-import { Abi } from "starknet-parser/src/types/rawStarknet";
-import * as console from "starknet-parser/lib/helpers/console";
+import { Abi } from "../../types/raw-starknet";
+import * as console from "../../helpers/console";
 import { FunctionAbi } from "starknet";
 import { ApiProvider, ViewProvider } from "../interfaces";
 
@@ -24,16 +24,16 @@ export class DatabaseAbiProvider implements AbiProvider {
 
     this.memoryCache = MemoryCache.getInstance()
   }
-
-  async get(contractAddress: string, blockNumber: number, blockHash?: string): Promise<Abi | undefined> {
-    let ret
+    async get(contractAddress: string, blockNumber: number, blockHash?: string): Promise<Abi> {
+        let ret
 
     const fromDbOrApi = await this.getBare(contractAddress)
 
-    if (!fromDbOrApi || !Array.isArray(fromDbOrApi) || fromDbOrApi.length == 0) {
-      console.warn(`getBare returned no result for contract ${contractAddress}`)
-      return
-    }
+
+        if (!fromDbOrApi || !Array.isArray(fromDbOrApi) || fromDbOrApi.length == 0) {
+            console.warn(`getBare returned no result for contract ${contractAddress}`)
+            return fromDbOrApi
+        }
 
     ret = fromDbOrApi
 
