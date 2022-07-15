@@ -5,16 +5,11 @@ import { FeederApiProvider } from "../src/providers/api/feeder";
 import { PathfinderApiProvider } from "../src/providers/api/pathfinder";
 import { DatabaseAbiProvider } from "../src/providers/abi/database";
 import { DatabaseViewProvider } from "../src/providers/view/database";
-import * as console from 'starknet-parser/lib/helpers/console'
-import {Abi, GetBlockResponse, TransactionReceipt} from 'starknet-parser/src/types/rawStarknet'
-import {TransactionCallOrganizer} from 'starknet-parser/lib/organizers/TransactionCallOrganizer'
-import {BlockOrganizer} from 'starknet-parser/lib/organizers/BlockOrganizer'
-import {AbiProvider, OnlineAbiProvider} from 'starknet-parser/lib/organizers/AbiProvider'
-// import JSON = require("json5")
-import {EventArgument} from "starknet-parser/src/types/organizedStarknet";
-import {ArgumentEntity} from "../src/entities";
-import {BigNumberish} from "starknet/utils/number";
-import {BigNumber} from "ethers";
+import * as console from '../src/helpers/console'
+import {InvokeFunctionTransaction, TransactionReceipt} from '../src/types/raw-starknet'
+import {TransactionCallOrganizer} from '../src/organizers/transaction-call'
+import {BlockOrganizer} from '../src/organizers/block'
+import JSON = require("json5")
 import { MemoryCache } from "../src/helpers/cache";
 import {ViewProvider} from "../src/providers/interfaces";
 
@@ -317,7 +312,7 @@ describe('providers', function() {
       const txHash = '0xbda33e18bc98d4c16bd6fe9d540a8f5f2de4a92d7a5cd7fb688d8866fc3572' // contract 0x73314940630fd6dcda0d772d4c972c4e0a9946bef9dabf4ef84eda8ef542b82 has getters implementation and implementation_time as well as event implementation_upgraded
       const getTransactionResponse = await defaultProvider.getTransaction(txHash) as any
       const blockNumber = getTransactionResponse.block_number as number
-      const tx = getTransactionResponse as Transaction
+      const tx = getTransactionResponse as InvokeFunctionTransaction
       log(tx)
 
       const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)

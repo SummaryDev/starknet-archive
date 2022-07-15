@@ -1,5 +1,5 @@
 import {Abi, Provider} from "starknet";
-import {GetBlockResponse} from "starknet-parser/src/types/rawStarknet";
+import {GetBlockResponse} from "../../types/raw-starknet";
 import axios from "axios";
 import {ApiError} from "../../helpers/error";
 import {ApiProvider} from "../interfaces";

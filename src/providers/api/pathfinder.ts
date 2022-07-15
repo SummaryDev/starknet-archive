@@ -1,10 +1,9 @@
-import * as console from "starknet-parser/lib/helpers/console";
+import * as console from "../../helpers/console";
 import axios from "axios";
-import {Abi, GetBlockResponse} from "starknet-parser/src/types/rawStarknet";
-import {getFullSelector} from "starknet-parser/lib/helpers/helpers";
-import {ApiError} from "../../helpers/error";
 import {ApiProvider} from "../interfaces";
-import JSON = require("json5")
+import {ApiError} from "../../helpers/error";
+import {Abi, GetBlockResponse} from "../../types/raw-starknet";
+import {getFullSelector} from "../../helpers/helpers";
 
 export class PathfinderApiProvider implements ApiProvider {
   constructor(private readonly url: string) {

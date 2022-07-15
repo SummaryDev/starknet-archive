@@ -1,10 +1,10 @@
-import {AbiProvider} from "starknet-parser/lib/organizers/AbiProvider";
+import {AbiProvider} from "../interfaces";
 import {DataSource, Repository} from "typeorm";
 import {ArgumentEntity, InputEntity, RawAbi, RawAbiEntity, TransactionEntity} from "../../entities";
-import {EventArgument, FunctionInput, OrganizedTransaction} from "starknet-parser/src/types/organizedStarknet";
+import {EventArgument, FunctionInput, OrganizedTransaction} from "../../types/organize-starknet";
 import {MemoryCache} from "../../helpers/cache";
-import {Abi} from "starknet-parser/src/types/rawStarknet";
-import * as console from "starknet-parser/lib/helpers/console";
+import {Abi} from "../../types/raw-starknet";
+import * as console from "../../helpers/console";
 import {FunctionAbi} from "starknet";
 import {ApiProvider, ViewProvider} from "../interfaces";
 
@@ -88,11 +88,11 @@ export class DatabaseAbiProvider implements AbiProvider {
       } else {
         let fromApi = await this.classApiProvider.getClassAbi(h)
 
-        if(!fromApi)
+        if (!fromApi)
           fromApi = await this.contractApiProvider.getContractAbi(h)
 
 
-        if(fromApi) {
+        if (fromApi) {
           await this.repository.save({contract_address: h, raw: fromApi})
           ret = fromApi
           console.debug(`from api for ${h}`)
@@ -100,7 +100,7 @@ export class DatabaseAbiProvider implements AbiProvider {
 
       }
 
-      if(ret)
+      if (ret)
         await this.memoryCache.set(h, ret, true)
     }
 
@@ -262,7 +262,7 @@ export class DatabaseAbiProvider implements AbiProvider {
   }
 
   static getImplementationGetters(abi: Abi) {
-    const filterstrings = ['get_implementation','implementation','proxy_get_implementation','Proxy_get_implementation','getImplementation','getImplementation_','get_implementation_class_hash','getImplementationHash']
+    const filterstrings = ['get_implementation', 'implementation', 'proxy_get_implementation', 'Proxy_get_implementation', 'getImplementation', 'getImplementation_', 'get_implementation_class_hash', 'getImplementationHash']
 
     const implementationContractGetters = abi.filter(o => {
       const a = o as FunctionAbi

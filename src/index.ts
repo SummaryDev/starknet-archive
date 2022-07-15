@@ -1,8 +1,8 @@
 import 'dotenv/config'
 import {createConnection, getConnectionOptions, DataSource} from "typeorm"
 import {defaultProvider, Provider} from 'starknet'
-import * as console from 'starknet-parser/lib/helpers/console'
-import {sleep} from 'starknet-parser/lib/helpers/helpers'
+import * as console from './helpers/console'
+import {sleep} from './helpers/helpers'
 import {ArchiveAbiProcessor, ArchiveBlockProcessor, BlockProcessor, OrganizeBlockProcessor} from "./processors";
 import { PathfinderApiProvider } from "./providers/api/pathfinder";
 import { FeederApiProvider } from "./providers/api/feeder";
