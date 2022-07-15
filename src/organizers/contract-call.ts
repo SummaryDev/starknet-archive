@@ -9,11 +9,10 @@ import {
   StarknetContractCode,
   EventArgument
 } from "../types/organize-starknet";
-import {Abi, Event} from "../types/raw-starknet";
+import {Abi, Event,FunctionAbi} from "../types/raw-starknet";
 import {getFullSelector} from "../helpers/helpers";
 import * as console from '../helpers/console';
 import {AbiProvider} from '../providers/interfaces';
-import {FunctionAbi} from "starknet";
 import {bnToUint256, isUint256, Uint256, uint256ToBN} from "starknet/utils/uint256";
 import {toBN, isHex, hexToDecimalString, BigNumberish} from "starknet/utils/number";
 
@@ -40,7 +39,7 @@ export class ContractCallOrganizer {
 
     if(abi && Array.isArray(abi)) {
       for (const item of abi) {
-        if (item.type === "function") {
+        if (item.type === "function" || item.type === "l1_handler") {
           const _name = getFullSelector(item.name)
           functions[_name] = item
         }

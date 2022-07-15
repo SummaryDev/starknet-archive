@@ -5,10 +5,9 @@ import {FunctionCall, CallArray, FunctionInput, OrganizedFunction, OrganizedEven
 import {ContractCallOrganizer} from "./contract-call"
 import {AbiProvider} from '../providers/interfaces'
 import {BigNumberish} from "starknet/utils/number"
-import {InvokeFunctionTransaction, DeployTransaction, TransactionReceipt} from "../types/raw-starknet"
+import {InvokeFunctionTransaction, DeployTransaction, TransactionReceipt, FunctionAbi} from "../types/raw-starknet"
 import * as console from '../helpers/console'
 import JSON = require("json5")
-import {FunctionAbi} from "starknet/types";
 
 export class TransactionCallOrganizer {
 
