@@ -142,3 +142,34 @@ select distinct type from input;
 
 select i.name, i.value, t.contract_address, t.function from input i left join transaction t on i.transaction_hash = t.transaction_hash where i.type = 'IndexAndValues';
 
+drop view argument_view;
+
+select (to_timestamp((b."timestamp")))::date AS dt, a.name, sum(a.decimal) as sum
+from argument a left join event e on a.event_id = e.id left join transaction t on e.transaction_hash = t.transaction_hash left join block b on t.block_number = b.block_number
+where e.transmitter_contract = '0x4b05cce270364e2e4bf65bde3e9429b50c97ea3443b133442f838045f41e733' and e.name = 'Mint' and (a.name = 'amount0' or a.name = 'amount1')
+group by dt, a.name
+order by dt desc;
+
+-- top anonymous contracts
+select count(*) ct, contract_address from transaction where function = 'anonymous' group by contract_address order by ct desc;
+-- top anonymous functions
+select count(*) ct, contract_address, entry_point_selector from transaction where function = 'anonymous' group by contract_address, entry_point_selector order by ct desc;
+-- top anonymous events
+select count(*) ct, transmitter_contract from event where name = 'anonymous' group by transmitter_contract order by ct desc;
+
+-- view functions that may return implementation
+select distinct e->>'name' from (select jsonb_array_elements(raw) e from raw_abi where raw <> '{}' and raw is not null) as e where e->>'type' = 'function' and e->>'stateMutability' = 'view' and e->>'name' ilike '%implement%';
+
+select * from raw_abi where raw::text like '%get_implementation_class_hash%';
+
+select * from raw_abi where raw::text like '%implementation_time%';
+
+select * from raw_abi where raw::text like '%oracle_implementation%';
+
+select * from raw_abi where raw::text like '%getImplementationHash%';
+
+SELECT "a"."id" AS "a_id", "a"."name" AS "a_name", "a"."type" AS "a_type", "a"."value" AS "a_value", "a"."decimal" AS "a_decimal", "a"."event_id" AS "a_event_id" FROM "argument" "a" LEFT JOIN "event" "e" ON "e"."id"="a"."event_id"  LEFT JOIN "transaction" "t" ON "t"."transaction_hash"="e"."transaction_hash"  LEFT JOIN "block" "b" ON "b"."block_number"="t"."block_number" WHERE "b"."block_number" <= 266476 AND "e"."transmitter_contract" = '0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7' AND "e"."name" = 'implementation_upgraded' AND "a"."name" ilike '%implement%' AND "a"."type" = 'felt' ORDER BY "b"."block_number" DESC LIMIT 1 -- PARAMETERS: [266476,"0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","implementation_upgraded","%implement%","felt"]
+
+SELECT "a"."id" AS "a_id", "a"."name" AS "a_name", "a"."type" AS "a_type", "a"."value" AS "a_value", "a"."decimal" AS "a_decimal", "a"."event_id" AS "a_event_id" FROM "argument" "a" LEFT JOIN "event" "e" ON "e"."id"="a"."event_id"  LEFT JOIN "transaction" "t" ON "t"."transaction_hash"="e"."transaction_hash"  LEFT JOIN "block" "b" ON "b"."block_number"="t"."block_number" WHERE "b"."block_number" <= 266476 AND "e"."transmitter_contract" = '0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7' AND "e"."name" = 'implementation_upgraded' AND "a"."name" ilike '%implement%' AND "a"."type" = 'felt' ORDER BY "b"."block_number" DESC
+
+
