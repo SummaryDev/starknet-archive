@@ -7,7 +7,9 @@ export interface BlockProvider {
 export interface ApiProvider {
   getBlock(blockNumber: number): Promise<GetBlockResponse>
 
-  getAbi(contractAddress: string): Promise<Abi>
+  getContractAbi(contractAddress: string): Promise<Abi>
+
+  getClassAbi(classHash: string): Promise<Abi>
 
   callView(contractAddress: string, viewFn: string, blockNumber?: number, blockHash?: string): Promise<string[]>
 }
@@ -17,5 +19,5 @@ export interface ViewProvider {
 }
 
 export interface AbiProvider {
-    get(contractAddress: string, blockNumber: number, blockHash?: string): Promise<Abi>
+    get(contractAddress: string, blockNumber: number, blockHash?: string): Promise<Abi | undefined>
 }

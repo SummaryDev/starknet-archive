@@ -1,9 +1,9 @@
 import * as console from "../../helpers/console";
 import axios from "axios";
-import { GetBlockResponse } from "../../types/raw-starknet";
-import { getFullSelector } from "../../helpers/helpers";
-import { ApiError } from "../../helpers/error";
-import { ApiProvider } from "../interfaces";
+import {ApiProvider} from "../interfaces";
+import {ApiError} from "../../helpers/error";
+import {Abi, GetBlockResponse} from "../../types/raw-starknet";
+import {getFullSelector} from "../../helpers/helpers";
 
 export class PathfinderApiProvider implements ApiProvider {
   constructor(private readonly url: string) {
@@ -25,28 +25,32 @@ export class PathfinderApiProvider implements ApiProvider {
     }
     const res = await axios.post(this.url, data, config)
 
-    if (res.data.error && res.data.error.code === -32603) // Internal error: database is locked
+    if (res.data.error && res.data.error.code === -32603) // recoverable Internal error: database is locked
       throw new ApiError(`error from pathfinder ${method} ${res.data.error.code} ${res.data.error.message}`)
 
     return res.data
   }
 
   async getBlock(blockNumber: number) {
-    const data = await this.call('starknet_getBlockByNumber', [blockNumber, 'FULL_TXN_AND_RECEIPTS'])
+    const method = 'starknet_getBlockByNumber'
+
+    const data = await this.call(method, [blockNumber, 'FULL_TXN_AND_RECEIPTS'])
 
     if (data.error)
-      throw new Error(`error from pathfinder starknet_getBlockByNumber ${blockNumber} ${data.error.code} ${data.error.message}`)
+      throw new Error(`error from pathfinder ${method} ${blockNumber} ${data.error.code} ${data.error.message}`)
 
     return data.result as GetBlockResponse
   }
 
-  async getAbi(contractAddress: string) {
+  async getContractAbi(contractAddress: string) {
     let ret = undefined
 
-    const data = await this.call('starknet_getCode', [contractAddress])
+    const method = 'starknet_getCode'
+
+    const data = await this.call(method, [contractAddress])
 
     if (data.error) {
-      const m = `error from pathfinder starknet_getCode ${contractAddress} ${data.error.code} ${data.error.message}`
+      const m = `error from pathfinder ${method} ${contractAddress} ${data.error.code} ${data.error.message}`
       if (data.error.code === 20)
         console.warn(m)
       else
@@ -56,6 +60,10 @@ export class PathfinderApiProvider implements ApiProvider {
     }
 
     return ret
+  }
+
+  async getClassAbi(classHash: string): Promise<Abi> {
+    throw new Error('pathfinder does not return ABI by starknet_getClass') //TODO revisit as future versions of pathfinder may start supporting ABI in starknet_getClass
   }
 
   async callView(contractAddress: string, viewFn: string, blockNumber?: number, blockHash?: string) {
@@ -78,10 +86,12 @@ export class PathfinderApiProvider implements ApiProvider {
       block_hash: blockHash
     }
 
-    const data = await this.call('starknet_call', params)
+    const method = 'starknet_call'
+
+    const data = await this.call(method, params)
 
     if (data.error)
-      throw new Error(`error from pathfinder starknet_call ${viewFn} at block ${blockNumber} ${data.error.code} ${data.error.message}`)
+      throw new Error(`error from pathfinder ${method} ${viewFn} at block ${blockNumber} ${data.error.code} ${data.error.message}`)
 
     return data.result
   }

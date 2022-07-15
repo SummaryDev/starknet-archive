@@ -27,17 +27,21 @@ async function iterateBlocks(ds: DataSource) {
   const feederUrl = process.env.STARKNET_ARCHIVE_FEEDER_URL || 'https://alpha4.starknet.io'
   const pathfinderUrl = process.env.STARKNET_ARCHIVE_PATHFINDER_URL || 'https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a'
 
-  const blockApiProvider = new FeederApiProvider(/*defaultProvider*/ new Provider({ baseUrl: feederUrl}))
-  const apiProvider =  new PathfinderApiProvider(pathfinderUrl)
+  const feederApiProvider = new FeederApiProvider(/*defaultProvider*/ new Provider({ baseUrl: feederUrl}))
+  const pathfinderApiProvider = new PathfinderApiProvider(pathfinderUrl)
+
+  const blockApiProvider = feederApiProvider // TODO revisit this as pathfinder may start providing full blocks with calldata
+  const contractApiProvider = pathfinderApiProvider
+  const classApiProvider =  feederApiProvider // TODO revisit this as pathfinder may start providing class abi like the feeder
 
   let p: BlockProcessor
 
   if(cmd == 'organize')
-    p = new OrganizeBlockProcessor(blockApiProvider, apiProvider, ds)
+    p = new OrganizeBlockProcessor(blockApiProvider, contractApiProvider, classApiProvider, ds)
   else if(cmd == 'archive_block')
-    p = new ArchiveBlockProcessor(apiProvider, ds)
+    p = new ArchiveBlockProcessor(contractApiProvider, ds)
   else if(cmd == 'archive_abi')
-    p = new ArchiveAbiProcessor(apiProvider, ds)
+    p = new ArchiveAbiProcessor(contractApiProvider, ds)
   else {
     console.error(`unknown cmd ${cmd}`)
     return

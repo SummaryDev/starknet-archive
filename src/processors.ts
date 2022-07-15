@@ -32,11 +32,11 @@ export class OrganizeBlockProcessor implements BlockProcessor {
   private readonly blockOrganizer: BlockOrganizer
   private blockProvider: BlockProvider
 
-  constructor(private readonly blockApiProvider: ApiProvider, private readonly apiProvider: ApiProvider, private readonly ds: DataSource) {
+  constructor(private readonly blockApiProvider: ApiProvider, private readonly contractApiProvider: ApiProvider, private readonly classApiProvider: ApiProvider, private readonly ds: DataSource) {
     this.blockRepository = ds.getRepository<OrganizedBlock>(BlockEntity)
     this.blockProvider = new DatabaseBlockProvider(blockApiProvider, ds)
-    const viewProvider = new DatabaseViewProvider(apiProvider, ds)
-    const abiProvider = new DatabaseAbiProvider(apiProvider, viewProvider, ds)
+    const viewProvider = new DatabaseViewProvider(contractApiProvider, ds)
+    const abiProvider = new DatabaseAbiProvider(contractApiProvider, classApiProvider, viewProvider, ds)
     this.blockOrganizer = new BlockOrganizer(abiProvider)
   }
 
@@ -115,7 +115,7 @@ export class ArchiveAbiProcessor implements BlockProcessor {
 
       for(let i=0; i < contractAddresses.length; i++) {
         const contractAddress = contractAddresses[i]
-        const fromApi = await this.apiProvider.getAbi(contractAddress)
+        const fromApi = await this.apiProvider.getContractAbi(contractAddress)
 
         await this.repository.save({contract_address: contractAddress, raw: fromApi})
         console.info(`saved abi from api for ${contractAddress} at ${blockNumber}`)
