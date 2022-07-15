@@ -32,7 +32,7 @@ export class ContractCallOrganizer {
     this.constructorFunction = constructorFunction
   }
 
-  static organizeAbi(abi: Abi) {
+  static organizeAbi(abi: Abi | undefined) {
     let functions: OrganizedFunctionAbi = {}
     let events: OrganizedEventAbi = {}
     let structs: OrganizedStructAbi = {}
