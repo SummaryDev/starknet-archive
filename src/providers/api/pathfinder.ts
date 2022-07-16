@@ -10,7 +10,7 @@ export class PathfinderApiProvider implements ApiProvider {
   }
 
   async call(method: string, params: any) {
-    console.debug(`call ${method}`)
+    console.debug(`call ${method} ${params}`)
 
     const data = {
       jsonrpc: '2.0',
@@ -23,12 +23,26 @@ export class PathfinderApiProvider implements ApiProvider {
         'Content-Type': 'application/json'
       }
     }
-    const res = await axios.post(this.url, data, config)
 
-    if (res.data.error && res.data.error.code === -32603) // recoverable Internal error: database is locked
-      throw new ApiError(`error from pathfinder ${method} ${res.data.error.code} ${res.data.error.message}`)
+    let res
 
-    return res.data
+    try {
+      res = await axios.post(this.url, data, config)
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        throw new ApiError(`pathfinder cannot ${method} for ${err.message}`)
+        // if (res && res.data && res.data.error && res.data.error.code === -32603) {
+        //   // recoverable Internal error: database is locked
+        //   throw new ApiError(`pathfinder cannot ${method} for ${res.data.error.code} ${res.data.error.message}`)
+        // }
+      } else {
+        throw(err)
+      }
+    }
+
+    if(res){
+      return res.data
+    }
   }
 
   async getBlock(blockNumber: number) {
@@ -37,7 +51,7 @@ export class PathfinderApiProvider implements ApiProvider {
     const data = await this.call(method, [blockNumber, 'FULL_TXN_AND_RECEIPTS'])
 
     if (data.error)
-      throw new Error(`error from pathfinder ${method} ${blockNumber} ${data.error.code} ${data.error.message}`)
+      throw new Error(`pathfinder cannot ${method} ${blockNumber} for ${data.error.code} ${data.error.message}`)
 
     return data.result as GetBlockResponse
   }
@@ -50,7 +64,7 @@ export class PathfinderApiProvider implements ApiProvider {
     const data = await this.call(method, [contractAddress])
 
     if (data.error) {
-      const m = `error from pathfinder ${method} ${contractAddress} ${data.error.code} ${data.error.message}`
+      const m = `pathfinder cannot ${method} ${contractAddress} for ${data.error.code} ${data.error.message}`
       if (data.error.code === 20)
         console.warn(m)
       else
@@ -91,7 +105,7 @@ export class PathfinderApiProvider implements ApiProvider {
     const data = await this.call(method, params)
 
     if (data.error)
-      throw new Error(`error from pathfinder ${method} ${viewFn} at block ${blockNumber} ${data.error.code} ${data.error.message}`)
+      throw new Error(`pathfinder cannot ${method} ${contractAddress} ${viewFn} at block ${blockNumber} for ${data.error.code} ${data.error.message}`)
 
     return data.result
   }

@@ -28,7 +28,7 @@ export class DatabaseAbiProvider implements AbiProvider {
   async get(contractAddress: string, blockNumber: number, blockHash?: string): Promise<Abi | undefined> {
     let ret
 
-    const contractAbi = await this.getAbi(contractAddress)
+    const contractAbi = await this.getAbi(contractAddress, false)
 
     if (!contractAbi || !Array.isArray(contractAbi) || contractAbi.length == 0) {
       console.warn(`getAbi returned no result for contract ${contractAddress}`)
@@ -43,7 +43,7 @@ export class DatabaseAbiProvider implements AbiProvider {
       if (!implementation) {
         console.warn(`findImplementation returned no result for proxy contract ${contractAddress} at block ${blockNumber}`)
       } else {
-        const implementationAbi = await this.getAbi(implementation)
+        const implementationAbi = await this.getAbi(implementation, true)
 
         if (!implementationAbi || !Array.isArray(implementationAbi) || implementationAbi.length == 0) {
           console.warn(`getAbi returned no result for implementation ${implementation} of proxy contract ${contractAddress} at block ${blockNumber}`)
@@ -73,12 +73,13 @@ export class DatabaseAbiProvider implements AbiProvider {
       return undefined
   }
 
-  async getAbi(h: string): Promise<Abi> {
+  async getAbi(h: string, tryClass?: boolean): Promise<Abi> {
     let ret
 
     const fromMemory = await this.memoryCache.get(h);
     if (fromMemory) {
       ret = fromMemory
+      console.debug(`from memory for ${h}`)
     } else {
       const fromDb = await this.repository.findOneBy({contract_address: h})//TODO even tho we store contract and class abi in the same table the pk name contract_address is confusing: for classes it should class_hash perhaps a better generic name is `hash`
 
@@ -86,22 +87,26 @@ export class DatabaseAbiProvider implements AbiProvider {
         ret = fromDb.raw
         console.debug(`from db for ${h}`)
       } else {
-        let fromApi = await this.classApiProvider.getClassAbi(h)
+        let fromApi = await this.contractApiProvider.getContractAbi(h)
 
-        if (!fromApi)
-          fromApi = await this.contractApiProvider.getContractAbi(h)
-
+        if(fromApi) {
+          console.debug(`from contract api for ${h}`)
+        } else if (tryClass) {
+          fromApi = await this.classApiProvider.getClassAbi(h)
+          if(fromApi) {
+            console.debug(`from class api for ${h}`)
+          }
+        }
 
         if (fromApi) {
           await this.repository.save({contract_address: h, raw: fromApi})
           ret = fromApi
-          console.debug(`from api for ${h}`)
         }
-
       }
 
-      if (ret)
+      if (ret) {
         await this.memoryCache.set(h, ret, true)
+      }
     }
 
     return ret
@@ -219,11 +224,16 @@ export class DatabaseAbiProvider implements AbiProvider {
 
       const implementations = await this.viewProvider.get(proxyContractAddress, viewFn, blockNumber, blockHash)
 
-      if (implementations.length != 1) {
-        console.warn(`cannot findImplementationByGetter from ${implementations.length} implementations in results from ${viewFn} for proxy contract ${proxyContractAddress} at block ${blockNumber}`)
+      if(implementations) {
+        if (implementations.length != 1) {
+          console.warn(`cannot findImplementationByGetter from ${implementations.length} implementations in results from ${viewFn} for proxy contract ${proxyContractAddress} at block ${blockNumber}`)
+        } else {
+          ret = implementations[0]
+        }
       } else {
-        ret = implementations[0]
+        console.warn(`cannot findImplementationByGetter from empty implementations in results from ${viewFn} for proxy contract ${proxyContractAddress} at block ${blockNumber}`)
       }
+
     }
 
     return ret

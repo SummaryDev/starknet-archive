@@ -5,17 +5,17 @@ export interface BlockProvider {
 }
 
 export interface ApiProvider {
-  getBlock(blockNumber: number): Promise<GetBlockResponse>
+  getBlock(blockNumber: number): Promise<GetBlockResponse | undefined>
 
-  getContractAbi(contractAddress: string): Promise<Abi>
+  getContractAbi(contractAddress: string): Promise<Abi | undefined>
 
-  getClassAbi(classHash: string): Promise<Abi>
+  getClassAbi(classHash: string): Promise<Abi | undefined>
 
-  callView(contractAddress: string, viewFn: string, blockNumber?: number, blockHash?: string): Promise<string[]>
+  callView(contractAddress: string, viewFn: string, blockNumber?: number, blockHash?: string): Promise<string[] | undefined>
 }
 
 export interface ViewProvider {
-  get(contractAddress: string, viewFunction: string, blockNumber?: number, blockHash?: string): Promise<string[]>
+  get(contractAddress: string, viewFunction: string, blockNumber?: number, blockHash?: string): Promise<string[] | undefined>
 }
 
 export interface AbiProvider {
