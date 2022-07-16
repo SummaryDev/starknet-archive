@@ -9,71 +9,83 @@ export class FeederApiProvider implements ApiProvider {
   }
 
   async getBlock(blockNumber: number) {
-    let ret
+    let res
+
     try {
-      const res = await this.provider.getBlock(blockNumber) as any
-      ret = res as GetBlockResponse
+      res = await this.provider.getBlock(blockNumber) as any
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        throw new ApiError(err.message)
+        throw new ApiError(`feeder cannot getBlock ${blockNumber} for ${err.message}`)
       } else
         throw (err)
     }
-    return ret
+
+    if (res) {
+      return res as GetBlockResponse
+    }
   }
 
   async getContractAbi(contractAddress: string) {
-    let ret
+    let res
+
     try {
-      const res = await this.provider.getCode(contractAddress)
-      ret = res.abi
+      res = await this.provider.getCode(contractAddress)
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        throw new ApiError(err.message)
+        throw new ApiError(`feeder cannot getCode ${contractAddress} for ${err.message}`)
       } else
         throw (err)
     }
-    return ret
+
+    if (res) {
+      return res.abi
+    }
   }
 
   async getClassAbi(classHash: string) {
-    let ret
-
+    let res
     const method = 'get_class_by_hash'
     const config = {
       headers: {
         'Content-Type': 'application/json'
       }
     }
-    const res = await axios.get(this.provider.feederGatewayUrl + '/' + method + '?classHash=' + classHash, config)
 
-    if (res.data.error) {
-      const m = `error from feeder ${method} ${classHash} ${res.data.error.code} ${res.data.error.message}`
-      // if (res.data.error.code === 20)
-      //   console.warn(m)
-      // else
-        throw new Error(m) //TODO check if recoverable and throw ApiError?
-    } else if (res.data.abi) {
-      ret = res.data.abi
-    }
-
-    return ret
-  }
-
-  async callView(contractAddress: string, viewFn: string, blockNumber?: number) {
-    let ret
     try {
-      const res = await this.provider.callContract({
-        contractAddress: contractAddress,
-        entrypoint: viewFn
-      }, {blockIdentifier: blockNumber})
-      ret = res.result
+      res = await axios.get(this.provider.feederGatewayUrl + '/' + method + '?classHash=' + classHash, config)
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        throw new ApiError(err.message)
+        if (err.code === 'ERR_BAD_RESPONSE') {// this error 500 means no class was found so we don't retry but return and try getting abi by contract address
+          return
+        } else {
+          throw new ApiError(`feeder cannot ${method} ${classHash} for ${err.message}`)
+        }
       } else
         throw (err)
     }
-    return ret
+
+    if (res && res.data) {
+      return res.data.abi
+    }
+  }
+
+  async callView(contractAddress: string, viewFn: string, blockNumber ?: number) {
+    let res
+
+    try {
+      res = await this.provider.callContract({
+        contractAddress: contractAddress,
+        entrypoint: viewFn
+      }, {blockIdentifier: blockNumber})
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        throw new ApiError(`feeder cannot callContract ${contractAddress} ${viewFn} at block ${blockNumber} for ${err.message}`)
+      } else
+        throw (err)
+    }
+
+    if (res) {
+      return res.result
+    }
   }
 }

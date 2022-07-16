@@ -514,7 +514,7 @@ describe('providers', function() {
     })
 
     it( 'organizeBlock problem blocks', async function () {
-      const blocks = [254923/*235506/*231612/*231579/*167434/*183423/*190290/*161308/*164233/*62135/*111570/*38172/*36568/*27592/*17281/*71368/*71405/*200501/*1564/*1064/*86*/]
+      const blocks = [268374/*254923/*235506/*231612/*231579/*167434/*183423/*190290/*161308/*164233/*62135/*111570/*38172/*36568/*27592/*17281/*71368/*71405/*200501/*1564/*1064/*86*/]
 
       const blockApiProvider = new FeederApiProvider(defaultProvider)
       const blockOrganizer = new BlockOrganizer(databaseAbiProvider)
@@ -526,7 +526,7 @@ describe('providers', function() {
         const getBlockResponse = await blockApiProvider.getBlock(blockNumber)
         log(getBlockResponse)
 
-        const organizedBlock = await blockOrganizer.organizeBlock(getBlockResponse)
+        const organizedBlock = await blockOrganizer.organizeBlock(getBlockResponse!)
         log(organizedBlock)
 
         console.info(`done with block ${blockNumber}`)
@@ -537,7 +537,7 @@ describe('providers', function() {
       const mc = MemoryCache.getInstance()
 
       const contractAddress = '0x4e34321e0bce0e4ff8ff0bcb3a9a030d423bca29a9d99cbcdd60edb9a2bf03a'
-      const abiBare = await databaseAbiProvider.getAbi(contractAddress)
+      const abiBare = await databaseAbiProvider.getAbi(contractAddress, false)
       log(abiBare)
 
       const abiFromCache = await mc.get(contractAddress)
