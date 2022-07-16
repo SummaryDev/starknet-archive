@@ -1,7 +1,7 @@
 import { Abi, GetBlockResponse } from "../types/raw-starknet";
 
 export interface BlockProvider {
-  get(blockNumber: number): Promise<GetBlockResponse>
+  get(blockNumber: number): Promise<GetBlockResponse | undefined>
 }
 
 export interface ApiProvider {

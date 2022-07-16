@@ -41,7 +41,7 @@ export class DatabaseAbiProvider implements AbiProvider {
       const implementation = await this.findImplementation(contractAddress, contractAbi, blockNumber, blockHash)
 
       if (!implementation) {
-        console.warn(`findImplementation returned no result for proxy contract ${contractAddress} at block ${blockNumber}`)
+        console.debug(`findImplementation returned no result for proxy contract ${contractAddress} at block ${blockNumber}`)
       } else {
         const implementationAbi = await this.getAbi(implementation, true)
 
@@ -165,7 +165,7 @@ export class DatabaseAbiProvider implements AbiProvider {
       console.debug(input)
 
       if (!input) {
-        console.warn(`cannot getImplementation from empty query looking for input like ${inputName} of the deployment transaction for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
+        console.debug(`cannot getImplementation from empty query looking for input like ${inputName} of the deployment transaction for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
       } else {
         ret = input.value
       }
@@ -202,7 +202,7 @@ export class DatabaseAbiProvider implements AbiProvider {
       console.debug(arg)
 
       if (!arg) {
-        console.warn(`cannot getImplementation from empty query looking for argument ${argName} in event ${upgradeEventName} for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
+        console.debug(`cannot getImplementation from empty query looking for argument ${argName} in event ${upgradeEventName} for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
       } else {
         ret = arg.value
       }

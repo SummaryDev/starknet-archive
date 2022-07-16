@@ -45,12 +45,17 @@ export class OrganizeBlockProcessor implements BlockProcessor {
 
     try {
       const block = await this.blockProvider.get(blockNumber)
+      if(!block)
+        return false
+
       organizedBlock = await this.blockOrganizer.organizeBlock(block)
       await this.blockRepository.save(organizedBlock)
       console.info(`saved organized ${blockNumber}`)
+
     } catch(err) {
       if (canRetry(err))
         return false
+
       console.error(`cannot get or organize or save ${blockNumber}, rethrowing ${err}`/*, err*/)
       throw err
     }
