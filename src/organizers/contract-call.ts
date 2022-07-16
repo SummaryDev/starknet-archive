@@ -267,9 +267,6 @@ export class ContractCallOrganizer {
 
   getFunctionAbiFromSelector(functionSelector: string) {
     if (!this.functions) {
-      // throw new Error(
-      //   `ContractAnalyzer::getFunctionFromSelector - No functions declared for this ContractAnalyzer instance (functions: ${this.functions})`
-      // );
       console.warn(`ContractAnalyzer::getFunctionFromSelector - No functions declared for this ContractAnalyzer instance (functions: ${this.functions})`);
       this.functions = {};
     }
@@ -277,9 +274,6 @@ export class ContractCallOrganizer {
     const fn = this.functions![functionSelector];
 
     if (!fn) {
-      // throw new Error(
-      //   `ContractAnalyzer::getFunctionFromSelector - No functions matching this selector (selector: ${functionSelector})`
-      // );
       console.warn(`ContractAnalyzer::getFunctionFromSelector - No functions matching this selector (selector: ${functionSelector})`);
     }
 
@@ -288,9 +282,6 @@ export class ContractCallOrganizer {
 
   getStructAbiFromStructType(type: string) {
     if (!this.structs) {
-      // throw new Error(
-      //   `ContractAnalyzer::getStructFromStructs - No struct specified for this instance (structs: ${this.structs})`
-      // );
       console.warn(`ContractAnalyzer::getStructFromStructs - No struct specified for this instance (structs: ${this.structs})`);
       this.structs = {};
     }
@@ -298,9 +289,6 @@ export class ContractCallOrganizer {
     const struct = this.structs![type];
 
     if (!struct) {
-      // throw new Error(
-      //   `ContractAnalyzer::getStructFromStructs - No struct specified for this type (structType: ${type})`
-      // );
       console.warn(`ContractAnalyzer::getStructFromStructs - No struct specified for this type (structType: ${type})`);
     }
 
@@ -309,9 +297,6 @@ export class ContractCallOrganizer {
 
   getEventAbiFromKey(key: string) {
     if (!this.events) {
-      // throw new Error(
-      //   `ContractAnalyzer::getEventFromKey - No events specified for this instance (events: ${this.events})`
-      // );
       console.warn(`ContractAnalyzer::getEventFromKey - No events specified for this instance (events: ${this.events})`);
       this.events = {};
     }
@@ -319,9 +304,6 @@ export class ContractCallOrganizer {
     const event = this.events![key];
 
     if (!event) {
-      // throw new Error(
-      //   `ContractAnalyzer::getEventFromKey - No events specified for this key (key: ${key})`
-      // );
       console.warn(`ContractAnalyzer::getEventFromKey - No events specified for this key (key: ${key})`);
     }
 
@@ -330,9 +312,6 @@ export class ContractCallOrganizer {
 
   getConstructorFunctionAbi() {
     if (!this.constructorFunction) {
-      // throw new Error(
-      //   `ContractAnalyzer::getConstructorFunctionAbi - No constructorFunction declared`
-      // );
       console.warn(`ContractAnalyzer::getConstructorFunctionAbi - No constructorFunction declared)`);
     }
 

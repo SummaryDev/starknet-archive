@@ -65,11 +65,11 @@ export class PathfinderApiProvider implements ApiProvider {
 
     if (data.error) {
       const m = `pathfinder cannot ${method} ${contractAddress} for ${data.error.code} ${data.error.message}`
-      if (data.error.code === 20)
-        console.warn(m)
+      if (data.error.code === 20)// this error 20 Contract not found means no abi was found so we don't retry but return and try getting abi by class hash
+        return
       else
         throw new Error(m)
-    } else if (data.result.abi) {
+    } else if (data.result && data.result.abi) {
       ret = JSON.parse(data.result.abi)
     }
 
