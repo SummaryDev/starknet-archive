@@ -19,19 +19,23 @@ export class DatabaseViewProvider implements ViewProvider {
       view_function: viewFunction
     })
 
-    if (!fromDb) {
-      const fromApi = await this.apiProvider.callView(contractAddress, viewFunction, blockNumber, blockHash)
-      await this.repository.save({
-        block_number: blockNumber,
-        contract_address: contractAddress,
-        view_function: viewFunction,
-        raw: fromApi
-      })
-      ret = fromApi
-      console.debug(`from api for ${contractAddress} ${viewFunction} ${blockNumber}`)
-    } else {
+    if (fromDb) {
       ret = fromDb.raw
       console.debug(`from db for ${contractAddress} ${viewFunction} ${blockNumber}`)
+    } else {
+      const fromApi = await this.apiProvider.callView(contractAddress, viewFunction, blockNumber, blockHash)
+
+      if(fromApi) {
+        await this.repository.save({
+          block_number: blockNumber,
+          contract_address: contractAddress,
+          view_function: viewFunction,
+          raw: fromApi
+        })
+
+        ret = fromApi
+        console.debug(`from api for ${contractAddress} ${viewFunction} ${blockNumber}`)
+      }
     }
 
     return ret

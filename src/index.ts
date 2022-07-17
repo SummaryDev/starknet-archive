@@ -33,11 +33,12 @@ async function iterateBlocks(ds: DataSource) {
   const blockApiProvider = feederApiProvider // TODO revisit this as pathfinder may start providing full blocks with calldata
   const contractApiProvider = pathfinderApiProvider
   const classApiProvider =  feederApiProvider // TODO revisit this as pathfinder may start providing class abi like the feeder
+  const viewApiProvider =  pathfinderApiProvider
 
   let p: BlockProcessor
 
   if(cmd == 'organize')
-    p = new OrganizeBlockProcessor(blockApiProvider, contractApiProvider, classApiProvider, ds)
+    p = new OrganizeBlockProcessor(blockApiProvider, contractApiProvider, classApiProvider, viewApiProvider, ds)
   else if(cmd == 'archive_block')
     p = new ArchiveBlockProcessor(blockApiProvider, ds)
   else if(cmd == 'archive_abi')

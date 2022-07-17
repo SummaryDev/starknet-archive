@@ -6,7 +6,7 @@ import { PathfinderApiProvider } from "../src/providers/api/pathfinder";
 import { DatabaseAbiProvider } from "../src/providers/abi/database";
 import { DatabaseViewProvider } from "../src/providers/view/database";
 import * as console from '../src/helpers/console'
-import {InvokeFunctionTransaction, TransactionReceipt} from '../src/types/raw-starknet'
+import {DeployTransaction, InvokeFunctionTransaction, TransactionReceipt} from '../src/types/raw-starknet'
 import {TransactionCallOrganizer} from '../src/organizers/transaction-call'
 import {BlockOrganizer} from '../src/organizers/block'
 //import JSON = require("json5")
@@ -32,7 +32,7 @@ describe('providers', function() {
       ds = o
       log(`connected to db`)
 
-      viewProvider = new DatabaseViewProvider(new FeederApiProvider(defaultProvider), ds)
+      viewProvider = new DatabaseViewProvider(pathfinderApiProvider, ds)
       databaseAbiProvider = new DatabaseAbiProvider(pathfinderApiProvider, feederApiProvider, viewProvider, ds)
     })
   })
@@ -378,6 +378,22 @@ describe('providers', function() {
       log(organizedEvents)
     })
 
+    it('organizeConstructorFunction for proxy contract 0x1b1748e401b692796ac064782e821a93ee0b1f7db2db4262d2ddbd3c8d66508', async () => {
+      const txHash = '0x2a3d77061ce9e6437a43478454782ab15c762131cdba308fbe1357dd8890844' // contract has no constructor defined
+      const getTransactionResponse = await defaultProvider.getTransaction(txHash) as any
+      const blockNumber = getTransactionResponse.block_number as number
+      const tx = getTransactionResponse.transaction as DeployTransaction
+      log(tx)
+
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+
+      const organizedFunction = await transactionCallOrganizer.organizeConstructorFunction(tx, blockNumber)
+
+      log(organizedFunction)
+
+      expect(organizedFunction).deep.eq(JSON.parse('{"name":"anonymous","inputs":[]}'))
+    })
+
     it('organizeFunction for proxy contract 0x4081227b89f2e6f0169743b85b8f1aa82cfd793098661f5488d3bc03f190cc', async () => {
       const txHash = '0x1de528f1fbb47901ed345d41fbaf97ac7d543d9233c9d85915f451800237681' // contract has __execute__
       const getTransactionResponse = await defaultProvider.getTransaction(txHash) as any
@@ -584,7 +600,7 @@ describe('providers', function() {
     })
 
     it( 'organizeBlock problem blocks', async function () {
-      const blocks = [269354/*269147/*269130/*268515/*268486/*268464/*68385/*268374/*254923/*235506/*231612/*231579/*167434/*183423/*190290/*161308/*164233/*62135/*111570/*38172/*36568/*27592/*17281/*71368/*71405/*200501/*1564/*1064/*86*/]
+      const blocks = [269717/*269354/*269147/*269130/*268515/*268486/*268464/*68385/*268374/*254923/*235506/*231612/*231579/*167434/*183423/*190290/*161308/*164233/*62135/*111570/*38172/*36568/*27592/*17281/*71368/*71405/*200501/*1564/*1064/*86*/]
 
       const blockApiProvider = new FeederApiProvider(defaultProvider)
       const blockOrganizer = new BlockOrganizer(databaseAbiProvider)

@@ -10,7 +10,7 @@ export class PathfinderApiProvider implements ApiProvider {
   }
 
   async call(method: string, params: any) {
-    console.debug(`call ${method} ${params}`)
+    console.debug(`call ${method}`)
 
     const data = {
       jsonrpc: '2.0',
@@ -31,10 +31,6 @@ export class PathfinderApiProvider implements ApiProvider {
     } catch (err) {
       if (axios.isAxiosError(err)) {
         throw new ApiError(`pathfinder cannot ${method} for ${err.message}`)
-        // if (res && res.data && res.data.error && res.data.error.code === -32603) {
-        //   // recoverable Internal error: database is locked
-        //   throw new ApiError(`pathfinder cannot ${method} for ${res.data.error.code} ${res.data.error.message}`)
-        // }
       } else {
         throw(err)
       }
@@ -104,8 +100,17 @@ export class PathfinderApiProvider implements ApiProvider {
 
     const data = await this.call(method, params)
 
-    if (data.error)
-      throw new Error(`pathfinder cannot ${method} ${contractAddress} ${viewFn} at block ${blockNumber} for ${data.error.code} ${data.error.message}`)
+    if (data.error) {
+      const m = `pathfinder cannot ${method} ${contractAddress} ${viewFn} at block ${blockNumber} for ${data.error.code} ${data.error.message}`
+      if (data.error.code === -32603) {
+        // Internal error: StarknetErrorCode.TRANSACTION_FAILED //TODO -32603 Internal error: database is locked is also a recoverable error while -32603 for starknet_call is not
+        console.warn(m)
+        return
+      } else {
+        throw new Error(m)
+      }
+    }
+
 
     return data.result
   }

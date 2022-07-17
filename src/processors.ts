@@ -32,10 +32,10 @@ export class OrganizeBlockProcessor implements BlockProcessor {
   private readonly blockOrganizer: BlockOrganizer
   private blockProvider: BlockProvider
 
-  constructor(private readonly blockApiProvider: ApiProvider, private readonly contractApiProvider: ApiProvider, private readonly classApiProvider: ApiProvider, private readonly ds: DataSource) {
+  constructor(private readonly blockApiProvider: ApiProvider, private readonly contractApiProvider: ApiProvider, private readonly classApiProvider: ApiProvider, private readonly viewApiProvider: ApiProvider, private readonly ds: DataSource) {
     this.blockRepository = ds.getRepository<OrganizedBlock>(BlockEntity)
     this.blockProvider = new DatabaseBlockProvider(blockApiProvider, ds)
-    const viewProvider = new DatabaseViewProvider(contractApiProvider, ds)
+    const viewProvider = new DatabaseViewProvider(viewApiProvider, ds)
     const abiProvider = new DatabaseAbiProvider(contractApiProvider, classApiProvider, viewProvider, ds)
     this.blockOrganizer = new BlockOrganizer(abiProvider)
   }

@@ -22,7 +22,6 @@ export class ContractCallOrganizer {
 
   async initialize() {
     const abi = await this.abiProvider.get(this.contractAddress, this.blockNumber, this.blockHash)
-    //this.setAbi(abi)
 
     const {events, functions, structs, constructorFunction} = ContractCallOrganizer.organizeAbi(abi)
     this.structs = structs
@@ -35,7 +34,7 @@ export class ContractCallOrganizer {
     let functions: OrganizedFunctionAbi = {}
     let events: OrganizedEventAbi = {}
     let structs: OrganizedStructAbi = {}
-    let constructorFunction = {} as FunctionAbi
+    let constructorFunction
 
     if(abi && Array.isArray(abi)) {
       for (const item of abi) {

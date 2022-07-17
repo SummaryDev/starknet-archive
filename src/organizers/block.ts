@@ -94,7 +94,7 @@ export class BlockOrganizer extends TransactionCallOrganizer {
 
         organizedTransactions.push(organizedTransaction)
       } else {
-        console.warn(`cannot organize transaction of type ${txType} ${receipt.transaction_hash} in block ${blockNumber}`)
+        console.debug(`cannot organize transaction of type ${txType} ${receipt.transaction_hash} in block ${blockNumber}`)
       }
 
     } // thru transaction receipts
