@@ -24,6 +24,12 @@ describe('organizers', function () {
 
   describe('TransactionCallOrganizer', async () => {
 
+    it('getFullSelector', async() => {
+      log(getFullSelector('Upgraded'))
+      log(getFullSelector('upgraded'))
+      log(getFullSelector('account_initialized'))
+    })
+
     it('organizeConstructorFunction', async () => {
       const txHash = '0x53facbf470346c7e21452e5b8ef4c2b210547f9463b00b73b8a16e8daa5e58c'
 

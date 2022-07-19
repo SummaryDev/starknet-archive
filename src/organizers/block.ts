@@ -20,6 +20,7 @@ export class BlockOrganizer extends TransactionCallOrganizer {
     const receipts = getBlockResponse.transaction_receipts as TransactionReceipt[]
 
     let organizedTransactions: OrganizedTransaction[] = []
+
     for (const receipt of receipts) {
       //TODO should loop thru receipts or maybe thru transactions? are they one to one?
 
@@ -28,8 +29,7 @@ export class BlockOrganizer extends TransactionCallOrganizer {
       try {
         organizedEvents = await super.organizeEvents(receipt, blockNumber, blockHash)
       } catch (err) {
-        const m = `caught while organizing events for receipt ${receipt.transaction_hash} in block ${blockNumber} err=${err}`
-        console.error(m, err)
+        console.debug(`caught while organizing events for receipt ${receipt.transaction_hash} in block ${blockNumber} err=${err}`)
         throw err
       }
 
@@ -51,8 +51,7 @@ export class BlockOrganizer extends TransactionCallOrganizer {
         try {
           organizedFunction = await super.organizeInvokeFunction(tx, blockNumber, blockHash)
         } catch (err) {
-          const m = `caught while organizing invoke function for tx ${tx.transaction_hash} in block ${blockNumber} err=${err}`
-          console.error(m, err)
+          console.debug(`caught while organizing invoke function for tx ${tx.transaction_hash} in block ${blockNumber} err=${err}`)
           throw err
         }
 
@@ -77,8 +76,7 @@ export class BlockOrganizer extends TransactionCallOrganizer {
         try {
           organizedFunction = await super.organizeConstructorFunction(tx, blockNumber, blockHash)
         } catch (err) {
-          const m = `caught while organizing constructor function for tx ${tx.transaction_hash} in block ${blockNumber} err=${err}`
-          console.error(m, err)
+          console.debug(`caught while organizing constructor function for tx ${tx.transaction_hash} in block ${blockNumber} err=${err}`)
           throw err
         }
 

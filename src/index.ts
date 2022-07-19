@@ -11,7 +11,9 @@ function main() {
   (async () => {
     const connectionOptions = await getConnectionOptions()
     const ds = await createConnection(connectionOptions)
-    console.info(ds.options)
+    const optionsInfo = connectionOptions as any
+    delete optionsInfo.password
+    console.info(optionsInfo)
     await iterateBlocks(ds)
   })()
 }

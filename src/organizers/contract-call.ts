@@ -106,13 +106,14 @@ export class ContractCallOrganizer {
   }
 
   organizeEvent(event: Event) {
-    // TODO: make another for loop for each key? (in case many events are triggered) perhaps not stick keys and data into calldata? ex. https://starktx.info/testnet/0x5ac92ccfa0fc4d13806fe9234c53a0d2d7ad8aa8cd8a7901e6b2a9310610f99/
-    if (event.keys.length > 1) {
-      return this.makeAnonymousEvent(event)
+    let eventAbi
+
+    for(let i=0; i < event.keys.length; i++) {
+      eventAbi = this.getEventAbiFromKey(event.keys[i])
+      if(eventAbi)
+        break
     }
 
-    // TODO: find out how come there's no abi yet can see the event in https://starktx.info/testnet/0x49652ed2ec3857cbc6e5dfd6b39ee6102c0f060f0fe96f55ee5f6d972fa5c09/
-    const eventAbi = this.getEventAbiFromKey(event.keys[0])
     console.debug(eventAbi)
 
     if (!eventAbi) {
@@ -311,7 +312,7 @@ export class ContractCallOrganizer {
 
   getConstructorFunctionAbi() {
     if (!this.constructorFunction) {
-      console.warn(`ContractAnalyzer::getConstructorFunctionAbi - No constructorFunction declared)`);
+      console.warn(`ContractAnalyzer::getConstructorFunctionAbi - No constructorFunction declared`);
     }
 
     return this.constructorFunction;
