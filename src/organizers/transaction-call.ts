@@ -1,7 +1,15 @@
 import {BigNumber} from "ethers"
 import {RawCalldata} from "starknet"
 import {callArrayStructLength} from "../helpers/constants"
-import {FunctionCall, CallArray, FunctionInput, OrganizedFunction, OrganizedEvent, StarknetStruct, StarknetArgument} from "../types/organize-starknet"
+import {
+  FunctionCall,
+  CallArray,
+  FunctionInput,
+  OrganizedFunction,
+  OrganizedEvent,
+  StarknetStruct,
+  StarknetArgument
+} from "../types/organize-starknet"
 import {ContractCallOrganizer} from "./contract-call"
 import {AbiProvider} from '../providers/interfaces'
 import {BigNumberish} from "starknet/utils/number"
@@ -11,7 +19,8 @@ import JSON = require("json5")
 
 export class TransactionCallOrganizer {
 
-  constructor(private readonly abiProvider: AbiProvider) {}
+  constructor(private readonly abiProvider: AbiProvider) {
+  }
 
   async organizeInvokeFunction(tx: InvokeFunctionTransaction, blockNumber: number, blockHash?: string) {
     const contractOrganizer = await this.getContractOrganizer(tx.contract_address, blockNumber, blockHash)
@@ -35,16 +44,10 @@ export class TransactionCallOrganizer {
     let organizedEvents: OrganizedEvent[] = []
 
     for (const event of receipt.events) {
-      const contractAnalyzer = await this.getContractOrganizer(event.from_address, blockNumber,blockHash)
-      try {
-        const eventCalldata = contractAnalyzer.organizeEvent(event)
-        if (eventCalldata) {
-          organizedEvents.push(eventCalldata)
-        }
-      } catch (err) {
-        const m = `caught while organizing events for tx ${receipt.transaction_hash} block ${blockNumber} err=${err}`
-        console.error(m, err)
-        throw err
+      const contractAnalyzer = await this.getContractOrganizer(event.from_address, blockNumber, blockHash)
+      const eventCalldata = contractAnalyzer.organizeEvent(event)
+      if (eventCalldata) {
+        organizedEvents.push(eventCalldata)
       }
     }
 
@@ -89,7 +92,7 @@ export class TransactionCallOrganizer {
         const arrayLengthDatum = calldata[calldataIndex]
         try {
           arrayLength = BigNumber.from(arrayLengthDatum).toNumber()
-        } catch(err) {
+        } catch (err) {
           console.warn(`cannot parse array length from ${arrayLengthDatum} for contract ${contractOrganizer.contractAddress} in block ${contractOrganizer.blockNumber}`)
         }
 
@@ -207,7 +210,7 @@ export class TransactionCallOrganizer {
   makeAnonymousFunction(calldata?: RawCalldata) {
     let functionInputs: FunctionInput[] = []
 
-    if(calldata) {
+    if (calldata) {
       functionInputs = calldata.map((o, i) => {
         return {name: `input_${i}`, value: o} as FunctionInput;
       })
@@ -268,9 +271,9 @@ export class TransactionCallOrganizer {
    */
   static destructureFunctionCalldata(tx: InvokeFunctionTransaction) {
     if (!tx.calldata) {
-      console.error("TransactionAnalyzer::destructureFunctionCalldata - Calldata of tx is undefined, tx: ", tx);
+      console.error("destructureFunctionCalldata - Calldata of tx is undefined, tx: ", tx);
       throw new Error(
-        `TransactionAnalyzer::destructureFunctionCalldata - Calldata of tx is undefined (calldata: ${tx.calldata})`
+        `destructureFunctionCalldata - Calldata of tx is undefined (calldata: ${tx.calldata})`
       );
     }
     ;

@@ -117,7 +117,7 @@ export class ContractCallOrganizer {
     console.debug(eventAbi)
 
     if (!eventAbi) {
-      console.warn(`ContractAnalyzer::organizeEvent - No events in the abi for ${this.contractAddress} at ${this.blockNumber} match keys in the event ${JSON.stringify(event.keys)}`)
+      console.warn(`organizeEvent - No events of ${this.contractAddress} match keys in the event ${JSON.stringify(event.keys)}`)
       return this.makeAnonymousEvent(event)
     }
 
@@ -177,10 +177,9 @@ export class ContractCallOrganizer {
       const size = BigNumber.from(calldata.fullCalldataValues[calldata.startIndex - 1]).toNumber();
       return size;
     } catch (error) {
-      console.error("ContractAnalyzer::getArraySizeFromCalldata - error", error);
-      throw new Error(
-        `ContractAnalyzer::getArraySizeFromCalldata - Error trying to get the previous calldata index and converting it into number (value: ${calldata.fullCalldataValues[calldata.startIndex - 1]})`
-      );
+      const m = `getArraySizeFromCalldata - Error trying to get the previous calldata index and converting it into number (value: ${calldata.fullCalldataValues[calldata.startIndex - 1]})`
+      console.error(m, error);
+      throw new Error(m);
     }
   }
 
@@ -268,14 +267,14 @@ export class ContractCallOrganizer {
 
   getFunctionAbiFromSelector(functionSelector: string) {
     if (!this.functions) {
-      console.warn(`ContractAnalyzer::getFunctionFromSelector - No functions declared for this ContractAnalyzer instance (functions: ${this.functions})`);
+      console.warn(`getFunctionFromSelector - No functions declared for ${this.contractAddress} functions: ${this.functions}`);
       this.functions = {};
     }
 
     const fn = this.functions![functionSelector];
 
     if (!fn) {
-      console.warn(`ContractAnalyzer::getFunctionFromSelector - No functions matching this selector (selector: ${functionSelector})`);
+      console.warn(`getFunctionFromSelector - No functions of ${this.contractAddress} matching this selector ${functionSelector}`);
     }
 
     return fn;
@@ -283,14 +282,14 @@ export class ContractCallOrganizer {
 
   getStructAbiFromStructType(type: string) {
     if (!this.structs) {
-      console.warn(`ContractAnalyzer::getStructFromStructs - No struct specified for this instance (structs: ${this.structs})`);
+      console.warn(`getStructFromStructs - No struct declared for ${this.contractAddress} structs: ${this.structs}`);
       this.structs = {};
     }
 
     const struct = this.structs![type];
 
     if (!struct) {
-      console.warn(`ContractAnalyzer::getStructFromStructs - No struct specified for this type (structType: ${type})`);
+      console.warn(`getStructFromStructs - No struct of ${this.contractAddress} specified for this type ${type}`);
     }
 
     return struct;
@@ -298,14 +297,14 @@ export class ContractCallOrganizer {
 
   getEventAbiFromKey(key: string) {
     if (!this.events) {
-      console.warn(`ContractAnalyzer::getEventFromKey - No events specified for this instance (events: ${this.events})`);
+      console.warn(`getEventFromKey - No events declared for ${this.contractAddress} events: ${this.events}`);
       this.events = {};
     }
 
     const event = this.events![key];
 
     if (!event) {
-      console.debug(`ContractAnalyzer::getEventFromKey - No events specified for this key (key: ${key})`);
+      console.debug(`getEventFromKey - No events of ${this.contractAddress} specified for this key ${key}`);
     }
 
     return event;
@@ -313,7 +312,7 @@ export class ContractCallOrganizer {
 
   getConstructorFunctionAbi() {
     if (!this.constructorFunction) {
-      console.warn(`ContractAnalyzer::getConstructorFunctionAbi - No constructorFunction declared`);
+      console.warn(`getConstructorFunctionAbi - No constructorFunction declared for ${this.contractAddress}`);
     }
 
     return this.constructorFunction;
