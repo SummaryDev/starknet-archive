@@ -117,6 +117,7 @@ export class ContractCallOrganizer {
     console.debug(eventAbi)
 
     if (!eventAbi) {
+      console.warn(`ContractAnalyzer::organizeEvent - No events in the abi for ${this.contractAddress} at ${this.blockNumber} match keys in the event ${JSON.stringify(event.keys)}`)
       return this.makeAnonymousEvent(event)
     }
 
@@ -304,7 +305,7 @@ export class ContractCallOrganizer {
     const event = this.events![key];
 
     if (!event) {
-      console.warn(`ContractAnalyzer::getEventFromKey - No events specified for this key (key: ${key})`);
+      console.debug(`ContractAnalyzer::getEventFromKey - No events specified for this key (key: ${key})`);
     }
 
     return event;
