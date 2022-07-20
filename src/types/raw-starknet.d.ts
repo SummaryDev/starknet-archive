@@ -21,29 +21,39 @@ export declare type GetBlockResponse = {
   block_hash: string;
   transactions: Transaction[];
   timestamp: number;
+  accepted_time: number;
   transaction_receipts: TransactionReceipt[];
   parent_block_hash: string;
   status: Status;
-  gas_price: string,
-  sequencer_address: string
+  gas_price: string;
+  sequencer_address: string;
+  new_root: string;
+  old_root: string;
+  sequencer: string;
+  parent_hash: string;
 };
 
 export declare type Transaction = DeployTransaction | InvokeFunctionTransaction;
 
 export declare type DeployTransaction = {
   type: 'DEPLOY';
-  transaction_hash: string;
+  transaction_hash?: string;
+  txn_hash?: string;
   contract_address: string;
   contract_address_salt: BigNumberish;
   class_hash: string;
   constructor_calldata: string[];
   contract_definition: CompressedCompiledContract;
   nonce?: BigNumberish;
+  actual_fee?: BigNumberish;
+  messages_sent: string[];
+  events: Event[],
 };
 
 export declare type InvokeFunctionTransaction = {
   type: 'INVOKE_FUNCTION';
-  transaction_hash: string;
+  transaction_hash?: string;
+  txn_hash?: string;
   contract_address: string;
   signature?: Signature;
   entry_point_type?: EntryPointType;
@@ -51,7 +61,10 @@ export declare type InvokeFunctionTransaction = {
   calldata?: RawCalldata;
   nonce?: BigNumberish;
   max_fee?: BigNumberish;
+  actual_fee?: BigNumberish;
   version?: BigNumberish;
+  messages_sent: string[];
+  events: Event[],
 };
 
 export declare type TransactionReceipt = {

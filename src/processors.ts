@@ -8,7 +8,8 @@ import { DatabaseBlockProvider } from './providers/block/database';
 import { DatabaseViewProvider } from './providers/view/database';
 import { DatabaseAbiProvider } from './providers/abi/database';
 import * as console from "./helpers/console";
-import { BlockOrganizer } from "./organizers/block";
+import {PathfinderOrganizer} from "./organizers/pathfinder";
+import {FeederOrganizer} from "./organizers/feeder";
 
 export interface BlockProcessor {
   process(blockNumber: number): Promise<boolean>
@@ -29,7 +30,7 @@ function canRetry(err: any): boolean {
 
 export class OrganizeBlockProcessor implements BlockProcessor {
   private readonly blockRepository: Repository<OrganizedBlock>
-  private readonly blockOrganizer: BlockOrganizer
+  private readonly blockOrganizer: PathfinderOrganizer | FeederOrganizer
   private blockProvider: BlockProvider
 
   constructor(private readonly blockApiProvider: ApiProvider, private readonly contractApiProvider: ApiProvider, private readonly classApiProvider: ApiProvider, private readonly ds: DataSource) {
@@ -37,7 +38,7 @@ export class OrganizeBlockProcessor implements BlockProcessor {
     this.blockProvider = new DatabaseBlockProvider(blockApiProvider, ds)
     const viewProvider = new DatabaseViewProvider(contractApiProvider, ds)
     const abiProvider = new DatabaseAbiProvider(contractApiProvider, classApiProvider, viewProvider, ds)
-    this.blockOrganizer = new BlockOrganizer(abiProvider)
+    this.blockOrganizer = new PathfinderOrganizer(abiProvider)
   }
 
   async process(blockNumber: number): Promise<boolean> {

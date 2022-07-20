@@ -37,7 +37,7 @@ async function iterateBlocks(ds: DataSource) {
   let p: BlockProcessor
 
   if(cmd == 'organize')
-    p = new OrganizeBlockProcessor(blockApiProvider, contractApiProvider, classApiProvider, ds)
+    p = new OrganizeBlockProcessor(pathfinderApiProvider, contractApiProvider, classApiProvider, ds)
   else if(cmd == 'archive_block')
     p = new ArchiveBlockProcessor(contractApiProvider, ds)
   else if(cmd == 'archive_abi')
