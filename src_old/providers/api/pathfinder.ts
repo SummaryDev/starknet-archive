@@ -1,9 +1,9 @@
 import * as console from "../../helpers/console";
 import axios from "axios";
-import {ApiError} from "../../helpers/error";
-import {getFullSelector} from "../../helpers/helpers";
 import {ApiProvider} from "../interfaces";
-import {BlockResponse, EventResponse, TransactionResponse} from "../../types/types";
+import {ApiError} from "../../helpers/error";
+import {Abi, GetBlockResponse} from "../../types/raw-starknet";
+import {getFullSelector} from "../../helpers/helpers";
 
 export class PathfinderApiProvider implements ApiProvider {
   constructor(private readonly url: string) {
@@ -41,7 +41,7 @@ export class PathfinderApiProvider implements ApiProvider {
     }
   }
 
-  async getBlock(blockNumber: number): Promise<BlockResponse> {
+  async getBlock(blockNumber: number) {
     const method = 'starknet_getBlockByNumber'
 
     const data = await this.call(method, [blockNumber, 'FULL_TXN_AND_RECEIPTS'])
@@ -49,53 +49,7 @@ export class PathfinderApiProvider implements ApiProvider {
     if (data.error)
       throw new Error(`pathfinder cannot ${method} ${blockNumber} for ${data.error.code} ${data.error.message}`)
 
-    const block = data.result
-    const transactions = new Array<TransactionResponse>()
-    const events = new Array<EventResponse>()
-
-    const response: BlockResponse = {
-      block_number: block.block_number,
-      block_hash: block.block_hash,
-      parent_hash: block.parent_hash,
-      old_root: block.old_root,
-      new_root: block.new_root,
-      timestamp: block.accepted_time,
-      gas_price: block.gas_price,
-      status: block.status,
-      sequencer_address: block.sequencer,
-      transactions,
-    }
-
-    for (const transaction of block.transactions) {
-      const t: TransactionResponse = {
-        txn_hash: transaction.txn_hash,
-        contract_address: transaction.contract_address,
-        entry_point_selector: transaction.entry_point_selector,
-        calldata: transaction.calldata,
-        max_fee: transaction.max_fee,
-        actual_fee: transaction.actual_fee,
-        status: transaction.status,
-        messages_sent: transaction.messages_sent,
-        events,
-      }
-
-      for (const event of transaction.events) {
-          const e: EventResponse = {
-            from_address: event.from_address,
-            keys: event.keys,
-            data: event.data,
-          }
-
-          events.push(event)
-      }
-
-      t.events = events
-
-      transactions.push(t)
-    }
-
-    response.transactions = transactions
-    return response
+    return data.result as GetBlockResponse
   }
 
   async getContractAbi(contractAddress: string) {
@@ -118,7 +72,7 @@ export class PathfinderApiProvider implements ApiProvider {
     return ret
   }
 
-  async getClassAbi(classHash: string) {
+  async getClassAbi(classHash: string): Promise<Abi> {
     throw new Error('pathfinder does not return ABI by starknet_getClass') //TODO revisit as future versions of pathfinder may start supporting ABI in starknet_getClass
   }
 

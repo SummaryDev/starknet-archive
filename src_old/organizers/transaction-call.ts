@@ -40,6 +40,20 @@ export class TransactionCallOrganizer {
     return this.parseFunction(contractOrganizer, tx.constructor_calldata, functionAbi)
   }
 
+  async organizeEvents(receipt: TransactionReceipt, blockNumber: number, blockHash?: string) {
+    let organizedEvents: OrganizedEvent[] = []
+
+    for (const event of receipt.events) {
+      const contractAnalyzer = await this.getContractOrganizer(event.from_address, blockNumber, blockHash)
+      const eventCalldata = contractAnalyzer.organizeEvent(event)
+      if (eventCalldata) {
+        organizedEvents.push(eventCalldata)
+      }
+    }
+
+    return organizedEvents
+  }
+
   parseFunction(contractOrganizer: ContractCallOrganizer, calldata?: RawCalldata, functionAbi?: FunctionAbi): OrganizedFunction {
     if (!functionAbi) {
       return this.makeAnonymousFunction(calldata)
@@ -203,6 +217,44 @@ export class TransactionCallOrganizer {
     }
     return {name: 'anonymous', inputs: functionInputs} as OrganizedFunction;
   }
+
+  // async getCalldataPerCallFromTx(transaction: InvokeFunctionTransaction) {
+  //   try {
+  //     const {callArray, rawFnCalldata} = TransactionCallOrganizer.destructureFunctionCalldata(transaction);
+  //     const functionCalls = await this.getCalldataPerCall(callArray, rawFnCalldata);
+  //
+  //     return functionCalls as FunctionCall[];
+  //   } catch (error) {
+  //     return undefined;
+  //   }
+  // }
+  //
+  // async getCalldataPerCall(
+  //   callArray: CallArray[],
+  //   fullTxCalldata: BigNumber[]
+  // ) {
+  //   let rawCalldataIndex = 0;
+  //   let functionCalls = [];
+  //   for (const call of callArray) {
+  //     const contractCallOrganizer = await this.getContractOrganizer(call.to.toHexString());
+  //
+  //     const {subcalldata, endIndex} = contractCallOrganizer.organizeFunctionInput(
+  //       call.selector.toHexString(),
+  //       fullTxCalldata,
+  //       rawCalldataIndex,
+  //     );
+  //     if (!endIndex && endIndex !== 0) {
+  //       throw new Error(`BlockAnalyzer::getCalldataPerCall - No endIndex returned (endIndex: ${endIndex})`);
+  //     }
+  //     rawCalldataIndex = endIndex;
+  //     functionCalls.push({
+  //       name: contractCallOrganizer.getFunctionAbiFromSelector(call.selector.toHexString()).name,
+  //       to: call.to,
+  //       calldata: subcalldata
+  //     });
+  //   }
+  //   return functionCalls;
+  // }
 
   async getContractOrganizer(contractAddress: string, blockNumber: number, blockHash?: string) {
     const contractCallOrganizer = new ContractCallOrganizer(contractAddress, blockNumber, this.abiProvider, blockHash)

@@ -1,23 +1,16 @@
-import { Abi, GetBlockResponse } from "../types/raw-starknet";
-
-export interface BlockProvider {
-  get(blockNumber: number): Promise<GetBlockResponse | undefined>
-}
+import {BlockResponse} from "../types/types";
+import {Abi} from "../../copy/types/raw-starknet";
 
 export interface ApiProvider {
-  getBlock(blockNumber: number): Promise<GetBlockResponse | undefined>
+  getBlock(blockNumber: number): Promise<BlockResponse>
 
-  getContractAbi(contractAddress: string): Promise<Abi | undefined>
+  getContractAbi(contractAddress: string): Promise<any>
 
-  getClassAbi(classHash: string): Promise<Abi | undefined>
+  getClassAbi(classHash: string): Promise<any>
 
   callView(contractAddress: string, viewFn: string, blockNumber?: number, blockHash?: string): Promise<string[] | undefined>
 }
 
-export interface ViewProvider {
-  get(contractAddress: string, viewFunction: string, blockNumber?: number, blockHash?: string): Promise<string[] | undefined>
-}
-
 export interface AbiProvider {
-    get(contractAddress: string, blockNumber: number, blockHash?: string): Promise<Abi | undefined>
+  get(contractAddress: string, blockNumber: number, blockHash?: string): Promise<Abi | undefined>
 }

@@ -121,7 +121,7 @@ export interface OrganizedTransaction {
   // InvokeFunctionTransaction
   transaction_hash: string,
   contract_address: string,
-  signature?: string[],
+  signature?: Signature,
   entry_point_type?: EntryPointType,//TODO enum?
   entry_point_selector: string,
   function?: string,
