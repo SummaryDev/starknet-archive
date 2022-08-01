@@ -1,6 +1,5 @@
-import {EntitySchema, ValueTransformer} from 'typeorm';
-import {OrganizedBlock, OrganizedTransaction, OrganizedEvent, FunctionInput, EventArgument} from "./types/organize-starknet";
-import {BigNumber} from "ethers";
+import {EntitySchema} from 'typeorm';
+import {OrganizedBlock, OrganizedTransaction, OrganizedEvent, FunctionInput, EventArgument} from "./types/types";
 
 export const BlockEntity = new EntitySchema<OrganizedBlock>({
   name: "block",
@@ -97,14 +96,6 @@ export const TransactionEntity = new EntitySchema<OrganizedTransactionData>({
       nullable: true
     },
     l2_to_l1_messages: {
-      type: 'jsonb',
-      nullable: true
-    },
-    execution_resources: {
-      type: 'jsonb',
-      nullable: true
-    },
-    contract_definition: {
       type: 'jsonb',
       nullable: true
     },

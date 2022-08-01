@@ -39,7 +39,7 @@ export class PathfinderOrganizer extends Organizer{
 
       const organizedTransaction = {
         transaction_hash: transaction.transaction_hash,
-        messages_sent: transaction.messages_sent,
+        l2_to_l1_messages: transaction.l2_to_l1_messages,
         events: organizedEvents
       } as OrganizedTransaction
 

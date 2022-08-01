@@ -1,7 +1,6 @@
 import {BigNumber} from "ethers"
 import {ContractCallOrganizer} from "./contract-call";
-import {FunctionInput, OrganizedFunction, StarknetArgument,} from "../types/types";
-import {FunctionAbi} from "../types/raw-starknet";
+import {FunctionInput, OrganizedFunction, StarknetArgument, FunctionAbi} from "../types/types";
 import {AbiProvider} from "../interfaces";
 
 export class Organizer {

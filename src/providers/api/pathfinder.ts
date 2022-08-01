@@ -56,8 +56,8 @@ export class PathfinderApiProvider implements ApiProvider{
     const response: BlockResponse = {
       block_number: block.block_number,
       block_hash: block.block_hash,
-      parent_hash: block.parent_hash,
-      old_root: block.old_root,
+      parent_block_hash: block.parent_hash,
+      state_root: block.old_root,
       new_root: block.new_root,
       timestamp: block.accepted_time,
       gas_price: block.gas_price,
@@ -76,7 +76,7 @@ export class PathfinderApiProvider implements ApiProvider{
         max_fee: transaction.max_fee,
         actual_fee: transaction.actual_fee,
         status: transaction.status,
-        messages_sent: transaction.messages_sent,
+        l2_to_l1_messages: transaction.messages_sent,
         events,
       }
 

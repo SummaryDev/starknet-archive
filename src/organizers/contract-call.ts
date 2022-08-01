@@ -7,9 +7,9 @@ import {
   OrganizedCalldata,
   OrganizedEvent,
   StarknetContractCode,
-  EventArgument
-} from "../types/organize-starknet";
-import {Abi, Event,FunctionAbi} from "../types/raw-starknet";
+  EventArgument,
+  EventResponse, FunctionAbi, Abi
+} from "../types/types";
 import {getFullSelector} from "../helpers/helpers";
 import * as console from '../helpers/console';
 import {AbiProvider} from '../interfaces';
@@ -105,7 +105,7 @@ export class ContractCallOrganizer {
     return {subcalldata: calldata, endIndex: calldataIndex};
   }
 
-  organizeEvent(event: Event) {
+  organizeEvent(event: EventResponse) {
     let eventAbi
 
     for(let i=0; i < event.keys.length; i++) {
@@ -165,7 +165,7 @@ export class ContractCallOrganizer {
     }
   }
 
-  makeAnonymousEvent(event: Event) {
+  makeAnonymousEvent(event: EventResponse) {
     const argument = {
       name: 'anonymous', value: event
     } as EventArgument
