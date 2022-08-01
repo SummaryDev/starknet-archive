@@ -1,11 +1,8 @@
-import 'dotenv/config'
 import {createConnection, getConnectionOptions, DataSource} from "typeorm"
-import {defaultProvider, Provider} from 'starknet'
-import * as console from './helpers/console'
 import {sleep} from './helpers/helpers'
-import {ArchiveAbiProcessor, ArchiveBlockProcessor, BlockProcessor, OrganizeBlockProcessor} from "./processors";
-import { PathfinderApiProvider } from "./providers/api/pathfinder";
-import { FeederApiProvider } from "./providers/api/feeder";
+import {BlockProcessor} from './interfaces';
+import {OrganizeBlockProcessor} from './processors/organize-block'
+import {PathfinderApiProvider} from "./providers/api/pathfinder";
 
 function main() {
   (async () => {
@@ -21,7 +18,6 @@ function main() {
 main()
 
 async function iterateBlocks(ds: DataSource) {
-
   const startBlock = Number.parseInt(process.env.STARKNET_ARCHIVE_START_BLOCK || '0')
   const finishBlock = Number.parseInt(process.env.STARKNET_ARCHIVE_FINISH_BLOCK || '0')
   const retryWait = Number.parseInt(process.env.STARKNET_ARCHIVE_RETRY_WAIT || '1000')
@@ -29,23 +25,19 @@ async function iterateBlocks(ds: DataSource) {
   const feederUrl = process.env.STARKNET_ARCHIVE_FEEDER_URL || 'https://alpha4.starknet.io'
   const pathfinderUrl = process.env.STARKNET_ARCHIVE_PATHFINDER_URL || 'https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a'
 
-  const feederApiProvider = new FeederApiProvider(/*defaultProvider*/ new Provider({ baseUrl: feederUrl}))
+
+  // const feederApiProvider = new FeederApiProvider(/*defaultProvider*/ new Provider({ baseUrl: feederUrl}))
   const pathfinderApiProvider = new PathfinderApiProvider(pathfinderUrl)
 
-  const blockApiProvider = feederApiProvider // TODO revisit this as pathfinder may start providing full blocks with calldata
+  const blockApiProvider = pathfinderApiProvider // TODO revisit this as pathfinder may start providing full blocks with calldata
   const contractApiProvider = pathfinderApiProvider
-  const classApiProvider =  feederApiProvider // TODO revisit this as pathfinder may start providing class abi like the feeder
+  const classApiProvider =  pathfinderApiProvider // TODO revisit this as pathfinder may start providing class abi like the feeder
   const viewApiProvider =  pathfinderApiProvider
-
   let p: BlockProcessor
 
-  if(cmd == 'organize')
+  if(cmd == 'organize') {
     p = new OrganizeBlockProcessor(blockApiProvider, contractApiProvider, classApiProvider, viewApiProvider, ds)
-  else if(cmd == 'archive_block')
-    p = new ArchiveBlockProcessor(blockApiProvider, ds)
-  else if(cmd == 'archive_abi')
-    p = new ArchiveAbiProcessor(contractApiProvider, ds)
-  else {
+  } else {
     console.error(`unknown cmd ${cmd}`)
     return
   }
@@ -65,6 +57,6 @@ async function iterateBlocks(ds: DataSource) {
       console.error(`cannot process ${blockNumber}, exiting for ${err}`, err)
       return
     }
-  } // thru blockNumber range
+  }
 
 }

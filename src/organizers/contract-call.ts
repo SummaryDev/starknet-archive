@@ -12,9 +12,9 @@ import {
 import {Abi, Event,FunctionAbi} from "../types/raw-starknet";
 import {getFullSelector} from "../helpers/helpers";
 import * as console from '../helpers/console';
-import {AbiProvider} from '../providers/interfaces';
-import {bnToUint256, isUint256, Uint256, uint256ToBN} from "starknet/utils/uint256";
-import {toBN, isHex, hexToDecimalString, BigNumberish} from "starknet/utils/number";
+import {AbiProvider} from '../interfaces';
+import {isUint256, Uint256, uint256ToBN} from "starknet/utils/uint256";
+import {isHex, hexToDecimalString, BigNumberish} from "starknet/utils/number";
 
 export class ContractCallOrganizer {
 

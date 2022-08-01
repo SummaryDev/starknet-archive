@@ -1,12 +1,11 @@
-import {AbiProvider} from "../interfaces";
+import {AbiProvider} from '../../interfaces'
 import {DataSource, Repository} from "typeorm";
-import {ArgumentEntity, InputEntity, RawAbi, RawAbiEntity, TransactionEntity} from "../../entities";
-import {EventArgument, FunctionInput, OrganizedTransaction} from "../../types/organize-starknet";
 import {MemoryCache} from "../../helpers/cache";
-import {Abi} from "../../types/raw-starknet";
-import * as console from "../../helpers/console";
-import {FunctionAbi} from "starknet";
-import {ApiProvider, ViewProvider} from "../interfaces";
+
+import {ArgumentEntity, InputEntity, RawAbi, RawAbiEntity, TransactionEntity} from "../../entities";
+import {EventArgument,FunctionInput,OrganizedTransaction, Abi} from "../../types/types";
+import {ApiProvider, ViewProvider} from "../../interfaces";
+import {FunctionAbi} from 'starknet';
 
 export class DatabaseAbiProvider implements AbiProvider {
   private readonly repository: Repository<RawAbi>
@@ -16,7 +15,12 @@ export class DatabaseAbiProvider implements AbiProvider {
 
   private readonly memoryCache: MemoryCache
 
-  constructor(private readonly contractApiProvider: ApiProvider, private readonly classApiProvider: ApiProvider, private readonly viewProvider: ViewProvider, ds: DataSource) {
+
+  constructor(
+    private readonly contractApiProvider: ApiProvider,
+    private readonly classApiProvider: ApiProvider,
+    private readonly viewProvider: ViewProvider,
+    ds: DataSource) {
     this.repository = ds.getRepository<RawAbi>(RawAbiEntity)
     this.txRepository = ds.getRepository<OrganizedTransaction>(TransactionEntity)
     this.inputRepository = ds.getRepository<FunctionInput>(InputEntity)
