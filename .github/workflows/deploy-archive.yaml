@@ -25,5 +25,5 @@ jobs:
           # plugins: "https://github.com/jkroepke/helm-secrets"
           command: |-
             env
-            helm upgrade starknet-archive-deployment ./helmchart/ --install -f ./helmchart/values.yaml --create-namespace -n dev-1 --set rds_password=${{ secrets.PASSWORD_DATABASE_RDS }}
+            helm upgrade starknet-archive-deployment ./helmchart/ --install -f ./helmchart/values.yaml --create-namespace -n dev --set rds_password=${{ secrets.PASSWORD_DATABASE_RDS }}
             kubectl get pods
