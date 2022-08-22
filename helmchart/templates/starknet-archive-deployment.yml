@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: starknet-indexer-archive
+spec:
+  selector:
+    matchLabels:
+      app: starknet-indexer-archive
+  template:
+    metadata:
+      labels:
+        app: starknet-indexer-archive
+    spec:
+      containers:
+      - name: starknet-indexer-archive
+        image: 935796133270.dkr.ecr.eu-central-1.amazonaws.com/starknet-archive:1.0.3
+        env:
+        - name: "TYPEORM_PASSWORD"
+          value: {{ .Values.rds_password }}
+{{ toYaml .Values.env | indent 8 }}
+        resources: 
+          limits:
+            memory: "1024Mi"
+            cpu: "1000m"
+          requests:
+            memory: "100Mi"
+            cpu: "100m"
+        # ports:
+        # - containerPort: 5000
