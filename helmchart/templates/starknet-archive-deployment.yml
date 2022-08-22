@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: starknet-indexer-archive
-        image: 935796133270.dkr.ecr.eu-central-1.amazonaws.com/starknet-archive:1.0.3
+        image: 729713441316.dkr.ecr.eu-central-1.amazonaws.com/starknet-archive:1.0.1
         env:
         - name: "TYPEORM_PASSWORD"
           value: {{ .Values.rds_password }}
