@@ -10,7 +10,7 @@ test/*.d.ts
 .idea
 
 # ts output dir
-lib
+lib/*
 
 # Logs
 logs

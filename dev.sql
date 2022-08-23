@@ -172,4 +172,35 @@ SELECT "a"."id" AS "a_id", "a"."name" AS "a_name", "a"."type" AS "a_type", "a"."
 
 SELECT "a"."id" AS "a_id", "a"."name" AS "a_name", "a"."type" AS "a_type", "a"."value" AS "a_value", "a"."decimal" AS "a_decimal", "a"."event_id" AS "a_event_id" FROM "argument" "a" LEFT JOIN "event" "e" ON "e"."id"="a"."event_id"  LEFT JOIN "transaction" "t" ON "t"."transaction_hash"="e"."transaction_hash"  LEFT JOIN "block" "b" ON "b"."block_number"="t"."block_number" WHERE "b"."block_number" <= 266476 AND "e"."transmitter_contract" = '0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7' AND "e"."name" = 'implementation_upgraded' AND "a"."name" ilike '%implement%' AND "a"."type" = 'felt' ORDER BY "b"."block_number" DESC
 
+select * from event where name = 'Mint';
+
+CREATE EXTENSION IF NOT EXISTS tablefunc;
+
+select a.event_id, a.name, a.value from argument a left join event e on a.event_id = e.id where e.name = 'Mint' and e.transmitter_contract = '0x13386f165f065115c1da38d755be261023c32f0134a03a8e66b6bb1e0016014' order by 1, 2 desc limit 30;
+
+select a.event_id, a.name, (case when (a.name = 'sender') then a.value::text else a.decimal::text end) from argument a left join event e on a.event_id = e.id where e.name = 'Mint' and e.transmitter_contract = '0x13386f165f065115c1da38d755be261023c32f0134a03a8e66b6bb1e0016014' order by 1, 2 desc limit 30;
+
+select * from crosstab('select a.event_id, a.name, a.decimal from argument a left join event e on a.event_id = e.id where e.name = ''Mint'' and e.transmitter_contract = ''0x13386f165f065115c1da38d755be261023c32f0134a03a8e66b6bb1e0016014'' order by 1, 2 desc limit 300')
+as ct (event_id int, sender numeric, amount0 numeric, amount1 numeric);
+
+select * from crosstab('select a.event_id, a.name, a.decimal from argument a left join event e on a.event_id = e.id where e.name = ''Mint'' and e.transmitter_contract = ''0x13386f165f065115c1da38d755be261023c32f0134a03a8e66b6bb1e0016014'' order by 1, 2 desc')
+as ct (event_id int, sender numeric, amount0 numeric, amount1 numeric);
+
+select min(block_number) from block;
+
+create database test3;
+
+select block_number, to_timestamp(timestamp)::timestamp without time zone as timestamp from block where timestamp between '2022-07-30 00:00:00+00'::timestamp and '2022-07-31 00:00:00+00'::timestamp order by block_number desc limit 10;
+
+ SELECT '2011-01-01 00:00:00+03'::TIMESTAMP
+
+
+with block_number_timestamp as (select b.block_number, to_timestamp(b.timestamp)::timestamp as t from block b) select * from block_number_timestamp where t > '2022-08-01 00:00:00'::timestamp and t < '2022-08-01 01:00:00'::timestamp order by block_number desc;
+
+with block_number_timestamp as (select b.block_number, to_timestamp(b.timestamp)::timestamp as t from block b order by b.block_number desc limit 10) select * from block_number_timestamp;
+
+select b.block_number, to_timestamp(b.timestamp)::timestamp as t from block b order by b.block_number desc limit 10;
+
+
+
 

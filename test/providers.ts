@@ -682,8 +682,8 @@ describe('providers', function() {
       log(rf)
     })
 
-    it('getContractAbi 0x104c608bbbd1faecbc038657509ee89d88d14af3aa6e2d36a91e945290ee87c', async () => {
-      const contractAddress = '0x104c608bbbd1faecbc038657509ee89d88d14af3aa6e2d36a91e945290ee87c'
+    it('getContractAbi 0x6715e129c11f1c5ec5ea460115de61e7d21f9e6873cb27109bc0bb3339acf53', async () => {
+      const contractAddress = '0x6715e129c11f1c5ec5ea460115de61e7d21f9e6873cb27109bc0bb3339acf53'
 
       const rp = await pathfinderApiProvider.getContractAbi(contractAddress)
       log(rp)
@@ -692,7 +692,7 @@ describe('providers', function() {
       const rf = await feederApiProvider.getContractAbi(contractAddress)
       log(rf)
 
-      //expect(rp).deep.eq(rf)
+      expect(rp).deep.eq(rf)
     })
 
     it('getContractAbi', async () => {

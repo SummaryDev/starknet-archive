@@ -63,6 +63,8 @@ export class PathfinderApiProvider implements ApiProvider {
       const m = `pathfinder cannot ${method} ${contractAddress} for ${data.error.code} ${data.error.message}`
       if (data.error.code === 20)// this error 20 Contract not found means no abi was found so we don't retry but return and try getting abi by class hash
         return
+      else if (data.error.code === -32603) // this is a recoverable error: -32603 Internal error: Fetching class hash from database
+        throw new ApiError(`pathfinder cannot ${method} for ${data.error}`)
       else
         throw new Error(m)
     } else if (data.result && data.result.abi) {
@@ -103,7 +105,7 @@ export class PathfinderApiProvider implements ApiProvider {
     if (data.error) {
       const m = `pathfinder cannot ${method} ${contractAddress} ${viewFn} at block ${blockNumber} for ${data.error.code} ${data.error.message}`
       if (data.error.code === -32603) {
-        // Internal error: StarknetErrorCode.TRANSACTION_FAILED //TODO -32603 Internal error: database is locked is also a recoverable error while -32603 for starknet_call is not
+        // Internal error: StarknetErrorCode.TRANSACTION_FAILED //TODO revisit this logic: -32603 Internal error: database is locked is usually recoverable error while -32603 for starknet_call is not so return nothing and don't retry
         console.warn(m)
         return
       } else {

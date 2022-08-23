@@ -16,7 +16,7 @@ export interface BlockProcessor {
 
 function canRetry(err: any): boolean {
   const ret = err instanceof ApiError // communication failures
-    || (err instanceof Error && err.message !== undefined && err.message !== null && (err.message.includes('ECONNRESET') || err.message.includes('EAI_AGAIN') || err.message.includes('StarkErrorCode.MALFORMED_REQUEST') //TODO aren't these errors covered by ApiError?
+    || (err instanceof Error && err.message !== undefined && err.message !== null && (err.message.includes('ECONNRESET') || err.message.includes('EAI_AGAIN') || err.message.includes('StarkErrorCode.MALFORMED_REQUEST') //TODO these must be coming from starknet.js and thus are not ApiError
       || err.message.includes('BLOCK_NOT_FOUND') // feeder api: block is not there yet
         || err.message.includes('Invalid block hash')) // pathfinder api code 24: block is not there yet //TODO when start sourcing everything from pathfinder such gap where we got the block already but cannot call other api methods at this block should not be possible and should be treated as unrecoverable error
     )
