@@ -12,7 +12,7 @@ COPY package.json .
 RUN npm install
 
 # Copy the rest of the application in and build it.
-COPY . .
+COPY . ./
 # RUN npm build
 CMD ["npm", "run", "build"]
 
