@@ -32,7 +32,7 @@ jobs:
     - name: Build, tag, and push image to ECR
       id: build
       env:
-        IMAGE: ${{ steps.login-ecr.outputs.registry }}/$NAME:$IMAGE_TAG
+        IMAGE: ${{ steps.login-ecr.outputs.registry }}/${{ env.NAME }}:${{  env.IMAGE_TAG }}
       run: |
         docker build -t $IMAGE .
         docker push $IMAGE
