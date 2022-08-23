@@ -6,7 +6,6 @@ on:
 #    branches: [ main ]
 
 env:
-  IMAGE_TAG: github-dev
   NAMESPACE: dev
   NAME: starknet-archive
 
@@ -32,18 +31,18 @@ jobs:
     - name: Build, tag, and push image to ECR
       id: build
       env:
-        IMAGE: ${{ steps.login-ecr.outputs.registry }}/${{ env.NAME }}:${{  env.IMAGE_TAG }}
+        IMAGE: ${{ steps.login-ecr.outputs.registry }}/${{ env.NAME }}:github-${{  env.NAMESPACE }}
       run: |
         docker build -t $IMAGE .
         docker push $IMAGE
         echo "::set-output name=image::$IMAGE"
 
-#    - name: Deploy to EKS
-#      uses: tensor-hq/eksctl-helm-action@0.1.0
-#      with:
-#        eks_cluster: dev-eks-starknet-indexer
-#        # plugins: "https://github.com/jkroepke/helm-secrets"
-#        command: |-
-#          env
-#          helm upgrade $NAME ./helmchart/ --install --create-namespace --namespace $NAMESPACE --set typeorm_password=${{ secrets.TYPEORM_PASSWORD }} --set image=${{ steps.build.image }}
-#          kubectl get pods
+    - name: Deploy to EKS
+      uses: tensor-hq/eksctl-helm-action@0.1.0
+      with:
+        eks_cluster: dev-eks-starknet-indexer
+        # plugins: "https://github.com/jkroepke/helm-secrets"
+        command: |-
+          env
+          helm upgrade $NAME ./helmchart/ --install --create-namespace --namespace $NAMESPACE --set typeorm_password=${{ secrets.TYPEORM_PASSWORD }} --set image=${{ steps.build.outputs.image }}
+          kubectl get pods
