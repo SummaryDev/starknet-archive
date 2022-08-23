@@ -1,6 +1,7 @@
 name: Build docker image and push to ECR
 
-#on:
+on:
+  workflow_dispatch:
 #  push:
 #    branches: [ main ]
 
