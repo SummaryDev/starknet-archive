@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: starknet-indexer-archive
+  name: starknet-archive
 spec:
   selector:
     matchLabels:
-      app: starknet-indexer-archive
+      app: starknet-archive
   template:
     metadata:
       labels:
-        app: starknet-indexer-archive
+        app: starknet-archive
     spec:
       containers:
-      - name: starknet-indexer-archive
-        image: 729713441316.dkr.ecr.eu-central-1.amazonaws.com/starknet-archive:1.0.1
+      - name: starknet-archive
+        image: {{ .Values.image }}
         env:
         - name: "TYPEORM_PASSWORD"
-          value: {{ .Values.rds_password }}
+          value: {{ .Values.typeorm_password }}
 {{ toYaml .Values.env | indent 8 }}
         resources: 
           limits:

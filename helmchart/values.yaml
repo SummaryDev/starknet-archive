@@ -1,4 +1,5 @@
-rds_password: password
+image: image
+typeorm_password: password
 env:
   - name: "TYPEORM_CONNECTION"
     value: "postgres"
@@ -21,4 +22,4 @@ env:
   - name: "STARKNET_ARCHIVE_START_BLOCK"
     value: "0"
   - name: "STARKNET_ARCHIVE_FINISH_BLOCK"
-    value: "100000"
+    value: "1"
