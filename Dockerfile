@@ -12,9 +12,9 @@ COPY package.json .
 RUN npm install
 
 # Copy the rest of the application in and build it.
-COPY . ./
-# RUN npm build
-CMD ["npm", "run", "build"]
+COPY . .
+RUN npm run build
+#CMD ["npm", "run", "build"]
 
 # Now /usr/src/app/lib has the built files.
 
