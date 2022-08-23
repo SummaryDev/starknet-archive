@@ -8,11 +8,11 @@ WORKDIR /usr/src/app
 # (Install OS dependencies; include -dev packages if needed.)
 
 # Install the Javascript dependencies, including all devDependencies.
-COPY package.json .
+COPY package.json package-lock.json ./
 RUN npm install
 
 # Copy the rest of the application in and build it.
-COPY . .
+COPY . ./
 RUN npm run build
 #CMD ["npm", "run", "build"]
 
