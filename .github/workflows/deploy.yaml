@@ -20,12 +20,21 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: eu-central-1
 
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
     - name: Deploy to EKS with helm upgrade
       uses: tensor-hq/eksctl-helm-action@0.1.0
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: starknet-archive
+        IMAGE_TAG: ${{ secrets.IMAGE_TAG }}
       with:
         eks_cluster: dev-eks-starknet-indexer
         # plugins: "https://github.com/jkroepke/helm-secrets"
         command: |-
           env
-          helm upgrade starknet-archive ./helmchart/ --install --create-namespace --namespace dev --set typeorm_password=${{ secrets.TYPEORM_PASSWORD }} --set image=${{ secrets.IMAGE }}
+          echo "Deploying image $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          helm upgrade starknet-archive ./helmchart/ --install --create-namespace --namespace dev --set typeorm_password=${{ secrets.TYPEORM_PASSWORD }} --set image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           kubectl get pods
