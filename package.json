@@ -33,7 +33,7 @@
    "scripts": {
       "start": "node lib/index.js",
       "typeorm": "typeorm-ts-node-commonjs",
-      "build": "rm -rf lib && tsc",
+      "build": "tsc",
       "rebuild": "rm -rf node_modules && rm package-lock.json && npm install && npm run build",
       "docker": "docker build -t olegabu/starknet-archive . && docker push olegabu/starknet-archive",
       "test": "ts-mocha test/*.ts"
