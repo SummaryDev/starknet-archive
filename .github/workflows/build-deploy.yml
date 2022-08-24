@@ -3,11 +3,7 @@ name: Build to ECR and deploy to EKS
 on:
   workflow_dispatch:
 #  push:
-#    branches: [ main ]
-
-#env:
-#  namespace: ${{ github.ref_name }} #dev
-#  name: ${{ github.event.repository.name }} # ${{ github.repository }} #starknet-archive
+#    branches: [ main, stage, prod ]
 
 jobs:
   build-deploy:
@@ -45,11 +41,8 @@ jobs:
         docker push $image
         echo "::set-output name=image::$image"
 
-#    - name: Deploy to EKS
-#      uses: tensor-hq/eksctl-helm-action@0.1.0
-#      with:
-#        eks_cluster: dev-eks-starknet-indexer
-#        # plugins: "https://github.com/jkroepke/helm-secrets"
-#        command: |-
-#          env
-#          helm upgrade $name ./helmchart/ --install --create-namespace --namespace $namespace --set typeorm_password=${{ secrets.TYPEORM_PASSWORD }} --set image=${{ steps.build.outputs.image }}
+    - name: Deploy to EKS
+      uses: tensor-hq/eksctl-helm-action@0.1.0
+      with:
+        eks_cluster: dev-eks-starknet-indexer
+        command: helm upgrade ${{ steps.var.outputs.name }} ./helmchart/ --install --create-namespace --namespace ${{ steps.var.outputs.namespace }} --set typeorm_password=${{ secrets.TYPEORM_PASSWORD }} --set image=${{ steps.build.outputs.image }}
