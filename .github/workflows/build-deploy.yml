@@ -15,7 +15,8 @@ jobs:
 
     steps:
     - name: echo
-      run: echo namespace=$namespace \
+      run: |
+      echo namespace=$namespace \
       name=$name \
       sha=${{ github.sha }} \
       repository=${{ github.repository }} \
