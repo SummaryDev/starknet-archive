@@ -19,6 +19,7 @@ jobs:
       if: github.ref_name == 'main'
       env:
         namespace: dev
+      run: echo namespace=$namespace
 
 #    - name: Compute variables
 #      id: var
