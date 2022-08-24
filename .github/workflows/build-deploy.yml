@@ -18,7 +18,7 @@ jobs:
     - name: Compute variables
       id: var
       run: |
-        if [[ ${{ github.ref_name }} == main ]]; then echo "::set-output name=namespace::dev"; else echo "::set-output name=namespace::${{ github.ref_name }}"; fi
+        if [[ ${{ github.ref_name }} == maino ]]; then echo "::set-output name=namespace::dev"; else echo "::set-output name=namespace::${{ github.ref_name }}"; fi
         echo "::set-output name=name::${{ github.event.repository.name }}"
 
 #    - name: Compute variables
