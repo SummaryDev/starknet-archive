@@ -8,7 +8,6 @@ on:
 env:
   namespace: ${{ github.ref_name }} #dev
   name: ${{ github.event.repository.name }} # ${{ github.repository }} #starknet-archive
-  sha: ${GITHUB_SHA::12} #${{ github.sha }}
 
 jobs:
   build-deploy:
@@ -30,7 +29,9 @@ jobs:
 #      run: echo "name=$name sha=$sha"
 
     - name: echo
-      run: echo "namespace=$namespace name=$name sha=$sha sha=${{ github.sha }} repository=${{ github.repository }} repository_owner=${{ github.repository_owner }} head_ref=${{ github.head_ref }} base_ref=${{ github.base_ref }} ref_name=${{ github.ref_name }} ref_type=${{ github.ref_type }} action_ref=${{ github.action_ref }} env=${{ toJSON(env) }} inputs=${{ toJSON(inputs) }} event=${{ toJSON(github.event) }}"
+      env:
+        sha_short: ${GITHUB_SHA::7} #${{ github.sha }}
+      run: echo "namespace=$namespace name=$name sha_short=$sha_short sha=${{ github.sha }} repository=${{ github.repository }} repository_owner=${{ github.repository_owner }} head_ref=${{ github.head_ref }} base_ref=${{ github.base_ref }} ref_name=${{ github.ref_name }} ref_type=${{ github.ref_type }} action_ref=${{ github.action_ref }} env=${{ toJSON(env) }} inputs=${{ toJSON(inputs) }} event=${{ toJSON(github.event) }}"
 
 #    - name: Check out code
 #      uses: actions/checkout@v2
