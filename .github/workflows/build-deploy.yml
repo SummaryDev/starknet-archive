@@ -6,16 +6,29 @@ on:
 #    branches: [ main ]
 
 env:
-  namespace: dev
-  name: starknet-archive
+  namespace: ${{ github.ref_name }} #dev
+  name: ${{ github.repository }} #starknet-archive
+  sha: ${{ github.sha }}
 
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Compute variables
+      id: var
+      run: |
+        echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+        echo "::set-output name=repository_short::$(basename ${{ github.repository }})"
+
+    - name: Set environment variables
+      id: env
+      env:
+        name: ${{ steps.var.outputs.sha_short }}
+        sha: ${{ steps.var.outputs.sha_short }}
+
     - name: echo
-      run: echo namespace=$namespace name=$name sha=${{ github.sha }} repository=${{ github.repository }} repository_owner=${{ github.repository_owner }} head_ref=${{ github.head_ref }} base_ref=${{ github.base_ref }} event=${{ github.event }} ref_name=${{ github.ref_name }} ref_type=${{ github.ref_type }} action_ref=${{ github.action_ref }} env=${{ env }} action_ref=${{ github.action_ref }} inputs=${{ inputs }}
+      run: echo namespace=$namespace name=$name sha=$sha sha=${{ github.sha }} repository=${{ github.repository }} repository_owner=${{ github.repository_owner }} head_ref=${{ github.head_ref }} base_ref=${{ github.base_ref }} event=${{ github.event }} ref_name=${{ github.ref_name }} ref_type=${{ github.ref_type }} action_ref=${{ github.action_ref }} env=${{ toJSON(env) }} inputs=${{ toJSON(inputs) }}
 
 #    - name: Check out code
 #      uses: actions/checkout@v2
