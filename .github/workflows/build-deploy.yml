@@ -15,21 +15,7 @@ jobs:
 
     steps:
     - name: echo
-      run: |
-      echo namespace=$namespace \
-      name=$name \
-      sha=${{ github.sha }} \
-      repository=${{ github.repository }} \
-      repository_owner=${{ github.repository_owner }} \
-      head_ref=${{ github.head_ref }} \
-      base_ref=${{ github.base_ref }} \
-      event=${{ github.event }} \
-      ref_name=${{ github.ref_name }} \
-      ref_type=${{ github.ref_type }} \
-      action_ref=${{ github.action_ref }} \
-      env=${{ env }} \
-      action_ref=${{ github.action_ref }} \
-      inputs=${{ inputs }}
+      run: echo namespace=$namespace name=$name sha=${{ github.sha }} repository=${{ github.repository }} repository_owner=${{ github.repository_owner }} head_ref=${{ github.head_ref }} base_ref=${{ github.base_ref }} event=${{ github.event }} ref_name=${{ github.ref_name }} ref_type=${{ github.ref_type }} action_ref=${{ github.action_ref }} env=${{ env }} action_ref=${{ github.action_ref }} inputs=${{ inputs }}
 
 #    - name: Check out code
 #      uses: actions/checkout@v2
