@@ -5,9 +5,9 @@ on:
 #  push:
 #    branches: [ main ]
 
-env:
-  namespace: ${{ github.ref_name }} #dev
-  name: ${{ github.event.repository.name }} # ${{ github.repository }} #starknet-archive
+#env:
+#  namespace: ${{ github.ref_name }} #dev
+#  name: ${{ github.event.repository.name }} # ${{ github.repository }} #starknet-archive
 
 jobs:
   build-deploy:
@@ -17,7 +17,9 @@ jobs:
 
     - name: Compute variables
       id: var
-      run: if [[ ${{ github.ref_name }} == main ]]; then echo "::set-output name=namespace::dev"; else echo "::set-output name=namespace::${{ github.ref_name }}"; fi
+      run: |
+        if [[ ${{ github.ref_name }} == main ]]; then echo "::set-output name=namespace::dev"; else echo "::set-output name=namespace::${{ github.ref_name }}"; fi
+        echo "::set-output name=name::${{ github.event.repository.name }}"
 
 #    - name: Compute variables
 #      id: var
@@ -42,7 +44,7 @@ jobs:
     - name: echo
       env:
         sha_short: ${GITHUB_SHA::7} #${{ github.sha }}
-      run: echo "namespace=$namespace namespace=${{ steps.var.outputs.namespace }} name=$name sha_short=$sha_short sha_short=${{ env.sha_short }} sha=${{ github.sha }} repository=${{ github.repository }} repository_owner=${{ github.repository_owner }} head_ref=${{ github.head_ref }} base_ref=${{ github.base_ref }} ref_name=${{ github.ref_name }} ref_type=${{ github.ref_type }} action_ref=${{ github.action_ref }} env=${{ toJSON(env) }} inputs=${{ toJSON(inputs) }} event=${{ toJSON(github.event) }}"
+      run: echo "namespace=${{ steps.var.outputs.namespace }} name=${{ steps.var.outputs.name }} namespace=$namespace name=$name sha_short=$sha_short sha_short=${{ env.sha_short }} sha=${{ github.sha }} repository=${{ github.repository }} repository_owner=${{ github.repository_owner }} head_ref=${{ github.head_ref }} base_ref=${{ github.base_ref }} ref_name=${{ github.ref_name }} ref_type=${{ github.ref_type }} action_ref=${{ github.action_ref }} env=${{ toJSON(env) }} inputs=${{ toJSON(inputs) }} event=${{ toJSON(github.event) }}"
 
 #    - name: Check out code
 #      uses: actions/checkout@v2
