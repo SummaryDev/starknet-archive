@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: starknet-archive
+  name: {{ .Values.name }}
 spec:
   selector:
     matchLabels:
-      app: starknet-archive
+      app: {{ .Values.name }}
   template:
     metadata:
       labels:
-        app: starknet-archive
+        app: {{ .Values.name }}
     spec:
       containers:
-      - name: starknet-archive
+      - name: {{ .Values.name }}
         image: {{ .Values.image }}
         env:
         - name: "TYPEORM_PASSWORD"
