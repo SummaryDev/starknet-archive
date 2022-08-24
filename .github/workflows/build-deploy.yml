@@ -15,7 +15,7 @@ jobs:
 
     steps:
     - name: echo
-      run echo namespace=$namespace \
+      run: echo namespace=$namespace \
       name=$name \
       sha=${{ github.sha }} \
       repository=${{ github.repository }} \
@@ -28,7 +28,7 @@ jobs:
       action_ref=${{ github.action_ref }} \
       env=${{ env }} \
       action_ref=${{ github.action_ref }} \
-      inputs=${{ inputs }} 
+      inputs=${{ inputs }}
 
 #    - name: Check out code
 #      uses: actions/checkout@v2
