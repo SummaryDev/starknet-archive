@@ -18,57 +18,33 @@ jobs:
     - name: Compute variables
       id: var
       run: |
-        if [[ ${{ github.ref_name }} == maino ]]; then echo "::set-output name=namespace::dev"; else echo "::set-output name=namespace::${{ github.ref_name }}"; fi
+        if [[ ${{ github.ref_name }} == main ]]; then echo "::set-output name=namespace::dev"; else echo "::set-output name=namespace::${{ github.ref_name }}"; fi
         echo "::set-output name=name::${{ github.event.repository.name }}"
+        echo "::set-output name=sha_short::${GITHUB_SHA::7}"
 
-#    - name: Compute variables
-#      id: var
-#      if: github.ref_name == 'main'
-#      env:
-#        namespace: dev
-#      run: echo namespace=$namespace
+    - name: Check out code
+      uses: actions/checkout@v2
 
-#    - name: Compute variables
-#      id: var
-#      run: |
-#        echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-#        echo "::set-output name=repository_short::$(basename ${{ github.repository }})"
-#
-#    - name: Set environment variables
-#      id: env
-#      env:
-#        sha: ${{ steps.var.outputs.sha_short }}
-#        name: ${{ steps.var.outputs.repository_short }}
-#      run: echo "name=$name sha=$sha"
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-central-1
 
-    - name: echo
+    - name: Login to ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build, tag, and push image to ECR
+      id: build
       env:
-        sha_short: ${GITHUB_SHA::7} #${{ github.sha }}
-      run: echo "namespace=${{ steps.var.outputs.namespace }} name=${{ steps.var.outputs.name }} namespace=$namespace name=$name sha_short=$sha_short sha_short=${{ env.sha_short }} sha=${{ github.sha }} repository=${{ github.repository }} repository_owner=${{ github.repository_owner }} head_ref=${{ github.head_ref }} base_ref=${{ github.base_ref }} ref_name=${{ github.ref_name }} ref_type=${{ github.ref_type }} action_ref=${{ github.action_ref }} env=${{ toJSON(env) }} inputs=${{ toJSON(inputs) }} event=${{ toJSON(github.event) }}"
+        image: ${{ steps.login-ecr.outputs.registry }}/${{ steps.var.outputs.name }}:${{ steps.var.outputs.namespace }}-${{ steps.var.outputs.sha_short }}
+      run: |
+        docker build -t $image .
+        docker push $image
+        echo "::set-output name=image::$image"
 
-#    - name: Check out code
-#      uses: actions/checkout@v2
-#
-#    - name: Configure AWS credentials
-#      uses: aws-actions/configure-aws-credentials@v1
-#      with:
-#        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#        aws-region: eu-central-1
-#
-#    - name: Login to ECR
-#      id: login-ecr
-#      uses: aws-actions/amazon-ecr-login@v1
-#
-#    - name: Build, tag, and push image to ECR
-#      id: build
-#      env:
-#        image: ${{ steps.login-ecr.outputs.registry }}/${{ env.name }}:github-${{ env.namespace }}
-#      run: |
-#        docker build -t $image .
-#        docker push $image
-#        echo "::set-output name=image::$image"
-#
 #    - name: Deploy to EKS
 #      uses: tensor-hq/eksctl-helm-action@0.1.0
 #      with:
