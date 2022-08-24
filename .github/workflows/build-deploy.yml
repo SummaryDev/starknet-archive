@@ -14,6 +14,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Compute variables
+      id: var
+      if: github.ref_name == 'main'
+      env:
+        namespace: dev
 
 #    - name: Compute variables
 #      id: var
