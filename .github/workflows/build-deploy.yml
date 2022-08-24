@@ -14,12 +14,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
     - name: Compute variables
       id: var
-      if: github.ref_name == 'main'
-      env:
-        namespace: dev
-      run: echo namespace=$namespace
+      run: if [[ ${{ github.ref_name }} == main ]]; then echo "::set-output name=namespace::dev"; else echo "::set-output name=namespace::${{ github.ref_name }}"; fi
+
+#    - name: Compute variables
+#      id: var
+#      if: github.ref_name == 'main'
+#      env:
+#        namespace: dev
+#      run: echo namespace=$namespace
 
 #    - name: Compute variables
 #      id: var
@@ -37,7 +42,7 @@ jobs:
     - name: echo
       env:
         sha_short: ${GITHUB_SHA::7} #${{ github.sha }}
-      run: echo "namespace=$namespace name=$name sha_short=$sha_short sha=${{ github.sha }} repository=${{ github.repository }} repository_owner=${{ github.repository_owner }} head_ref=${{ github.head_ref }} base_ref=${{ github.base_ref }} ref_name=${{ github.ref_name }} ref_type=${{ github.ref_type }} action_ref=${{ github.action_ref }} env=${{ toJSON(env) }} inputs=${{ toJSON(inputs) }} event=${{ toJSON(github.event) }}"
+      run: echo "namespace=$namespace namespace=${{ steps.var.outputs.namespace }} name=$name sha_short=$sha_short sha_short=${{ env.sha_short }} sha=${{ github.sha }} repository=${{ github.repository }} repository_owner=${{ github.repository_owner }} head_ref=${{ github.head_ref }} base_ref=${{ github.base_ref }} ref_name=${{ github.ref_name }} ref_type=${{ github.ref_type }} action_ref=${{ github.action_ref }} env=${{ toJSON(env) }} inputs=${{ toJSON(inputs) }} event=${{ toJSON(github.event) }}"
 
 #    - name: Check out code
 #      uses: actions/checkout@v2
