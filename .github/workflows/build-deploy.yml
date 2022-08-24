@@ -24,12 +24,12 @@ jobs:
     - name: Set environment variables
       id: env
       env:
-        name: ${{ steps.var.outputs.sha_short }}
         sha: ${{ steps.var.outputs.sha_short }}
-      run: echo name=$name sha=$sha
+        name: ${{ steps.var.outputs.repository_short }}
+      run: echo "name=$name sha=$sha"
 
     - name: echo
-      run: echo namespace=$namespace name=$name sha=$sha sha=${{ github.sha }} repository=${{ github.repository }} repository_owner=${{ github.repository_owner }} head_ref=${{ github.head_ref }} base_ref=${{ github.base_ref }} event=${{ github.event }} ref_name=${{ github.ref_name }} ref_type=${{ github.ref_type }} action_ref=${{ github.action_ref }} env=${{ toJSON(env) }} inputs=${{ toJSON(inputs) }}
+      run: echo "namespace=$namespace name=$name sha=$sha sha=${{ github.sha }} repository=${{ github.repository }} repository_owner=${{ github.repository_owner }} head_ref=${{ github.head_ref }} base_ref=${{ github.base_ref }} ref_name=${{ github.ref_name }} ref_type=${{ github.ref_type }} action_ref=${{ github.action_ref }} env=${{ toJSON(env) }} inputs=${{ toJSON(inputs) }} event=${{ toJSON(github.event) }}"
 
 #    - name: Check out code
 #      uses: actions/checkout@v2
