@@ -7,7 +7,7 @@ on:
 
 env:
   namespace: ${{ github.ref_name }} #dev
-  name: ${{ event.repository.name }} # ${{ github.repository }} #starknet-archive
+  name: ${{ github.event.repository.name }} # ${{ github.repository }} #starknet-archive
   sha: ${GITHUB_SHA::12} #${{ github.sha }}
 
 jobs:
