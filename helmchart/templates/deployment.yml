@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.name }}
+  name: {{ .Release.Name }}
 spec:
   selector:
     matchLabels:
@@ -27,5 +27,3 @@ spec:
           requests:
             memory: "100Mi"
             cpu: "100m"
-        # ports:
-        # - containerPort: 5000
