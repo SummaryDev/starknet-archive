@@ -43,6 +43,11 @@ jobs:
 
     - name: Deploy to EKS
       uses: tensor-hq/eksctl-helm-action@0.1.0
+      env:
+        name: ${{ steps.var.outputs.name }}
+        namespace: ${{ steps.var.outputs.namespace }}
+        image: ${{ steps.build.outputs.image }}
+        typeorm_password: ${{ secrets.TYPEORM_PASSWORD }}
       with:
         eks_cluster: dev-eks-starknet-indexer
-        command: helm upgrade ${{ steps.var.outputs.name }}-${{ steps.var.outputs.namespace }} ./helmchart/ --install --namespace ${{ steps.var.outputs.namespace }} --set typeorm_password=${{ secrets.TYPEORM_PASSWORD }} --set typeorm_database=${{ steps.var.outputs.namespace }} --set image=${{ steps.build.outputs.image }} --set name=${{ steps.var.outputs.name }}
+        command: ./build.sh
