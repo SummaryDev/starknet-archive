@@ -24,6 +24,13 @@ docker run --env-file .env --network host -e STARKNET_ARCHIVE_START_BLOCK=100000
 
 ## Deploy
 
+Define env variables
+```bash
+export namespace=dev
+export name=starknet_archive
+export typeorm_password=... 
+```
+
 Deploy to Kubernetes cluster with helm
 ```bash
 ./deploy.sh
