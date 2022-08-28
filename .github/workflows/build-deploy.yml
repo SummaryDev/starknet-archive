@@ -50,4 +50,4 @@ jobs:
         typeorm_password: ${{ secrets.TYPEORM_PASSWORD }}
       with:
         eks_cluster: dev-eks-starknet-indexer
-        command: ./build.sh
+        command: ./deploy.sh
