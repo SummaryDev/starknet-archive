@@ -4,7 +4,7 @@ env:
   - name: "TYPEORM_HOST"
     value: "postgres-dev-eu-central-1.cubsklniptgt.eu-central-1.rds.amazonaws.com"
   - name: "TYPEORM_USERNAME"
-    value: "postgres"
+    value: "archive"
   - name: "TYPEORM_PORT"
     value: "5432"
   - name: "TYPEORM_SYNCHRONIZE"
