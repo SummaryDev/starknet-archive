@@ -24,14 +24,20 @@ docker run --env-file .env --network host -e STARKNET_ARCHIVE_START_BLOCK=100000
 
 ## Deploy
 
-Define env variables
+Deploy to Kubernetes cluster with helm
+
 ```bash
-export namespace=dev
-export name=starknet_archive
-export typeorm_password=... 
+namespace=dev image=729713441316.dkr.ecr.eu-central-1.amazonaws.com/starknet-archive:dev-de25bce password=archive123 ./deploy.sh 
 ```
 
-Deploy to Kubernetes cluster with helm
-```bash
-./deploy.sh
+Observe
+
+```shell
+kubectl --namespace dev get pods --selector=app=starknet-archive
+```
+
+Tail logs
+
+```shell
+kubectl --namespace dev logs --follow --selector=app=starknet-archive
 ```

@@ -18,4 +18,6 @@ env:
   - name: "STARKNET_ARCHIVE_START_BLOCK"
     value: "0"
   - name: "STARKNET_ARCHIVE_FINISH_BLOCK"
-    value: "1"
+    value: "1000000"
+  - name: "STARKNET_ARCHIVE_PATHFINDER_URL"
+    value: "http://54.80.141.84:9545"
