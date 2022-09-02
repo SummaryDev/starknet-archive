@@ -16,7 +16,9 @@ spec:
         image: {{ .Values.image }}
         env:
         - name: "TYPEORM_PASSWORD"
-          value: {{ .Values.password }}
+          value: {{ .Values.db_password_archive }}
+        - name: "TYPEORM_HOST"
+          value: {{ .Values.db_host }}
         - name: "TYPEORM_DATABASE"
           value: {{ .Values.database }}
 {{ toYaml .Values.env | indent 8 }}

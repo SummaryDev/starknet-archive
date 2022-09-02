@@ -1,8 +1,6 @@
 env:
   - name: "TYPEORM_CONNECTION"
     value: "postgres"
-  - name: "TYPEORM_HOST"
-    value: "postgres-dev-eu-central-1.cubsklniptgt.eu-central-1.rds.amazonaws.com"
   - name: "TYPEORM_USERNAME"
     value: "archive"
   - name: "TYPEORM_PORT"

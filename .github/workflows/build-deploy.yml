@@ -47,7 +47,8 @@ jobs:
         name: ${{ steps.var.outputs.name }}
         namespace: ${{ steps.var.outputs.namespace }}
         image: ${{ steps.build.outputs.image }}
-        password: ${{ secrets.password }}
+        db_host: ${{ secrets.db_host }}
+        db_password_archive: ${{ secrets.db_password_archive }}
       with:
         eks_cluster: dev-eks-starknet-indexer
         command: ./deploy.sh
