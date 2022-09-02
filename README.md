@@ -27,7 +27,7 @@ docker run --env-file .env --network host -e STARKNET_ARCHIVE_START_BLOCK=100000
 Deploy to Kubernetes cluster with helm
 
 ```bash
-namespace=dev image=729713441316.dkr.ecr.eu-central-1.amazonaws.com/starknet-archive:dev-de25bce password=archive123 ./deploy.sh 
+namespace=dev image=729713441316.dkr.ecr.eu-central-1.amazonaws.com/starknet-archive:dev-de25bce db_host=postgres-dev-eu-central-1.cubsklniptgt.eu-central-1.rds.amazonaws.com db_password_archive=archive123 ./deploy.sh 
 ```
 
 Observe
