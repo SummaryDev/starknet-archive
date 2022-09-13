@@ -1,13 +1,10 @@
-import { Abi, GetCodeResponse } from "../../types/raw-starknet";
-import { Provider } from "starknet"
-import { AbiProvider } from "../interfaces";
+import { Abi } from "../../types/raw-starknet";
+import { AbiProvider, ApiProvider } from "../interfaces";
 
 export class OnlineAbiProvider implements AbiProvider {
-  constructor(private readonly provider: Provider) {}
+  constructor(private readonly provider: ApiProvider) {}
 
-  async get(contractAddress: string, blockNumber: number): Promise<Abi> {
-    const getCodeResponse = await this.provider.getCode(contractAddress, blockNumber) as any
-    const code = getCodeResponse as GetCodeResponse
-    return code.abi
+  async get(contractAddress: string, blockNumber: number): Promise<Abi | undefined> {
+    return await this.provider.getContractAbi(contractAddress)
   }
 }

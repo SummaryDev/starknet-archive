@@ -1,4 +1,4 @@
-import { Abi, GetBlockResponse } from "../types/raw-starknet";
+import { Abi, GetBlockResponse, TransactionReceipt, Transaction } from "../types/raw-starknet";
 
 export interface BlockProvider {
   get(blockNumber: number): Promise<GetBlockResponse | undefined>
@@ -12,6 +12,10 @@ export interface ApiProvider {
   getClassAbi(classHash: string): Promise<Abi | undefined>
 
   callView(contractAddress: string, viewFn: string, blockNumber?: number, blockHash?: string): Promise<string[] | undefined>
+
+  getTransactionReceipt(txHash: string): Promise<TransactionReceipt | undefined>
+
+  getTransaction(txHash: string): Promise<Transaction | undefined>
 }
 
 export interface ViewProvider {

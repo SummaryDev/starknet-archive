@@ -1,11 +1,29 @@
-import {Abi, Provider} from "starknet";
-import {GetBlockResponse} from "../../types/raw-starknet";
+import {Provider} from "starknet";
+import {GetBlockResponse, TransactionReceipt, Transaction} from "../../types/raw-starknet";
 import axios from "axios";
 import {ApiError} from "../../helpers/error";
 import {ApiProvider} from "../interfaces";
 
 export class FeederApiProvider implements ApiProvider {
-  constructor(private readonly provider: Provider) {
+  private readonly provider: Provider
+  private readonly feederUrl: string
+
+  constructor(network?: string) {
+    if(!network) {
+      network = 'goerli-alpha'
+    }
+
+    if(network === 'goerli-alpha') {
+      this.feederUrl = 'https://alpha4.starknet.io'
+    } else {
+      this.feederUrl = 'https://mainnet.starknet.io'
+    }
+
+    this.provider = new Provider({
+      sequencer: {
+        network: network as any
+      }
+    })
   }
 
   async getBlock(blockNumber: number) {
@@ -29,10 +47,10 @@ export class FeederApiProvider implements ApiProvider {
     let res
 
     try {
-      res = await this.provider.getCode(contractAddress)
+      res = await this.provider.getClassAt(contractAddress, 'latest')
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        throw new ApiError(`feeder cannot getCode ${contractAddress} for ${err.message}`)
+        throw new ApiError(`feeder cannot getClassAt ${contractAddress} for ${err.message}`)
       } else
         throw (err)
     }
@@ -45,14 +63,9 @@ export class FeederApiProvider implements ApiProvider {
   async getClassAbi(classHash: string) {
     let res
     const method = 'get_class_by_hash'
-    const config = {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }
 
     try {
-      res = await axios.get(this.provider.feederGatewayUrl + '/' + method + '?classHash=' + classHash, config)
+      res = await axios.get(this.feederUrl + '/feeder_gateway/' + method + '?classHash=' + classHash/* + '&block_id=latest'*/)
     } catch (err) {
       if (axios.isAxiosError(err)) {
         if (err.code === 'ERR_BAD_RESPONSE') {// this error 500 means no class was found so we don't retry but return and try getting abi by contract address
@@ -76,7 +89,7 @@ export class FeederApiProvider implements ApiProvider {
       res = await this.provider.callContract({
         contractAddress: contractAddress,
         entrypoint: viewFn
-      }, {blockIdentifier: blockNumber})
+      }, blockNumber)
     } catch (err) {
       if (axios.isAxiosError(err)) {
         throw new ApiError(`feeder cannot callContract ${contractAddress} ${viewFn} at block ${blockNumber} for ${err.message}`)
@@ -87,5 +100,35 @@ export class FeederApiProvider implements ApiProvider {
     if (res) {
       return res.result
     }
+  }
+
+  async getTransactionReceipt(txHash: string) {
+    let res
+
+    try {
+      res = await this.provider.getTransactionReceipt(txHash)
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        throw new ApiError(`feeder cannot getTransactionReceipt ${txHash} for ${err.message}`)
+      } else
+        throw (err)
+    }
+
+    return res as TransactionReceipt
+  }
+
+  async getTransaction(txHash: string) {
+    let res
+
+    try {
+      res = await this.provider.getTransaction(txHash)
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        throw new ApiError(`feeder cannot getTransaction ${txHash} for ${err.message}`)
+      } else
+        throw (err)
+    }
+
+    return res as Transaction
   }
 }
