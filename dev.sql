@@ -202,5 +202,45 @@ with block_number_timestamp as (select b.block_number, to_timestamp(b.timestamp)
 select b.block_number, to_timestamp(b.timestamp)::timestamp as t from block b order by b.block_number desc limit 10;
 
 
+drop view transaction_view;
 
+drop view view_tx;
+drop view view_tx2;
+drop view realtest;
+drop view realtest2;
+drop view realtest3;
+drop view realtest4;
+drop view view_tx3;
+drop view view_tx4;
+drop view tx_view5;
+drop view tx_view6;
+drop view tx_view7;
+drop view tx_view8;
+drop view view_tx5;
+drop view view_tx6;
+drop view viewtx3;
+drop view viewtx4;
+drop view viewtx5;
+drop view user_view_transaction_10;
+drop view user_transaction_10;
+drop view user_transaction_11;
+drop view user_transaction_with_timestamp;
+drop view user_transaction_with_timestamp_desc;
+drop view user_test;
+drop view user_test2;
 
+ALTER TABLE "block" rename COLUMN "parent_block_hash" to "parent_hash";
+ALTER TABLE "block" rename COLUMN "state_root" to "new_root";
+ALTER TABLE "transaction" rename COLUMN "l2_to_l1_messages" to "messages_sent";
+
+query: CREATE TABLE "raw_receipt" ("transaction_hash" character varying NOT NULL, "raw" jsonb NOT NULL, CONSTRAINT "PK_92179bee0fe038ac82d57dad7fe" PRIMARY KEY ("transaction_hash"))
+query: ALTER TABLE "block" DROP COLUMN "gas_price"
+query: ALTER TABLE "transaction" DROP COLUMN "entry_point_type"
+query: ALTER TABLE "transaction" DROP COLUMN "execution_resources"
+query: ALTER TABLE "transaction" DROP COLUMN "contract_definition"
+query: ALTER TABLE "transaction" ADD "status" character varying
+query: ALTER TABLE "transaction" ADD "status_data" character varying
+query: ALTER TABLE "transaction" ADD "l1_origin_message" jsonb
+query: ALTER TABLE "transaction" ADD "sender_address" character varying
+
+select * from raw_receipt

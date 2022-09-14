@@ -8,7 +8,10 @@ import {
   RawAbi,
   RawAbiEntity,
   TransactionEntity,
-  RawView, RawViewEntity
+  RawView,
+  RawViewEntity,
+  RawReceipt,
+  RawReceiptEntity
 } from "../entities";
 import {Abi, FunctionAbi, Block, Transaction, TransactionReceipt} from "../types/raw-starknet";
 import {EventArgument, FunctionInput, OrganizedTransaction} from "../types/organized-starknet";
@@ -22,6 +25,7 @@ export class DatabaseApiProvider implements ApiProvider {
   private readonly inputRepository: Repository<FunctionInput>
   private readonly argumentRepository: Repository<EventArgument>
   private readonly viewRepository: Repository<RawView>
+  private readonly receiptRepository: Repository<RawReceipt>
 
   private readonly memoryCache = MemoryCache.getInstance()
 
@@ -32,6 +36,7 @@ export class DatabaseApiProvider implements ApiProvider {
     this.inputRepository = ds.getRepository<FunctionInput>(InputEntity)
     this.argumentRepository = ds.getRepository<EventArgument>(ArgumentEntity)
     this.viewRepository = ds.getRepository<RawView>(RawViewEntity)
+    this.receiptRepository = ds.getRepository<RawReceipt>(RawReceiptEntity)
   }
 
   async getBlock(blockNumber: number): Promise<Block | undefined> {
@@ -353,11 +358,25 @@ export class DatabaseApiProvider implements ApiProvider {
     return implementationGetters.length == 1 || implementationConstructors.length == 1 || upgradeEvents.length == 1
   }
 
-  getClassAbi(classHash: string): Promise<Abi | undefined> {
-    throw new Error('not implemented')
+  async getTransactionReceipt(txHash: string): Promise<TransactionReceipt | undefined> {
+    let ret
+
+    const fromDb = await this.receiptRepository.findOneBy({transaction_hash: txHash})
+
+    if (!fromDb) {
+      const fromApi = await this.apiProvider.getTransactionReceipt(txHash)
+      await this.receiptRepository.save({transaction_hash: txHash, raw: fromApi})
+      ret = fromApi
+      console.debug(`from api for ${txHash}`)
+    } else {
+      ret = fromDb.raw
+      console.debug(`from db for ${txHash}`)
+    }
+
+    return ret
   }
 
-  getTransactionReceipt(txHash: string): Promise<TransactionReceipt | undefined> {
+  getClassAbi(classHash: string): Promise<Abi | undefined> {
     throw new Error('not implemented')
   }
 
