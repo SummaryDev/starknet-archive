@@ -3,7 +3,7 @@ import {createConnection, getConnectionOptions, DataSource} from "typeorm"
 import * as console from './helpers/console'
 import {sleep} from './helpers/helpers'
 import {ArchiveAbiProcessor, ArchiveBlockProcessor, BlockProcessor, OrganizeBlockProcessor} from "./processors";
-import {ComboApiProvider} from "./providers/combo";
+import {ComboApi} from "./api/combo";
 
 function main() {
   (async () => {
@@ -28,16 +28,16 @@ async function iterateBlocks(ds: DataSource) {
   const pathfinderUrl = process.env.STARKNET_ARCHIVE_PATHFINDER_URL || 'https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a' /*'http://54.80.141.84:9545'*/
   const network = 'goerli-alpha'
 
-  const apiProvider = new ComboApiProvider(pathfinderUrl, network)
+  const api = new ComboApi(pathfinderUrl, network)
 
   let p: BlockProcessor
 
   if(cmd == 'organize')
-    p = new OrganizeBlockProcessor(apiProvider, ds)
+    p = new OrganizeBlockProcessor(api, ds)
   else if(cmd == 'archive_block')
-    p = new ArchiveBlockProcessor(apiProvider, ds)
+    p = new ArchiveBlockProcessor(api, ds)
   else if(cmd == 'archive_abi')
-    p = new ArchiveAbiProcessor(apiProvider, ds)
+    p = new ArchiveAbiProcessor(api, ds)
   else {
     console.error(`unknown cmd ${cmd}`)
     return

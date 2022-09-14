@@ -1,8 +1,8 @@
 import {DataSource, Repository} from "typeorm";
 import {BlockEntity, RawAbi, RawAbiEntity, RawBlock, RawBlockEntity, TransactionEntity} from "./entities";
 import {OrganizedBlock, OrganizedTransaction} from "./types/organized-starknet";
-import { ApiProvider } from './providers/interfaces';
-import { DatabaseApiProvider } from './providers/database';
+import { Api } from './api/interfaces';
+import { DatabaseApi } from './api/database';
 import { ApiError } from './helpers/error';
 import * as console from "./helpers/console";
 import { BlockOrganizer } from "./organizers/block";
@@ -27,19 +27,19 @@ function canRetry(err: any): boolean {
 export class OrganizeBlockProcessor implements BlockProcessor {
   private readonly blockRepository: Repository<OrganizedBlock>
   private readonly blockOrganizer: BlockOrganizer
-  private databaseApiProvider: DatabaseApiProvider
+  private databaseApi: DatabaseApi
 
-  constructor(private readonly apiProvider: ApiProvider, private readonly ds: DataSource) {
+  constructor(private readonly api: Api, private readonly ds: DataSource) {
     this.blockRepository = ds.getRepository<OrganizedBlock>(BlockEntity)
-    this.databaseApiProvider = new DatabaseApiProvider(apiProvider, ds)
-    this.blockOrganizer = new BlockOrganizer(apiProvider)
+    this.databaseApi = new DatabaseApi(api, ds)
+    this.blockOrganizer = new BlockOrganizer(api)
   }
 
   async process(blockNumber: number): Promise<boolean> {
     let organizedBlock: OrganizedBlock
 
     try {
-      const block = await this.databaseApiProvider.getBlock(blockNumber)
+      const block = await this.databaseApi.getBlock(blockNumber)
       if(!block)
         return false
 
@@ -62,14 +62,14 @@ export class OrganizeBlockProcessor implements BlockProcessor {
 export class ArchiveBlockProcessor implements BlockProcessor {
   private readonly repository: Repository<RawBlock>
 
-  constructor(private readonly apiProvider: ApiProvider, ds: DataSource) {
+  constructor(private readonly api: Api, ds: DataSource) {
     this.repository = ds.getRepository<RawBlock>(RawBlockEntity)
   }
 
   async process(blockNumber: number): Promise<boolean> {
 
     try {
-      const fromApi = await this.apiProvider.getBlock(blockNumber)
+      const fromApi = await this.api.getBlock(blockNumber)
       await this.repository.save({block_number: blockNumber, raw: fromApi})
       console.info(`saved raw ${blockNumber}`)
     } catch(err) {
@@ -87,7 +87,7 @@ export class ArchiveAbiProcessor implements BlockProcessor {
   private readonly repository: Repository<RawAbi>
   private readonly txRepository: Repository<OrganizedTransaction>
 
-  constructor(private readonly apiProvider: ApiProvider, ds: DataSource) {
+  constructor(private readonly api: Api, ds: DataSource) {
     this.repository = ds.getRepository<RawAbi>(RawAbiEntity)
     this.txRepository = ds.getRepository<OrganizedTransaction>(TransactionEntity)
   }
@@ -115,7 +115,7 @@ export class ArchiveAbiProcessor implements BlockProcessor {
 
       for(let i=0; i < contractAddresses.length; i++) {
         const contractAddress = contractAddresses[i]
-        const fromApi = await this.apiProvider.getContractAbi(contractAddress)
+        const fromApi = await this.api.getContractAbi(contractAddress)
 
         await this.repository.save({contract_address: contractAddress, raw: fromApi})
         console.info(`saved abi from api for ${contractAddress} at ${blockNumber}`)

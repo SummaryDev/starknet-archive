@@ -1,7 +1,7 @@
 import {Abi, Block, Transaction, TransactionReceipt} from "../types/raw-starknet";
-import { ApiProvider } from "./interfaces";
+import { Api } from "./interfaces";
 
-export class MockApiProvider implements ApiProvider {
+export class MockApi implements Api {
   constructor(private readonly abiCache: { [address: string]: Abi }) {}
 
   async getContractAbi(contractAddress: string, blockNumber: number) {
