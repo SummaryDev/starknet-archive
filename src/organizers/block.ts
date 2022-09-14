@@ -1,17 +1,13 @@
-import {
-  Block,
-} from "../types/raw-starknet"
-import {
-  OrganizedTransaction, OrganizedFunction, OrganizedBlock
-} from "../types/organized-starknet"
-import {TransactionCallOrganizer} from "./transaction-call"
+import { Block } from "../types/raw-starknet"
+import { OrganizedTransaction, OrganizedFunction, OrganizedBlock } from "../types/organized-starknet"
+import { TransactionCallOrganizer } from "./transaction-call"
+import { Api } from "../api/interfaces"
 import * as console from '../helpers/console'
-import {AbiProvider, ApiProvider} from "../providers/interfaces";
 
 export class BlockOrganizer extends TransactionCallOrganizer {
 
-  constructor(private readonly apiProvider: ApiProvider, abiProvider: AbiProvider) {
-    super(abiProvider)
+  constructor(api: Api) {
+    super(api)
   }
 
   async organizeTransactions(getBlockResponse: Block) {
@@ -24,7 +20,7 @@ export class BlockOrganizer extends TransactionCallOrganizer {
     for (const tx of transactions) {
       const organizedTransaction = tx as OrganizedTransaction
 
-      const receipt = await this.apiProvider.getTransactionReceipt(tx.transaction_hash)
+      const receipt = await this.api.getTransactionReceipt(tx.transaction_hash)
 
       if(receipt) {
         organizedTransaction.status = receipt.status

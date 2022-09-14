@@ -1,10 +1,10 @@
 import {Provider} from "starknet";
-import {Block, TransactionReceipt, Transaction} from "../../types/raw-starknet";
+import {Block, TransactionReceipt, Transaction} from "../types/raw-starknet";
 import axios from "axios";
-import {ApiError} from "../../helpers/error";
-import {ApiProvider} from "../interfaces";
+import {ApiError} from "../helpers/error";
+import {Api} from "./interfaces";
 
-export class FeederApiProvider implements ApiProvider {
+export class FeederApi implements Api {
   private readonly provider: Provider
   private readonly feederUrl: string
 

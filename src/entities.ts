@@ -397,3 +397,21 @@ export const RawViewEntity = new EntitySchema<RawView>({
     }
   }
 })
+
+export interface RawReceipt {
+  transaction_hash: string;
+  raw: any;
+}
+
+export const RawReceiptEntity = new EntitySchema<RawReceipt>({
+  name: "raw_receipt",
+  columns: {
+    transaction_hash: {
+      type: String,
+      primary: true
+    },
+    raw: {
+      type: 'jsonb'
+    }
+  }
+})

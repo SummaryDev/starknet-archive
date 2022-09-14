@@ -1,13 +1,13 @@
-import {PathfinderApiProvider} from "./pathfinder";
-import {ApiProvider} from "../interfaces";
-import {FeederApiProvider} from "./feeder";
+import {PathfinderApi} from "./pathfinder";
+import {Api} from "./interfaces";
+import {FeederApi} from "./feeder";
 
-export class ComboApiProvider extends PathfinderApiProvider implements ApiProvider {
+export class ComboApi extends PathfinderApi implements Api {
   private readonly feederApiProvider
 
   constructor(pathfinderUrl: string, private readonly network: string) {
     super(pathfinderUrl)
-    this.feederApiProvider = new FeederApiProvider(network)
+    this.feederApiProvider = new FeederApi(network)
   }
 
   async getClassAbi(classHash: string) {

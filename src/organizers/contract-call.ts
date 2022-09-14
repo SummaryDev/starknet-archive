@@ -11,17 +11,17 @@ import {
 import { Abi, Event, FunctionAbi, BigNumberish} from "../types/raw-starknet";
 import {getFullSelector} from "../helpers/helpers";
 import * as console from '../helpers/console';
-import {AbiProvider} from '../providers/interfaces';
+import {Api} from '../api/interfaces';
 
 import { isUint256, Uint256, uint256ToBN } from "starknet/utils/uint256";
 import { isHex, hexToDecimalString } from "starknet/utils/number";
 
 export class ContractCallOrganizer {
 
-  constructor(readonly contractAddress: string, readonly blockNumber: number, private readonly abiProvider: AbiProvider, private readonly blockHash?: string, private structs?: OrganizedStructAbi, private functions?: OrganizedFunctionAbi, private events?: OrganizedEventAbi, private constructorFunction?: FunctionAbi) {}
+  constructor(readonly contractAddress: string, readonly blockNumber: number, private readonly api: Api, private readonly blockHash?: string, private structs?: OrganizedStructAbi, private functions?: OrganizedFunctionAbi, private events?: OrganizedEventAbi, private constructorFunction?: FunctionAbi) {}
 
   async initialize() {
-    const abi = await this.abiProvider.get(this.contractAddress, this.blockNumber, this.blockHash)
+    const abi = await this.api.getContractAbi(this.contractAddress, this.blockNumber, this.blockHash)
 
     const {events, functions, structs, constructorFunction} = ContractCallOrganizer.organizeAbi(abi)
     this.structs = structs
