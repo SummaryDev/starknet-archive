@@ -1,30 +1,89 @@
-import {AbiProvider} from "../interfaces";
-import {DataSource, Repository} from "typeorm";
-import {ArgumentEntity, InputEntity, RawAbi, RawAbiEntity, TransactionEntity} from "../../entities";
-import {EventArgument, FunctionInput, OrganizedTransaction} from "../../types/organized-starknet";
-import {MemoryCache} from "../../helpers/cache";
-import {Abi, FunctionAbi} from "../../types/raw-starknet";
-import * as console from "../../helpers/console";
-import {ApiProvider, ViewProvider} from "../interfaces";
+import { ApiProvider } from './interfaces'
+import { DataSource, Repository } from "typeorm";
+import {
+  RawBlock,
+  RawBlockEntity,
+  ArgumentEntity,
+  InputEntity,
+  RawAbi,
+  RawAbiEntity,
+  TransactionEntity,
+  RawView, RawViewEntity
+} from "../entities";
+import {Abi, FunctionAbi, Block, Transaction, TransactionReceipt} from "../types/raw-starknet";
+import {EventArgument, FunctionInput, OrganizedTransaction} from "../types/organized-starknet";
+import {MemoryCache} from "../helpers/cache";
+import * as console from "../helpers/console";
 
-export class DatabaseAbiProvider implements AbiProvider {
-  private readonly repository: Repository<RawAbi>
+export class DatabaseApiProvider implements ApiProvider {
+  private readonly blockRepository: Repository<RawBlock>
+  private readonly abiRepository: Repository<RawAbi>
   private readonly txRepository: Repository<OrganizedTransaction>
   private readonly inputRepository: Repository<FunctionInput>
   private readonly argumentRepository: Repository<EventArgument>
+  private readonly viewRepository: Repository<RawView>
 
-  private readonly memoryCache: MemoryCache
+  private readonly memoryCache = MemoryCache.getInstance()
 
-  constructor(private readonly apiProvider: ApiProvider, private readonly viewProvider: ViewProvider, ds: DataSource) {
-    this.repository = ds.getRepository<RawAbi>(RawAbiEntity)
+  constructor(private readonly apiProvider: ApiProvider, ds: DataSource) {
+    this.blockRepository = ds.getRepository<RawBlock>(RawBlockEntity)
+    this.abiRepository = ds.getRepository<RawAbi>(RawAbiEntity)
     this.txRepository = ds.getRepository<OrganizedTransaction>(TransactionEntity)
     this.inputRepository = ds.getRepository<FunctionInput>(InputEntity)
     this.argumentRepository = ds.getRepository<EventArgument>(ArgumentEntity)
-
-    this.memoryCache = MemoryCache.getInstance()
+    this.viewRepository = ds.getRepository<RawView>(RawViewEntity)
   }
 
-  async get(contractAddress: string, blockNumber: number, blockHash?: string): Promise<Abi | undefined> {
+  async getBlock(blockNumber: number): Promise<Block | undefined> {
+    let ret
+
+    const fromDb = await this.blockRepository.findOneBy({block_number: blockNumber})
+
+    if (!fromDb) {
+      const fromApi = await this.apiProvider.getBlock(blockNumber)
+      await this.blockRepository.save({block_number: blockNumber, raw: fromApi})
+      ret = fromApi
+      console.debug(`from api for ${blockNumber}`)
+    } else {
+      ret = fromDb.raw
+      console.debug(`from db for ${blockNumber}`)
+    }
+
+    return ret
+  }
+
+  async callView(contractAddress: string, viewFunction: string, blockNumber?: number, blockHash?: string) {
+    let ret
+
+    const fromDb = await this.viewRepository.findOneBy({
+      block_number: blockNumber,
+      contract_address: contractAddress,
+      view_function: viewFunction
+    })
+
+    if (fromDb) {
+      ret = fromDb.raw
+      console.debug(`from db for ${contractAddress} ${viewFunction} ${blockNumber}`)
+    } else {
+      const fromApi = await this.apiProvider.callView(contractAddress, viewFunction, blockNumber, blockHash)
+
+      if(fromApi) {
+        await this.viewRepository.save({
+          block_number: blockNumber,
+          contract_address: contractAddress,
+          view_function: viewFunction,
+          raw: fromApi
+        })
+
+        ret = fromApi
+        console.debug(`from api for ${contractAddress} ${viewFunction} ${blockNumber}`)
+      }
+    }
+
+    return ret
+  }
+
+  async getContractAbi(contractAddress: string, blockNumber?: number, blockHash?: string): Promise<Abi | undefined> {
     let ret
 
     const contractAbi = await this.getAbi(contractAddress, false)
@@ -36,8 +95,8 @@ export class DatabaseAbiProvider implements AbiProvider {
 
     ret = contractAbi
 
-    if (DatabaseAbiProvider.isProxy(contractAbi)) {
-      const implementation = await this.findImplementation(contractAddress, contractAbi, blockNumber, blockHash)
+    if (DatabaseApiProvider.isProxy(contractAbi)) {
+      const implementation = await this.findImplementation(contractAddress, contractAbi, blockNumber!, blockHash)
 
       if (!implementation) {
         console.debug(`findImplementation returned no result for proxy contract ${contractAddress} at block ${blockNumber}`)
@@ -49,8 +108,8 @@ export class DatabaseAbiProvider implements AbiProvider {
         } else {
           ret = implementationAbi
 
-          const proxyConstructor = DatabaseAbiProvider.findConstructor(contractAbi as FunctionAbi[])
-          const implementationConstructor = DatabaseAbiProvider.findConstructor(implementationAbi as FunctionAbi[])
+          const proxyConstructor = DatabaseApiProvider.findConstructor(contractAbi as FunctionAbi[])
+          const implementationConstructor = DatabaseApiProvider.findConstructor(implementationAbi as FunctionAbi[])
 
           if (proxyConstructor && !implementationConstructor)
             ret.push(proxyConstructor)
@@ -80,7 +139,7 @@ export class DatabaseAbiProvider implements AbiProvider {
       ret = fromMemory
       console.debug(`from memory for ${h}`)
     } else {
-      const fromDb = await this.repository.findOneBy({contract_address: h})//TODO even tho we store contract and class abi in the same table the pk name contract_address is confusing: for classes it should class_hash perhaps a better generic name is `hash`
+      const fromDb = await this.abiRepository.findOneBy({contract_address: h})//TODO even tho we store contract and class abi in the same table the pk name contract_address is confusing: for classes it should class_hash perhaps a better generic name is `hash`
 
       if (fromDb && fromDb.raw) {
         ret = fromDb.raw
@@ -98,7 +157,7 @@ export class DatabaseAbiProvider implements AbiProvider {
         }
 
         if (fromApi) {
-          await this.repository.save({contract_address: h, raw: fromApi})
+          await this.abiRepository.save({contract_address: h, raw: fromApi})
           ret = fromApi
         }
       }
@@ -117,9 +176,9 @@ export class DatabaseAbiProvider implements AbiProvider {
     if (!proxyContractAbi)
       return ret
 
-    const implementationContractGetters = DatabaseAbiProvider.getImplementationGetters(proxyContractAbi)
-    const implementationConstructors = DatabaseAbiProvider.getImplementationConstructors(proxyContractAbi)
-    const upgradeEvents = DatabaseAbiProvider.getUpgradeEvents(proxyContractAbi)
+    const implementationContractGetters = DatabaseApiProvider.getImplementationGetters(proxyContractAbi)
+    const implementationConstructors = DatabaseApiProvider.getImplementationConstructors(proxyContractAbi)
+    const upgradeEvents = DatabaseApiProvider.getUpgradeEvents(proxyContractAbi)
 
     if (implementationContractGetters.length == 1) {
       ret = await this.findImplementationByGetter(proxyContractAddress, proxyContractAbi, blockNumber, blockHash)
@@ -139,7 +198,7 @@ export class DatabaseAbiProvider implements AbiProvider {
   async findImplementationByConstructor(proxyContractAddress: string, proxyContractAbi: Abi, blockNumber: number): Promise<string | undefined> {
     let ret = undefined
 
-    const constructors = DatabaseAbiProvider.getImplementationConstructors(proxyContractAbi)
+    const constructors = DatabaseApiProvider.getImplementationConstructors(proxyContractAbi)
 
     if (constructors.length != 1) {
       console.warn(`cannot getImplementation from ${constructors.length} constructors in abi for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
@@ -176,7 +235,7 @@ export class DatabaseAbiProvider implements AbiProvider {
   async findImplementationByEvent(proxyContractAddress: string, proxyContractAbi: Abi, blockNumber: number): Promise<string | undefined> {
     let ret = undefined
 
-    const upgradeEvents = DatabaseAbiProvider.getUpgradeEvents(proxyContractAbi)
+    const upgradeEvents = DatabaseApiProvider.getUpgradeEvents(proxyContractAbi)
 
     if (upgradeEvents.length != 1) {
       console.warn(`cannot getImplementation from ${upgradeEvents.length} upgradeEvents in abi for proxy contract ${proxyContractAddress} before block ${blockNumber}`)
@@ -213,7 +272,7 @@ export class DatabaseAbiProvider implements AbiProvider {
   async findImplementationByGetter(proxyContractAddress: string, proxyContractAbi: Abi, blockNumber: number, blockHash?: string): Promise<string | undefined> {
     let ret = undefined
 
-    const viewFunctions = DatabaseAbiProvider.getImplementationGetters(proxyContractAbi)
+    const viewFunctions = DatabaseApiProvider.getImplementationGetters(proxyContractAbi)
 
     if (viewFunctions.length != 1) {
       console.warn(`cannot findImplementationByGetter from ${viewFunctions.length} viewFunctions in abi for proxy contract ${proxyContractAddress}`)
@@ -221,7 +280,7 @@ export class DatabaseAbiProvider implements AbiProvider {
       const viewFnAbi = viewFunctions[0]
       const viewFn = viewFnAbi.name
 
-      const implementations = await this.viewProvider.get(proxyContractAddress, viewFn, blockNumber, blockHash)
+      const implementations = await this.callView(proxyContractAddress, viewFn, blockNumber, blockHash)
 
       if(implementations) {
         if (implementations.length != 1) {
@@ -287,11 +346,22 @@ export class DatabaseAbiProvider implements AbiProvider {
     if (!abi)
       return false
 
-    const implementationGetters = DatabaseAbiProvider.getImplementationGetters(abi)
-    const implementationConstructors = DatabaseAbiProvider.getImplementationConstructors(abi)
-    const upgradeEvents = DatabaseAbiProvider.getUpgradeEvents(abi)
+    const implementationGetters = DatabaseApiProvider.getImplementationGetters(abi)
+    const implementationConstructors = DatabaseApiProvider.getImplementationConstructors(abi)
+    const upgradeEvents = DatabaseApiProvider.getUpgradeEvents(abi)
 
     return implementationGetters.length == 1 || implementationConstructors.length == 1 || upgradeEvents.length == 1
   }
 
+  getClassAbi(classHash: string): Promise<Abi | undefined> {
+    throw new Error('not implemented')
+  }
+
+  getTransactionReceipt(txHash: string): Promise<TransactionReceipt | undefined> {
+    throw new Error('not implemented')
+  }
+
+  getTransaction(txHash: string): Promise<Transaction | undefined> {
+    throw new Error('not implemented')
+  }
 }

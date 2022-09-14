@@ -1,11 +1,9 @@
 import {DataSource, Repository} from "typeorm";
 import {BlockEntity, RawAbi, RawAbiEntity, RawBlock, RawBlockEntity, TransactionEntity} from "./entities";
 import {OrganizedBlock, OrganizedTransaction} from "./types/organized-starknet";
-import { ApiProvider, BlockProvider } from './providers/interfaces';
+import { ApiProvider } from './providers/interfaces';
+import { DatabaseApiProvider } from './providers/database';
 import { ApiError } from './helpers/error';
-import { DatabaseBlockProvider } from './providers/block/database';
-import { DatabaseViewProvider } from './providers/view/database';
-import { DatabaseAbiProvider } from './providers/abi/database';
 import * as console from "./helpers/console";
 import { BlockOrganizer } from "./organizers/block";
 
@@ -29,21 +27,19 @@ function canRetry(err: any): boolean {
 export class OrganizeBlockProcessor implements BlockProcessor {
   private readonly blockRepository: Repository<OrganizedBlock>
   private readonly blockOrganizer: BlockOrganizer
-  private blockProvider: BlockProvider
+  private databaseApiProvider: DatabaseApiProvider
 
   constructor(private readonly apiProvider: ApiProvider, private readonly ds: DataSource) {
     this.blockRepository = ds.getRepository<OrganizedBlock>(BlockEntity)
-    this.blockProvider = new DatabaseBlockProvider(apiProvider, ds)
-    const viewProvider = new DatabaseViewProvider(apiProvider, ds)
-    const abiProvider = new DatabaseAbiProvider(apiProvider, viewProvider, ds)
-    this.blockOrganizer = new BlockOrganizer(apiProvider, abiProvider)
+    this.databaseApiProvider = new DatabaseApiProvider(apiProvider, ds)
+    this.blockOrganizer = new BlockOrganizer(apiProvider)
   }
 
   async process(blockNumber: number): Promise<boolean> {
     let organizedBlock: OrganizedBlock
 
     try {
-      const block = await this.blockProvider.get(blockNumber)
+      const block = await this.databaseApiProvider.getBlock(blockNumber)
       if(!block)
         return false
 

@@ -15,13 +15,13 @@ import {
   RawCalldata, L1HandlerTransaction
 } from "../types/raw-starknet"
 import {ContractCallOrganizer} from "./contract-call"
-import {AbiProvider} from '../providers/interfaces'
+import {ApiProvider} from '../providers/interfaces'
 import * as console from '../helpers/console'
 import JSON = require("json5")
 
 export class TransactionCallOrganizer {
 
-  constructor(private readonly abiProvider: AbiProvider) {
+  constructor(protected readonly apiProvider: ApiProvider) {
   }
 
   async organizeFunction(tx: InvokeFunctionTransaction | L1HandlerTransaction, blockNumber: number, blockHash?: string) {
@@ -259,7 +259,7 @@ export class TransactionCallOrganizer {
   // }
 
   async getContractOrganizer(contractAddress: string, blockNumber: number, blockHash?: string) {
-    const contractCallOrganizer = new ContractCallOrganizer(contractAddress, blockNumber, this.abiProvider, blockHash)
+    const contractCallOrganizer = new ContractCallOrganizer(contractAddress, blockNumber, this.apiProvider, blockHash)
     await contractCallOrganizer.initialize()
 
     return contractCallOrganizer

@@ -1,9 +1,9 @@
-import * as console from "../../helpers/console";
+import * as console from "../helpers/console";
 import axios from "axios";
-import {ApiProvider} from "../interfaces";
-import {ApiError} from "../../helpers/error";
-import {Abi, Block, Transaction, TransactionReceipt} from "../../types/raw-starknet";
-import {getFullSelector} from "../../helpers/helpers";
+import {ApiProvider} from "./interfaces";
+import {ApiError} from "../helpers/error";
+import {Abi, Block, Transaction, TransactionReceipt} from "../types/raw-starknet";
+import {getFullSelector} from "../helpers/helpers";
 
 export class PathfinderApiProvider implements ApiProvider {
   constructor(private readonly url: string) {

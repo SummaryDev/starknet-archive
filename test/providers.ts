@@ -1,17 +1,16 @@
 import {expect} from 'chai'
 import {createConnection, DataSource} from "typeorm"
-import { FeederApiProvider } from "../src/providers/api/feeder";
-import { PathfinderApiProvider } from "../src/providers/api/pathfinder";
-import { ComboApiProvider } from "../src/providers/api/combo";
-import { DatabaseAbiProvider } from "../src/providers/abi/database";
-import { DatabaseViewProvider } from "../src/providers/view/database";
+import { FeederApiProvider } from "../src/providers/feeder";
+import { PathfinderApiProvider } from "../src/providers/pathfinder";
+import { ComboApiProvider } from "../src/providers/combo";
+import { DatabaseApiProvider } from "../src/providers/database";
 import * as console from '../src/helpers/console'
-import {DeployTransaction, InvokeFunctionTransaction, TransactionReceipt} from '../src/types/raw-starknet'
+import { InvokeFunctionTransaction } from '../src/types/raw-starknet'
 import {TransactionCallOrganizer} from '../src/organizers/transaction-call'
 import {BlockOrganizer} from '../src/organizers/block'
 //import JSON = require("json5")
 import { MemoryCache } from "../src/helpers/cache";
-import {ApiProvider, ViewProvider} from "../src/providers/interfaces";
+import { ApiProvider } from "../src/providers/interfaces";
 
 function log(o: any) {
   console.log(JSON.stringify(o, null, 2))
@@ -31,16 +30,14 @@ describe('providers', function() {
 
   let ds:DataSource
 
-  let viewProvider:ViewProvider
-  let databaseAbiProvider:DatabaseAbiProvider
+  let databaseApiProvider:DatabaseApiProvider
 
   before(() => {
     return createConnection().then(o => {
       ds = o
       log(`connected to db`)
 
-      viewProvider = new DatabaseViewProvider(apiProvider, ds)
-      databaseAbiProvider = new DatabaseAbiProvider(apiProvider, viewProvider, ds)
+      databaseApiProvider = new DatabaseApiProvider(apiProvider, ds)
     })
   })
 
@@ -51,21 +48,21 @@ describe('providers', function() {
 
       const blockNumber = 241859 // <-- WAS DEPLOYED IN THIS BLOCK https://beta-goerli.voyager.online/tx/0x26780a818432b6739a23ab8e1ad0c0463ada881a563034a6d5c3d7e46850883
       const contractAddressProxy = '0x5ef67d8c38b82ba699f206bf0db59f1828087a710bad48cc4d51a2b0da4c29'
-      const abiProxy = await databaseAbiProvider.getAbi(contractAddressProxy)
+      const abiProxy = await databaseApiProvider.getAbi(contractAddressProxy)
       log(abiProxy)
       expect(abiProxy).not.undefined
-      const isProxy = DatabaseAbiProvider.isProxy(abiProxy)
+      const isProxy = DatabaseApiProvider.isProxy(abiProxy)
       expect(isProxy).true
 
-      let implementationContractAddress = await databaseAbiProvider.findImplementation(contractAddressProxy, abiProxy, 266476)
+      let implementationContractAddress = await databaseApiProvider.findImplementation(contractAddressProxy, abiProxy, 266476)
       log(implementationContractAddress)
       expect(implementationContractAddress).eq('0x1ecfc4bf6c3b5317a25fec2eb942db4f336077f7506acc3eb253889d73a45d4')
 
-      implementationContractAddress = await databaseAbiProvider.findImplementation(contractAddressProxy, abiProxy, blockNumber)
+      implementationContractAddress = await databaseApiProvider.findImplementation(contractAddressProxy, abiProxy, blockNumber)
       log(implementationContractAddress)
       expect(implementationContractAddress).eq('0x42687c59528cd15c17c1ec7029a3c6196e004fac5dea4ac9fdc99b58ded01e1')
 
-      expect(databaseAbiProvider.findImplementation(contractAddressProxy, abiProxy, blockNumber-1)).to.throw
+      expect(databaseApiProvider.findImplementation(contractAddressProxy, abiProxy, blockNumber-1)).to.throw
     })
 
     it('finds implementation contract address for proxy contract with multiple implementation getter view functions', async() => {
@@ -74,63 +71,63 @@ describe('providers', function() {
 
       const blockNumber = 102959 // <-- WAS DEPLOYED IN THIS BLOCK https://beta-goerli.voyager.online/tx/0x550088c7427d9734c801e7dd3a5e166d515276849034071ee87905510dbe3c6
       const contractAddressProxy = '0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7'
-      const abiProxy = await databaseAbiProvider.getAbi(contractAddressProxy)
+      const abiProxy = await databaseApiProvider.getAbi(contractAddressProxy)
       log(abiProxy)
       expect(abiProxy).not.undefined
-      const isProxy = DatabaseAbiProvider.isProxy(abiProxy)
+      const isProxy = DatabaseApiProvider.isProxy(abiProxy)
       expect(isProxy).true
 
-      let implementationContractAddress = await databaseAbiProvider.findImplementation(contractAddressProxy, abiProxy, 266476)
+      let implementationContractAddress = await databaseApiProvider.findImplementation(contractAddressProxy, abiProxy, 266476)
       log(implementationContractAddress)
       expect(implementationContractAddress).eq('0xfa904eea70850fdd44e155dcc79a8d96515755ed43990ff4e7e7c096673e7')
 
-      implementationContractAddress = await databaseAbiProvider.findImplementation(contractAddressProxy, abiProxy, blockNumber)
+      implementationContractAddress = await databaseApiProvider.findImplementation(contractAddressProxy, abiProxy, blockNumber)
       log(implementationContractAddress)
       expect(implementationContractAddress).eq('0x0')
 
-      expect(databaseAbiProvider.findImplementation(contractAddressProxy, abiProxy, blockNumber-1)).to.throw
+      expect(databaseApiProvider.findImplementation(contractAddressProxy, abiProxy, blockNumber-1)).to.throw
     })
 
     it('finds implementation contract address for proxy contract with a getter view function', async() => {
       const blockNumber = 119485 // <-- WAS DEPLOYED IN THIS BLOCK https://goerli.voyager.online/tx/0x3d86f1b062475dc31f57ad8666ee78c332ed2588ad360f6316108702a066123
       const contractAddressProxy = '0x47495c732aa419dfecb43a2a78b4df926fddb251c7de0e88eab90d8a0399cd8'
-      const abiProxy = await databaseAbiProvider.getAbi(contractAddressProxy)
+      const abiProxy = await databaseApiProvider.getAbi(contractAddressProxy)
       log(abiProxy)
       expect(abiProxy).not.undefined
-      const isProxy = DatabaseAbiProvider.isProxy(abiProxy)
+      const isProxy = DatabaseApiProvider.isProxy(abiProxy)
       expect(isProxy).true
 
-      let implementationContractAddress = await databaseAbiProvider.findImplementation(contractAddressProxy, abiProxy, 200000)
+      let implementationContractAddress = await databaseApiProvider.findImplementation(contractAddressProxy, abiProxy, 200000)
       log(implementationContractAddress)
       expect(implementationContractAddress).eq('0x70a61892f03b34f88894f0fb9bb4ae0c63a53f5042f79997862d1dffb8d6a30')
 
-      implementationContractAddress = await databaseAbiProvider.findImplementation(contractAddressProxy, abiProxy, blockNumber)
+      implementationContractAddress = await databaseApiProvider.findImplementation(contractAddressProxy, abiProxy, blockNumber)
       log(implementationContractAddress)
       expect(implementationContractAddress).eq('0x90aa7a9203bff78bfb24f0753c180a33d4bad95b1f4f510b36b00993815704')
 
-      expect(databaseAbiProvider.findImplementation(contractAddressProxy, abiProxy, blockNumber-1)).to.throw
+      expect(databaseApiProvider.findImplementation(contractAddressProxy, abiProxy, blockNumber-1)).to.throw
     })
 
     it('finds implementation contract address for proxy contract with a constructor and events', async() => {
       const blockNumber = 134018
       const contractAddressProxy = '0x328eddfaf2c85bd63f814c25b5b81fd21a5ca04993440b24c6b87b6fb93c921'
-      const abiProxy = await databaseAbiProvider.getAbi(contractAddressProxy)
+      const abiProxy = await databaseApiProvider.getAbi(contractAddressProxy)
       log(abiProxy)
-      const isProxy = DatabaseAbiProvider.isProxy(abiProxy!)
+      const isProxy = DatabaseApiProvider.isProxy(abiProxy!)
       expect(isProxy).true
 
-      let implementationContractAddress = await databaseAbiProvider.findImplementation(contractAddressProxy, abiProxy, blockNumber)
+      let implementationContractAddress = await databaseApiProvider.findImplementation(contractAddressProxy, abiProxy, blockNumber)
       expect(implementationContractAddress).eq('0x3cbd5ea6dfab767246b10a6afaa5e6a7019492935b2364d836d7f02a07b58ae')
 
-      expect(databaseAbiProvider.findImplementation(contractAddressProxy, abiProxy, blockNumber-1)).to.throw
+      expect(databaseApiProvider.findImplementation(contractAddressProxy, abiProxy, blockNumber-1)).to.throw
     })
 
     it('finds implementation contract address from proxy constructor', async() => {
       const blockNumber = 134018
       const contractAddressProxy = '0x328eddfaf2c85bd63f814c25b5b81fd21a5ca04993440b24c6b87b6fb93c921'
-      const abiProxy = await databaseAbiProvider.getAbi(contractAddressProxy)
+      const abiProxy = await databaseApiProvider.getAbi(contractAddressProxy)
       log(abiProxy)
-      const isProxy = DatabaseAbiProvider.isProxy(abiProxy)
+      const isProxy = DatabaseApiProvider.isProxy(abiProxy)
       expect(isProxy).true
 
       /*
@@ -139,18 +136,18 @@ describe('providers', function() {
       134018	0x2dd6e7e242921c61c8b3b8dc07cf88a8792562dc21b732550af4fbfb5aee217	["0x3cbd5ea6dfab767246b10a6afaa5e6a7019492935b2364d836d7f02a07b58ae"] <-- WAS DEPLOYED IN THIS BLOCK
        */
 
-      let implementationContractAddress = await databaseAbiProvider.findImplementationByConstructor(contractAddressProxy, abiProxy!, blockNumber)
+      let implementationContractAddress = await databaseApiProvider.findImplementationByConstructor(contractAddressProxy, abiProxy!, blockNumber)
       expect(implementationContractAddress).eq('0x3cbd5ea6dfab767246b10a6afaa5e6a7019492935b2364d836d7f02a07b58ae')
 
-      expect(databaseAbiProvider.findImplementationByConstructor(contractAddressProxy, abiProxy!, blockNumber-1)).to.throw
+      expect(databaseApiProvider.findImplementationByConstructor(contractAddressProxy, abiProxy!, blockNumber-1)).to.throw
     })
 
     it('finds implementation contract address from proxy constructor with multiple inputs', async() => {
       const blockNumber = 62135
       const contractAddressProxy = '0x1317354276941f7f799574c73fd8fe53fa3f251084b4c04d88cf601b6bd915e'
-      const abiProxy = await databaseAbiProvider.getAbi(contractAddressProxy)
+      const abiProxy = await databaseApiProvider.getAbi(contractAddressProxy)
       log(abiProxy)
-      const isProxy = DatabaseAbiProvider.isProxy(abiProxy)
+      const isProxy = DatabaseApiProvider.isProxy(abiProxy)
       expect(isProxy).true
 
       /*
@@ -159,17 +156,17 @@ describe('providers', function() {
       62135	0x53facbf470346c7e21452e5b8ef4c2b210547f9463b00b73b8a16e8daa5e58c	["0x6043ed114a9a1987fe65b100d0da46fe71b2470e7e5ff8bf91be5346f5e5e3", "0x74db315cc7e1e821dfd229890068ea197594ac3e29fa0038dc12704f63ebb83"] <-- WAS DEPLOYED IN THIS BLOCK
        */
 
-      let implementationContractAddress = await databaseAbiProvider.findImplementationByConstructor(contractAddressProxy, abiProxy!, blockNumber)
+      let implementationContractAddress = await databaseApiProvider.findImplementationByConstructor(contractAddressProxy, abiProxy!, blockNumber)
       expect(implementationContractAddress).eq('0x74db315cc7e1e821dfd229890068ea197594ac3e29fa0038dc12704f63ebb83')
 
-      expect(databaseAbiProvider.findImplementationByConstructor(contractAddressProxy, abiProxy!, blockNumber-1)).to.throw
+      expect(databaseApiProvider.findImplementationByConstructor(contractAddressProxy, abiProxy!, blockNumber-1)).to.throw
     })
 
     it('finds implementation contract address from upgrade event', async() => {
       const contractAddressProxy = '0x328eddfaf2c85bd63f814c25b5b81fd21a5ca04993440b24c6b87b6fb93c921'
-      const abiProxy = await databaseAbiProvider.getAbi(contractAddressProxy)
+      const abiProxy = await databaseApiProvider.getAbi(contractAddressProxy)
       log(abiProxy)
-      const isProxy = DatabaseAbiProvider.isProxy(abiProxy)
+      const isProxy = DatabaseApiProvider.isProxy(abiProxy)
       expect(isProxy).true
 
       /*
@@ -181,30 +178,30 @@ describe('providers', function() {
       134018	"0x3cbd5ea6dfab767246b10a6afaa5e6a7019492935b2364d836d7f02a07b58ae"	Upgraded	implementation <-- WAS DEPLOYED IN THIS BLOCK
        */
 
-      let implementationContractAddress = await databaseAbiProvider.findImplementationByEvent(contractAddressProxy, abiProxy!, 164233)
+      let implementationContractAddress = await databaseApiProvider.findImplementationByEvent(contractAddressProxy, abiProxy!, 164233)
       expect(implementationContractAddress).eq('0x65c4fe3e8d1eaa783a62417271af5546d9164cc81d7780617b1295722bfd535')
 
-      implementationContractAddress = await databaseAbiProvider.findImplementationByEvent(contractAddressProxy, abiProxy!, 161300)
+      implementationContractAddress = await databaseApiProvider.findImplementationByEvent(contractAddressProxy, abiProxy!, 161300)
       expect(implementationContractAddress).eq('0x3a29ab9db30291ab762af40a510cb0fe61c4a4f1050142d1ea9d58754cbd641')
 
-      implementationContractAddress = await databaseAbiProvider.findImplementationByEvent(contractAddressProxy, abiProxy!, 146407)
+      implementationContractAddress = await databaseApiProvider.findImplementationByEvent(contractAddressProxy, abiProxy!, 146407)
       expect(implementationContractAddress).eq('0x1e7bad045fbf062272ba29f3d95d678868c3151399b25ba8bb1092077a85edd')
 
-      implementationContractAddress = await databaseAbiProvider.findImplementationByEvent(contractAddressProxy, abiProxy!, 134018)
+      implementationContractAddress = await databaseApiProvider.findImplementationByEvent(contractAddressProxy, abiProxy!, 134018)
       expect(implementationContractAddress).eq('0x3cbd5ea6dfab767246b10a6afaa5e6a7019492935b2364d836d7f02a07b58ae')
 
-      expect(await databaseAbiProvider.findImplementationByEvent(contractAddressProxy, abiProxy!, 134017)).to.throw
+      expect(await databaseApiProvider.findImplementationByEvent(contractAddressProxy, abiProxy!, 134017)).to.throw
     })
 
     it('finds implementation contract address from a getter view function', async() => {
       let contractAddressProxy = '0x47495c732aa419dfecb43a2a78b4df926fddb251c7de0e88eab90d8a0399cd8' // has get_implementation
       let blockNumber = 200000
-      let abiProxy = await databaseAbiProvider.getAbi(contractAddressProxy)
+      let abiProxy = await databaseApiProvider.getAbi(contractAddressProxy)
       log(abiProxy)
-      let isProxy = DatabaseAbiProvider.isProxy(abiProxy)
+      let isProxy = DatabaseApiProvider.isProxy(abiProxy)
       expect(isProxy).true
 
-      let implementationContractAddress = await databaseAbiProvider.findImplementationByGetter(contractAddressProxy, abiProxy!, blockNumber)
+      let implementationContractAddress = await databaseApiProvider.findImplementationByGetter(contractAddressProxy, abiProxy!, blockNumber)
       expect(implementationContractAddress).eq('0x70a61892f03b34f88894f0fb9bb4ae0c63a53f5042f79997862d1dffb8d6a30')
 
       /*
@@ -213,10 +210,10 @@ describe('providers', function() {
        */
       blockNumber = 119485
 
-      implementationContractAddress = await databaseAbiProvider.findImplementationByGetter(contractAddressProxy, abiProxy!, blockNumber)
+      implementationContractAddress = await databaseApiProvider.findImplementationByGetter(contractAddressProxy, abiProxy!, blockNumber)
       expect(implementationContractAddress).eq('0x90aa7a9203bff78bfb24f0753c180a33d4bad95b1f4f510b36b00993815704')
 
-      expect(databaseAbiProvider.findImplementationByGetter(contractAddressProxy, abiProxy!, blockNumber-1)).to.throw
+      expect(databaseApiProvider.findImplementationByGetter(contractAddressProxy, abiProxy!, blockNumber-1)).to.throw
 
       /*
       proxy
@@ -232,66 +229,66 @@ describe('providers', function() {
       contractAddressProxy = '0x1317354276941f7f799574c73fd8fe53fa3f251084b4c04d88cf601b6bd915e' // has getImplementation
 
       blockNumber = 200000
-      abiProxy = await databaseAbiProvider.getAbi(contractAddressProxy)
+      abiProxy = await databaseApiProvider.getAbi(contractAddressProxy)
       log(abiProxy)
-      isProxy = DatabaseAbiProvider.isProxy(abiProxy)
+      isProxy = DatabaseApiProvider.isProxy(abiProxy)
       expect(isProxy).true
 
-      implementationContractAddress = await databaseAbiProvider.findImplementationByGetter(contractAddressProxy, abiProxy!, blockNumber)
+      implementationContractAddress = await databaseApiProvider.findImplementationByGetter(contractAddressProxy, abiProxy!, blockNumber)
       expect(implementationContractAddress).eq('0x75a31cd9fc21788e3505f9ca50f2a020cd63430f68dbc66a40fe3a083159ebf')
 
       blockNumber = 70056
 
-      implementationContractAddress = await databaseAbiProvider.findImplementationByGetter(contractAddressProxy, abiProxy!, blockNumber)
+      implementationContractAddress = await databaseApiProvider.findImplementationByGetter(contractAddressProxy, abiProxy!, blockNumber)
       expect(implementationContractAddress).eq('0x2c30ac04ab60b7b2be19854f9c7129cc40ff95dd167816fb3be1ea94d7110c8')
 
       blockNumber = 62135
 
-      implementationContractAddress = await databaseAbiProvider.findImplementationByGetter(contractAddressProxy, abiProxy!, blockNumber)
+      implementationContractAddress = await databaseApiProvider.findImplementationByGetter(contractAddressProxy, abiProxy!, blockNumber)
       expect(implementationContractAddress).eq('0x74db315cc7e1e821dfd229890068ea197594ac3e29fa0038dc12704f63ebb83')
 
-      expect(databaseAbiProvider.findImplementationByGetter(contractAddressProxy, abiProxy!, blockNumber-1)).to.throw
+      expect(databaseApiProvider.findImplementationByGetter(contractAddressProxy, abiProxy!, blockNumber-1)).to.throw
     })
 
     it('detects proxy contract', async() => {
       const contractAddressProxyByConstructor = '0x0328eddfaf2c85bd63f814c25b5b81fd21a5ca04993440b24c6b87b6fb93c921'
-      const abiProxyByConstructor = await databaseAbiProvider.getAbi(contractAddressProxyByConstructor)
+      const abiProxyByConstructor = await databaseApiProvider.getAbi(contractAddressProxyByConstructor)
       log(abiProxyByConstructor)
-      const isProxyByConstructorProxy = DatabaseAbiProvider.isProxy(abiProxyByConstructor)
+      const isProxyByConstructorProxy = DatabaseApiProvider.isProxy(abiProxyByConstructor)
       expect(isProxyByConstructorProxy).true
 
       const contractAddressProxyByEvent = '0x0328eddfaf2c85bd63f814c25b5b81fd21a5ca04993440b24c6b87b6fb93c921'
-      const abiProxyByEvent = await databaseAbiProvider.getAbi(contractAddressProxyByEvent)
+      const abiProxyByEvent = await databaseApiProvider.getAbi(contractAddressProxyByEvent)
       log(abiProxyByEvent)
-      const isProxyByEventProxy = DatabaseAbiProvider.isProxy(abiProxyByEvent)
+      const isProxyByEventProxy = DatabaseApiProvider.isProxy(abiProxyByEvent)
       expect(isProxyByEventProxy).true
 
       const contractAddressProxyByContractAbiReadFunction = '0x47495c732aa419dfecb43a2a78b4df926fddb251c7de0e88eab90d8a0399cd8'
-      const abiProxyByContractAbiReadFunction = await databaseAbiProvider.getAbi(contractAddressProxyByContractAbiReadFunction)
+      const abiProxyByContractAbiReadFunction = await databaseApiProvider.getAbi(contractAddressProxyByContractAbiReadFunction)
       log(abiProxyByContractAbiReadFunction)
-      const isProxyByContractAbiReadFunctionProxy = DatabaseAbiProvider.isProxy(abiProxyByContractAbiReadFunction)
+      const isProxyByContractAbiReadFunctionProxy = DatabaseApiProvider.isProxy(abiProxyByContractAbiReadFunction)
       expect(isProxyByContractAbiReadFunctionProxy).true
 
       const contractAddressProxyByClassAbiReadFunction = '0x5ef67d8c38b82ba699f206bf0db59f1828087a710bad48cc4d51a2b0da4c29'
-      const abiProxyByClassAbiReadFunction = await databaseAbiProvider.getAbi(contractAddressProxyByClassAbiReadFunction)
+      const abiProxyByClassAbiReadFunction = await databaseApiProvider.getAbi(contractAddressProxyByClassAbiReadFunction)
       log(abiProxyByClassAbiReadFunction)
-      const isProxyByClassAbiReadFunctionProxy = DatabaseAbiProvider.isProxy(abiProxyByClassAbiReadFunction)
+      const isProxyByClassAbiReadFunctionProxy = DatabaseApiProvider.isProxy(abiProxyByClassAbiReadFunction)
       expect(isProxyByClassAbiReadFunctionProxy).true
 
       const contractAddressRegular = '0x4e34321e0bce0e4ff8ff0bcb3a9a030d423bca29a9d99cbcdd60edb9a2bf03a'
-      const abiRegular = await databaseAbiProvider.getAbi(contractAddressRegular)
+      const abiRegular = await databaseApiProvider.getAbi(contractAddressRegular)
       log(abiRegular)
-      const isRegularProxy = DatabaseAbiProvider.isProxy(abiRegular)
+      const isRegularProxy = DatabaseApiProvider.isProxy(abiRegular)
       expect(isRegularProxy).false
     })
 
     it('gets abi for regular contract', async() => {
       const blockNumber = 200000
       const contractAddress = '0x4e34321e0bce0e4ff8ff0bcb3a9a030d423bca29a9d99cbcdd60edb9a2bf03a'
-      const abiBare = await databaseAbiProvider.getAbi(contractAddress)
+      const abiBare = await databaseApiProvider.getAbi(contractAddress)
       log(abiBare)
 
-      const abi = await databaseAbiProvider.get(contractAddress, blockNumber)
+      const abi = await databaseApiProvider.getContractAbi(contractAddress, blockNumber)
       log(abi)
 
       expect(abiBare).deep.eq(abi)
@@ -302,10 +299,10 @@ describe('providers', function() {
     it('gets abi for proxy contract', async() => {
       const blockNumber = 200000
       const contractAddress = '0x328eddfaf2c85bd63f814c25b5b81fd21a5ca04993440b24c6b87b6fb93c921'
-      const abiProxy = await databaseAbiProvider.getAbi(contractAddress)
+      const abiProxy = await databaseApiProvider.getAbi(contractAddress)
       log(abiProxy)
 
-      const abiImplementation = await databaseAbiProvider.get(contractAddress, blockNumber)
+      const abiImplementation = await databaseApiProvider.getContractAbi(contractAddress, blockNumber)
       log(abiImplementation)
 
       expect(abiProxy).not.deep.eq(abiImplementation)
@@ -321,7 +318,7 @@ describe('providers', function() {
       const blockNumber = 271814
       log(receipt)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseApiProvider)
 
       const organizedEvents = await transactionCallOrganizer.organizeEvents(receipt!.events!, blockNumber)
 
@@ -335,7 +332,7 @@ describe('providers', function() {
       const blockNumber = 271814
       log(receipt)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseApiProvider)
 
       const organizedEvents = await transactionCallOrganizer.organizeEvents(receipt!.events!, blockNumber)
 
@@ -348,7 +345,7 @@ describe('providers', function() {
       const blockNumber = 269354
       log(receipt)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseApiProvider)
 
       const organizedEvents = await transactionCallOrganizer.organizeEvents(receipt!.events!, blockNumber)
 
@@ -365,7 +362,7 @@ describe('providers', function() {
       const blockNumber = 268464
       log(receipt)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseApiProvider)
 
       const organizedEvents = await transactionCallOrganizer.organizeEvents(receipt!.events!, blockNumber)
 
@@ -382,7 +379,7 @@ describe('providers', function() {
       const blockNumber = 268385
       log(receipt)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseApiProvider)
 
       const organizedEvents = await transactionCallOrganizer.organizeEvents(receipt!.events!, blockNumber)
 
@@ -395,7 +392,7 @@ describe('providers', function() {
       const blockNumber = 268383
       log(receipt)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseApiProvider)
 
       const organizedEvents = await transactionCallOrganizer.organizeEvents(receipt!.events!, blockNumber)
 
@@ -408,7 +405,7 @@ describe('providers', function() {
       const blockNumber = 269717
       log(getTransactionResponse)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseApiProvider)
 
       const organizedFunction = await transactionCallOrganizer.organizeFunction(getTransactionResponse, blockNumber)
 
@@ -424,7 +421,7 @@ describe('providers', function() {
       const tx = await apiProvider.getTransaction(txHash) as InvokeFunctionTransaction
       log(tx)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseApiProvider)
 
       const organizedFunction = await transactionCallOrganizer.organizeFunction(tx, blockNumber)
 
@@ -440,7 +437,7 @@ describe('providers', function() {
       const tx = await apiProvider.getTransaction(txHash) as InvokeFunctionTransaction
       log(tx)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseApiProvider)
 
       const organizedFunction = await transactionCallOrganizer.organizeFunction(tx, blockNumber)
 
@@ -456,7 +453,7 @@ describe('providers', function() {
       const tx = await apiProvider.getTransaction(txHash) as InvokeFunctionTransaction
       log(tx)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseApiProvider)
 
       const organizedFunction = await transactionCallOrganizer.organizeFunction(tx, blockNumber)
 
@@ -472,7 +469,7 @@ describe('providers', function() {
       const tx = await apiProvider.getTransaction(txHash) as InvokeFunctionTransaction
       log(tx)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseApiProvider)
 
       const organizedFunction = await transactionCallOrganizer.organizeFunction(tx, blockNumber)
 
@@ -487,7 +484,7 @@ describe('providers', function() {
       const blockNumber = 265557
       log(receipt)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseApiProvider)
 
       const organizedEvents = await transactionCallOrganizer.organizeEvents(receipt!.events!, blockNumber)
 
@@ -504,7 +501,7 @@ describe('providers', function() {
       const blockNumber = 266852
       log(receipt)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseApiProvider)
 
       const organizedEvents = await transactionCallOrganizer.organizeEvents(receipt!.events!, blockNumber)
 
@@ -521,7 +518,7 @@ describe('providers', function() {
       const blockNumber = 266469
       log(receipt)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseApiProvider)
 
       const organizedEvents = await transactionCallOrganizer.organizeEvents(receipt!.events!, blockNumber)
 
@@ -538,7 +535,7 @@ describe('providers', function() {
       const blockNumber = 265758
       log(receipt)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseApiProvider)
 
       const organizedEvents = await transactionCallOrganizer.organizeEvents(receipt!.events!, blockNumber)
 
@@ -555,7 +552,7 @@ describe('providers', function() {
       const blockNumber = 265759
       log(receipt)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseApiProvider)
 
       const organizedEvents = await transactionCallOrganizer.organizeEvents(receipt!.events!, blockNumber)
 
@@ -572,7 +569,7 @@ describe('providers', function() {
       const blockNumber = 206784
       log(receipt)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(databaseAbiProvider)
+      const transactionCallOrganizer = new TransactionCallOrganizer(databaseApiProvider)
 
       const organizedEvents = await transactionCallOrganizer.organizeEvents(receipt!.events!!, blockNumber)
 
@@ -598,16 +595,16 @@ describe('providers', function() {
     it( 'organizeBlock problem blocks', async function () {
       const blocks = [269354/*322717, 269717, 269354, 269147, 269130, 268515, 268486, 268464, 68385, 268374, 254923, 235506, 231612, 231579, 167434, 183423, 190290, 161308, 164233, 62135, 111570, 38172, 36568, 27592, 17281, 71368, 71405, 200501, 1564, 1064, 86*/]
 
-      const blockOrganizer = new BlockOrganizer(apiProvider, databaseAbiProvider)
+      const blockOrganizer = new BlockOrganizer(databaseApiProvider)
 
       for(let i=0; i < blocks.length; i++) {
         const blockNumber = blocks[i]
         console.info(`organizing block ${blockNumber}`)
 
-        const getBlockResponse = await apiProvider.getBlock(blockNumber)
-        log(getBlockResponse)
+        const block = await databaseApiProvider.getBlock(blockNumber)
+        log(block)
 
-        const organizedBlock = await blockOrganizer.organizeBlock(getBlockResponse!)
+        const organizedBlock = await blockOrganizer.organizeBlock(block!)
         log(organizedBlock)
 
         console.info(`done with block ${blockNumber}`)
@@ -618,7 +615,7 @@ describe('providers', function() {
       const mc = MemoryCache.getInstance()
 
       const contractAddress = '0x4e34321e0bce0e4ff8ff0bcb3a9a030d423bca29a9d99cbcdd60edb9a2bf03a'
-      const abiBare = await databaseAbiProvider.getAbi(contractAddress, false)
+      const abiBare = await databaseApiProvider.getAbi(contractAddress, false)
       log(abiBare)
 
       const abiFromCache = await mc.get(contractAddress)

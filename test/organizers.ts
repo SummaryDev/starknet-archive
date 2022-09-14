@@ -1,13 +1,13 @@
-import { MockAbiProvider } from "../src/providers/abi/mock"
-import { OnlineAbiProvider } from "../src/providers/abi/online"
+import { MockApiProvider } from "../src/providers/mock"
+import { ComboApiProvider } from "../src/providers/combo"
 import { TransactionCallOrganizer } from "../src/organizers/transaction-call"
 import { ContractCallOrganizer } from "../src/organizers/contract-call"
-import { Abi, Block, TransactionReceipt, InvokeFunctionTransaction, DeployTransaction } from "../src/types/raw-starknet"
+import { Abi, TransactionReceipt, InvokeFunctionTransaction, DeployTransaction } from "../src/types/raw-starknet"
 import { getFullSelector } from "../src/helpers/helpers"
 import assert = require("node:assert")
 // import JSON = require("json5")
 import * as console from "../src/helpers/console";
-import {ComboApiProvider} from "../src/providers/api/combo";
+
 
 function log(o: any) {
   console.log(JSON.stringify(o, null, 2))
@@ -36,7 +36,7 @@ describe('organizers', function () {
       const tx = await apiProvider.getTransaction(txHash) as DeployTransaction
       log(tx)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(new OnlineAbiProvider(apiProvider))
+      const transactionCallOrganizer = new TransactionCallOrganizer(apiProvider)
 
       const organizedFunction = await transactionCallOrganizer.organizeConstructorFunction(tx, blockNumber)
 
@@ -52,7 +52,7 @@ describe('organizers', function () {
       const tx = await apiProvider.getTransaction(txHash) as InvokeFunctionTransaction
       log(tx)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(new OnlineAbiProvider(apiProvider))
+      const transactionCallOrganizer = new TransactionCallOrganizer(apiProvider)
 
       const organizedFunction = await transactionCallOrganizer.organizeFunction(tx, blockNumber)
 
@@ -237,7 +237,7 @@ describe('organizers', function () {
       const tx = await apiProvider.getTransaction(txHash) as InvokeFunctionTransaction
       log(tx)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(new OnlineAbiProvider(apiProvider))
+      const transactionCallOrganizer = new TransactionCallOrganizer(apiProvider)
 
       const organizedFunction = await transactionCallOrganizer.organizeFunction(tx, blockNumber)
 
@@ -300,7 +300,7 @@ describe('organizers', function () {
       const tx = await apiProvider.getTransaction(txHash) as InvokeFunctionTransaction
       log(tx)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(new OnlineAbiProvider(apiProvider))
+      const transactionCallOrganizer = new TransactionCallOrganizer(apiProvider)
 
       const organizedFunction = await transactionCallOrganizer.organizeFunction(tx, blockNumber)
 
@@ -353,7 +353,7 @@ describe('organizers', function () {
       const tx = await apiProvider.getTransaction(txHash) as InvokeFunctionTransaction
       log(tx)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(new OnlineAbiProvider(apiProvider))
+      const transactionCallOrganizer = new TransactionCallOrganizer(apiProvider)
 
       const organizedFunction = await transactionCallOrganizer.organizeFunction(tx, blockNumber)
 
@@ -406,7 +406,7 @@ describe('organizers', function () {
       const tx = await apiProvider.getTransaction(txHash) as InvokeFunctionTransaction
       log(tx)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(new OnlineAbiProvider(apiProvider))
+      const transactionCallOrganizer = new TransactionCallOrganizer(apiProvider)
 
       const organizedFunction = await transactionCallOrganizer.organizeFunction(tx, blockNumber)
 
@@ -474,7 +474,7 @@ describe('organizers', function () {
       const tx = JSON.parse('{"contract_address":"0x3c31bbfd817f44d9cf41b54bb714cb6e6d480dbfea156622ce3b828f59e01ca","entry_point_selector":"0x15d40a3d6ca2ac30f4031e42be28da9b056fef9bb7357ac5e85627ee876e5ad","entry_point_type":"EXTERNAL","calldata":["0x3","0x11136570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","0x222bb4205277617b698a9a2950b938d0a236dd4619f82f05bec02bdbd245fab","0x3","0x4","0x55536570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","0x666bb4205277617b698a9a2950b938d0a236dd4619f82f05bec02bdbd245fab","0x7","0x8","0x99936570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","0x000bb4205277617b698a9a2950b938d0a236dd4619f82f05bec02bdbd245fab","0x1","0x2","0x3","0x17736570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","0x288bb4205277617b698a9a2950b938d0a236dd4619f82f05bec02bdbd245fab","0x399bb4205277617b698a9a2950b938d0a236dd4619f82f05bec02bdbd245fab","0x4"],"signature":["0x76658d7dfffdf57813b15659b171cf96fb671785d00797103fbbb7c4751ba6b","0x2a17010bc19379985fe749a8ba2f1f410f59ed562b1075df619f325475a84dd"],"transaction_hash":"0x2e9d400084b55cb7b4f8517567f141aaa9334f64a3061f39e98069e7dd47707","max_fee":"0x28fa6ae0000","type":"INVOKE_FUNCTION"}')
       log(tx)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(new OnlineAbiProvider(apiProvider))
+      const transactionCallOrganizer = new TransactionCallOrganizer(apiProvider)
 
       const organizedFunction = await transactionCallOrganizer.organizeFunction(tx, 171140)
 
@@ -572,9 +572,9 @@ describe('organizers', function () {
 
       const abiMap: { [address: string]: Abi } = {}
       abiMap[tx.contract_address] = abi
-      const abiProvider = new MockAbiProvider(abiMap)
-      const transactionCallOrganizer = new TransactionCallOrganizer(abiProvider)
-      const contractOrganizer = new ContractCallOrganizer(tx.contract_address, 0, abiProvider)
+      const abiProvider = new MockApiProvider(abiMap)
+      const transactionCallOrganizer = new TransactionCallOrganizer(apiProvider)
+      const contractOrganizer = new ContractCallOrganizer(tx.contract_address, 0, apiProvider)
       await contractOrganizer.initialize()
       const functionAbi = contractOrganizer.getFunctionAbiFromSelector(tx.entry_point_selector)
       console.debug(functionAbi)
@@ -595,9 +595,9 @@ describe('organizers', function () {
 
       const abiMap: { [address: string]: Abi } = {}
       abiMap[tx.contract_address] = abi
-      const abiProvider = new MockAbiProvider(abiMap)
-      const transactionCallOrganizer = new TransactionCallOrganizer(abiProvider)
-      const contractOrganizer = new ContractCallOrganizer(tx.contract_address, 0, abiProvider)
+      const mockApiProvider = new MockApiProvider(abiMap)
+      const transactionCallOrganizer = new TransactionCallOrganizer(mockApiProvider)
+      const contractOrganizer = new ContractCallOrganizer(tx.contract_address, 0, mockApiProvider)
       await contractOrganizer.initialize()
       const functionAbi = contractOrganizer.getFunctionAbiFromSelector(tx.entry_point_selector)
       console.debug(functionAbi)
@@ -621,9 +621,9 @@ describe('organizers', function () {
       const contract_address = 'test'
       const abiMap: { [address: string]: Abi } = {}
       abiMap[contract_address] = [structAbi]
-      const abiProvider = new MockAbiProvider(abiMap)
-      const transactionCallOrganizer = new TransactionCallOrganizer(abiProvider)
-      const contractOrganizer = new ContractCallOrganizer(contract_address, 0, abiProvider)
+      const mockApiProvider = new MockApiProvider(abiMap)
+      const transactionCallOrganizer = new TransactionCallOrganizer(mockApiProvider)
+      const contractOrganizer = new ContractCallOrganizer(contract_address, 0, mockApiProvider)
       await contractOrganizer.initialize()
 
       let ret = transactionCallOrganizer.parseStruct(calldata,1, structType, contractOrganizer)
@@ -647,9 +647,9 @@ describe('organizers', function () {
       const contract_address = 'test'
       const abiMap: { [address: string]: Abi } = {}
       abiMap[contract_address] = [structAbi]
-      const abiProvider = new MockAbiProvider(abiMap)
-      const transactionCallOrganizer = new TransactionCallOrganizer(abiProvider)
-      const contractOrganizer = new ContractCallOrganizer(contract_address, 0, abiProvider)
+      const mockApiProvider = new MockApiProvider(abiMap)
+      const transactionCallOrganizer = new TransactionCallOrganizer(mockApiProvider)
+      const contractOrganizer = new ContractCallOrganizer(contract_address, 0, mockApiProvider)
       await contractOrganizer.initialize()
 
       let ret = transactionCallOrganizer.parseStruct(calldata,0, structType, contractOrganizer)
@@ -670,9 +670,9 @@ describe('organizers', function () {
       const contract_address = 'test'
       const abiMap: { [address: string]: Abi } = {}
       abiMap[contract_address] = [structAbi]
-      const abiProvider = new MockAbiProvider(abiMap)
-      const transactionCallOrganizer = new TransactionCallOrganizer(abiProvider)
-      const contractOrganizer = new ContractCallOrganizer(contract_address, 0, abiProvider)
+      const mockApiProvider = new MockApiProvider(abiMap)
+      const transactionCallOrganizer = new TransactionCallOrganizer(mockApiProvider)
+      const contractOrganizer = new ContractCallOrganizer(contract_address, 0, apiProvider)
       await contractOrganizer.initialize()
 
       let struct = transactionCallOrganizer.parseStruct(calldata,0, structType, contractOrganizer)
@@ -686,7 +686,7 @@ describe('organizers', function () {
       const receipt = await apiProvider.getTransactionReceipt(txHash)
       log(receipt)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(new OnlineAbiProvider(apiProvider))
+      const transactionCallOrganizer = new TransactionCallOrganizer(apiProvider)
 
       const organizedEvents = await transactionCallOrganizer.organizeEvents(receipt.events!, blockNumber)
 
@@ -712,7 +712,7 @@ describe('organizers', function () {
       const receipt = await apiProvider.getTransactionReceipt(txHash)
       log(receipt)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(new OnlineAbiProvider(apiProvider))
+      const transactionCallOrganizer = new TransactionCallOrganizer(apiProvider)
 
       const organizedEvents = await transactionCallOrganizer.organizeEvents(receipt.events!, blockNumber)
 
@@ -733,7 +733,7 @@ describe('organizers', function () {
       const receipt = getTransactionReceiptResponse as TransactionReceipt
       log(receipt)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(new OnlineAbiProvider(apiProvider))
+      const transactionCallOrganizer = new TransactionCallOrganizer(apiProvider)
 
       const organizedEvents = await transactionCallOrganizer.organizeEvents(receipt.events!, blockNumber)
 
@@ -753,7 +753,7 @@ describe('organizers', function () {
       const receipt = await apiProvider.getTransactionReceipt(txHash)
       log(receipt)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(new OnlineAbiProvider(apiProvider))
+      const transactionCallOrganizer = new TransactionCallOrganizer(apiProvider)
 
       const organizedEvents = await transactionCallOrganizer.organizeEvents(receipt.events!, blockNumber)
 
@@ -853,7 +853,7 @@ describe('organizers', function () {
       const tx = await apiProvider.getTransaction('0x5772cdd88ca51effeeeff8fcdcd9635c90226bd56ed6b5b6b0e3a318c0a2e9a') as InvokeFunctionTransaction
       log(tx)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(new OnlineAbiProvider(apiProvider))
+      const transactionCallOrganizer = new TransactionCallOrganizer(apiProvider)
 
       const organizedFunction = await transactionCallOrganizer.organizeFunction(tx, blockNumber)
 
@@ -918,7 +918,7 @@ describe('organizers', function () {
       const tx = await apiProvider.getTransaction('0x3a7dcf65c03cb540f856b2dd29a894f829c2e9d27d1d7bfd7545488a03d31bb') as InvokeFunctionTransaction
       log(tx)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(new OnlineAbiProvider(apiProvider))
+      const transactionCallOrganizer = new TransactionCallOrganizer(apiProvider)
 
       const organizedFunction = await transactionCallOrganizer.organizeFunction(tx, blockNumber)
 
@@ -971,7 +971,7 @@ describe('organizers', function () {
       const tx = await apiProvider.getTransaction('0x5ac92ccfa0fc4d13806fe9234c53a0d2d7ad8aa8cd8a7901e6b2a9310610f99') as InvokeFunctionTransaction
       log(tx)
 
-      const transactionCallOrganizer = new TransactionCallOrganizer(new OnlineAbiProvider(apiProvider))
+      const transactionCallOrganizer = new TransactionCallOrganizer(apiProvider)
 
       const organizedFunction = await transactionCallOrganizer.organizeFunction(tx, blockNumber)
 

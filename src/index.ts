@@ -3,7 +3,7 @@ import {createConnection, getConnectionOptions, DataSource} from "typeorm"
 import * as console from './helpers/console'
 import {sleep} from './helpers/helpers'
 import {ArchiveAbiProcessor, ArchiveBlockProcessor, BlockProcessor, OrganizeBlockProcessor} from "./processors";
-import {ComboApiProvider} from "./providers/api/combo";
+import {ComboApiProvider} from "./providers/combo";
 
 function main() {
   (async () => {

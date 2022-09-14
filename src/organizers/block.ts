@@ -1,17 +1,13 @@
-import {
-  Block,
-} from "../types/raw-starknet"
-import {
-  OrganizedTransaction, OrganizedFunction, OrganizedBlock
-} from "../types/organized-starknet"
-import {TransactionCallOrganizer} from "./transaction-call"
+import { Block } from "../types/raw-starknet"
+import { OrganizedTransaction, OrganizedFunction, OrganizedBlock } from "../types/organized-starknet"
+import { TransactionCallOrganizer } from "./transaction-call"
+import { ApiProvider } from "../providers/interfaces"
 import * as console from '../helpers/console'
-import {AbiProvider, ApiProvider} from "../providers/interfaces";
 
 export class BlockOrganizer extends TransactionCallOrganizer {
 
-  constructor(private readonly apiProvider: ApiProvider, abiProvider: AbiProvider) {
-    super(abiProvider)
+  constructor(apiProvider: ApiProvider) {
+    super(apiProvider)
   }
 
   async organizeTransactions(getBlockResponse: Block) {

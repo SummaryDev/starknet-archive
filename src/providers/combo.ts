@@ -1,5 +1,5 @@
 import {PathfinderApiProvider} from "./pathfinder";
-import {ApiProvider} from "../interfaces";
+import {ApiProvider} from "./interfaces";
 import {FeederApiProvider} from "./feeder";
 
 export class ComboApiProvider extends PathfinderApiProvider implements ApiProvider {
