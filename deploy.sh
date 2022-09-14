@@ -2,6 +2,6 @@
 
 env | grep 'namespace\|name\|image'
 
-echo helm --namespace $namespace upgrade --install ${name:=starknet-archive}-$namespace ./helmchart/ --set db_host=${db_host} --set db_password_archive=${db_password_archive} --set database=$namespace --set image=${image:=$image_archive} --set name=${name:=starknet-archive}
+helm --namespace $namespace upgrade --install ${name:=starknet-archive}-$namespace ./helmchart/ --set db_host=${db_host} --set db_password_archive=${db_password_archive} --set database=$namespace --set image=${image:=$image_archive} --set name=${name:=starknet-archive}
 
 kubectl --namespace $namespace get pods --selector=app=${name:=starknet-archive}

@@ -1,6 +1,5 @@
-import {EntitySchema, ValueTransformer} from 'typeorm';
-import {OrganizedBlock, OrganizedTransaction, OrganizedEvent, FunctionInput, EventArgument} from "./types/organize-starknet";
-import {BigNumber} from "ethers";
+import {EntitySchema} from 'typeorm';
+import {OrganizedBlock, OrganizedTransaction, OrganizedEvent, FunctionInput, EventArgument} from "./types/organized-starknet";
 
 export const BlockEntity = new EntitySchema<OrganizedBlock>({
   name: "block",
@@ -12,21 +11,17 @@ export const BlockEntity = new EntitySchema<OrganizedBlock>({
     block_hash: {
       type: String
     },
-    parent_block_hash: {
+    parent_hash: {
       type: String,
       nullable: true
     },
-    state_root: {
+    new_root: {
       type: String
     },
     timestamp: {
       type: Number
     },
     status: {
-      type: String,
-      nullable: true
-    },
-    gas_price: {
       type: String,
       nullable: true
     },
@@ -58,25 +53,21 @@ export const TransactionEntity = new EntitySchema<OrganizedTransactionData>({
       type: String,
       primary: true
     },
-    contract_address: {
+    type: {
       type: String
     },
-    type: {
+    contract_address: {
       type: String
     },
     entry_point_selector: {
       type: String,
       nullable: true
     },
-    entry_point_type: {
+    max_fee: {
       type: String,
       nullable: true
     },
     nonce: {
-      type: String,
-      nullable: true
-    },
-    max_fee: {
       type: String,
       nullable: true
     },
@@ -92,19 +83,23 @@ export const TransactionEntity = new EntitySchema<OrganizedTransactionData>({
       type: String,
       nullable: true
     },
+    status: {
+      type: String,
+      nullable: true
+    },
+    status_data: {
+      type: String,
+      nullable: true
+    },
     actual_fee: {
       type: String,
       nullable: true
     },
-    l2_to_l1_messages: {
+    messages_sent: {
       type: 'jsonb',
       nullable: true
     },
-    execution_resources: {
-      type: 'jsonb',
-      nullable: true
-    },
-    contract_definition: {
+    l1_origin_message: {
       type: 'jsonb',
       nullable: true
     },
@@ -113,6 +108,10 @@ export const TransactionEntity = new EntitySchema<OrganizedTransactionData>({
       nullable: true
     },
     class_hash: {
+      type: String,
+      nullable: true
+    },
+    sender_address: {
       type: String,
       nullable: true
     },

@@ -1,19 +1,21 @@
 import {BigNumber} from "ethers"
-import {RawCalldata} from "starknet"
 import {callArrayStructLength} from "../helpers/constants"
 import {
-  FunctionCall,
-  CallArray,
   FunctionInput,
   OrganizedFunction,
   OrganizedEvent,
-  StarknetStruct,
   StarknetArgument
-} from "../types/organize-starknet"
+} from "../types/organized-starknet"
+import {
+  InvokeFunctionTransaction,
+  DeployTransaction,
+  Event,
+  FunctionAbi,
+  BigNumberish,
+  RawCalldata, L1HandlerTransaction
+} from "../types/raw-starknet"
 import {ContractCallOrganizer} from "./contract-call"
 import {AbiProvider} from '../providers/interfaces'
-import {BigNumberish} from "starknet/utils/number"
-import {InvokeFunctionTransaction, DeployTransaction, TransactionReceipt, FunctionAbi} from "../types/raw-starknet"
 import * as console from '../helpers/console'
 import JSON = require("json5")
 
@@ -22,17 +24,17 @@ export class TransactionCallOrganizer {
   constructor(private readonly abiProvider: AbiProvider) {
   }
 
-  async organizeInvokeFunction(tx: InvokeFunctionTransaction, blockNumber: number, blockHash?: string) {
-    const contractOrganizer = await this.getContractOrganizer(tx.contract_address, blockNumber, blockHash)
+  async organizeFunction(tx: InvokeFunctionTransaction | L1HandlerTransaction, blockNumber: number, blockHash?: string) {
+    const contractOrganizer = await this.getContractOrganizer(tx.contract_address!, blockNumber, blockHash)
 
-    const functionAbi = contractOrganizer.getFunctionAbiFromSelector(tx.entry_point_selector)
+    const functionAbi = contractOrganizer.getFunctionAbiFromSelector(tx.entry_point_selector!)
     console.debug(functionAbi)
 
     return this.parseFunction(contractOrganizer, tx.calldata, functionAbi)
   }
 
   async organizeConstructorFunction(tx: DeployTransaction, blockNumber: number, blockHash?: string) {
-    const contractOrganizer = await this.getContractOrganizer(tx.contract_address, blockNumber, blockHash)
+    const contractOrganizer = await this.getContractOrganizer(tx.contract_address!, blockNumber, blockHash)
 
     const functionAbi = contractOrganizer.getConstructorFunctionAbi()
     console.debug(functionAbi)
@@ -40,10 +42,10 @@ export class TransactionCallOrganizer {
     return this.parseFunction(contractOrganizer, tx.constructor_calldata, functionAbi)
   }
 
-  async organizeEvents(receipt: TransactionReceipt, blockNumber: number, blockHash?: string) {
+  async organizeEvents(events: Event[], blockNumber: number, blockHash?: string) {
     let organizedEvents: OrganizedEvent[] = []
 
-    for (const event of receipt.events) {
+    for (const event of events) {
       const contractAnalyzer = await this.getContractOrganizer(event.from_address, blockNumber, blockHash)
       const eventCalldata = contractAnalyzer.organizeEvent(event)
       if (eventCalldata) {

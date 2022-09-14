@@ -4,17 +4,17 @@ import {
   OrganizedFunctionAbi,
   OrganizedStructAbi,
   StarknetArgument,
-  OrganizedCalldata,
   OrganizedEvent,
   StarknetContractCode,
   EventArgument
-} from "../types/organize-starknet";
-import {Abi, Event,FunctionAbi} from "../types/raw-starknet";
+} from "../types/organized-starknet";
+import { Abi, Event, FunctionAbi, BigNumberish} from "../types/raw-starknet";
 import {getFullSelector} from "../helpers/helpers";
 import * as console from '../helpers/console';
 import {AbiProvider} from '../providers/interfaces';
-import {bnToUint256, isUint256, Uint256, uint256ToBN} from "starknet/utils/uint256";
-import {toBN, isHex, hexToDecimalString, BigNumberish} from "starknet/utils/number";
+
+import { isUint256, Uint256, uint256ToBN } from "starknet/utils/uint256";
+import { isHex, hexToDecimalString } from "starknet/utils/number";
 
 export class ContractCallOrganizer {
 
@@ -61,50 +61,6 @@ export class ContractCallOrganizer {
     return {functions, structs, events, constructorFunction} as StarknetContractCode
   }
 
-  organizeFunctionInput(
-    functionSelector: string,
-    fullCalldataValues: BigNumberish[],
-    startIndex?: number
-  ) {
-
-    const inputs = this.getFunctionAbiFromSelector(functionSelector).inputs;
-    let calldataIndex = startIndex || 0;
-
-    let calldata: OrganizedCalldata = [];
-    for (const input of inputs) {
-      const {argsValues, endIndex} = this.getArgumentsValuesFromCalldata(
-        input.type,
-        {fullCalldataValues: fullCalldataValues, startIndex: calldataIndex}
-      );
-      calldataIndex = endIndex;
-      calldata.push({...input, value: argsValues});
-    }
-
-    return {subcalldata: calldata, endIndex: calldataIndex};
-  }
-
-  organizeFunctionOutput(
-    functionSelector: string,
-    fullCalldataValues: BigNumberish[],
-    startIndex?: number
-  ) {
-
-    const outputs = this.getFunctionAbiFromSelector(functionSelector).outputs;
-    let calldataIndex = startIndex || 0;
-
-    let calldata: OrganizedCalldata = [];
-    for (const output of outputs) {
-      const {argsValues, endIndex} = this.getArgumentsValuesFromCalldata(
-        output.type,
-        {fullCalldataValues: fullCalldataValues, startIndex: calldataIndex},
-      );
-      calldataIndex = endIndex;
-      calldata.push({...output, value: argsValues});
-    }
-
-    return {subcalldata: calldata, endIndex: calldataIndex};
-  }
-
   organizeEvent(event: Event) {
     let eventAbi
 
@@ -131,6 +87,8 @@ export class ContractCallOrganizer {
         })
         dataIndex = endIndex
         const argument = {...arg, value: argsValues, decimal: decimal} as EventArgument
+        if(argument.decimal === undefined)
+          delete argument.decimal
         args.push(argument)
       }
     }

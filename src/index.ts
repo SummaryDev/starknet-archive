@@ -1,11 +1,9 @@
 import 'dotenv/config'
 import {createConnection, getConnectionOptions, DataSource} from "typeorm"
-import {defaultProvider, Provider} from 'starknet'
 import * as console from './helpers/console'
 import {sleep} from './helpers/helpers'
 import {ArchiveAbiProcessor, ArchiveBlockProcessor, BlockProcessor, OrganizeBlockProcessor} from "./processors";
-import { PathfinderApiProvider } from "./providers/api/pathfinder";
-import { FeederApiProvider } from "./providers/api/feeder";
+import {ComboApiProvider} from "./providers/api/combo";
 
 function main() {
   (async () => {
@@ -26,31 +24,26 @@ async function iterateBlocks(ds: DataSource) {
   const finishBlock = Number.parseInt(process.env.STARKNET_ARCHIVE_FINISH_BLOCK || '0')
   const retryWait = Number.parseInt(process.env.STARKNET_ARCHIVE_RETRY_WAIT || '1000')
   const cmd = process.env.STARKNET_ARCHIVE_CMD || 'organize'
-  const feederUrl = process.env.STARKNET_ARCHIVE_FEEDER_URL || 'https://alpha4.starknet.io'
-  const pathfinderUrl = process.env.STARKNET_ARCHIVE_PATHFINDER_URL || 'https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a'
 
-  const feederApiProvider = new FeederApiProvider(/*defaultProvider*/ new Provider({ baseUrl: feederUrl}))
-  const pathfinderApiProvider = new PathfinderApiProvider(pathfinderUrl)
+  const pathfinderUrl = process.env.STARKNET_ARCHIVE_PATHFINDER_URL || 'https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a' /*'http://54.80.141.84:9545'*/
+  const network = 'goerli-alpha'
 
-  const blockApiProvider = feederApiProvider // TODO revisit this as pathfinder may start providing full blocks with calldata
-  const contractApiProvider = pathfinderApiProvider
-  const classApiProvider =  feederApiProvider // TODO revisit this as pathfinder may start providing class abi like the feeder
-  const viewApiProvider =  pathfinderApiProvider
+  const apiProvider = new ComboApiProvider(pathfinderUrl, network)
 
   let p: BlockProcessor
 
   if(cmd == 'organize')
-    p = new OrganizeBlockProcessor(blockApiProvider, contractApiProvider, classApiProvider, viewApiProvider, ds)
+    p = new OrganizeBlockProcessor(apiProvider, ds)
   else if(cmd == 'archive_block')
-    p = new ArchiveBlockProcessor(blockApiProvider, ds)
+    p = new ArchiveBlockProcessor(apiProvider, ds)
   else if(cmd == 'archive_abi')
-    p = new ArchiveAbiProcessor(contractApiProvider, ds)
+    p = new ArchiveAbiProcessor(apiProvider, ds)
   else {
     console.error(`unknown cmd ${cmd}`)
     return
   }
 
-  console.info(`processing blocks ${startBlock} to ${finishBlock} with ${cmd} from ${feederUrl} and ${pathfinderUrl}`)
+  console.info(`processing blocks ${startBlock} to ${finishBlock} with ${cmd} from ${network} and ${pathfinderUrl}`)
 
   for (let blockNumber = startBlock; blockNumber <= finishBlock; ) {
     console.info(`processing ${blockNumber}`)

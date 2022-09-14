@@ -1,19 +1,19 @@
 import { BlockProvider } from '../interfaces'
 import { Cache } from "../../helpers/helpers";
-import { GetBlockResponse } from "../../types/raw-starknet";
+import { Block } from "../../types/raw-starknet";
 
 export class MockBlockProvider implements BlockProvider {
-  private readonly cache: Cache<GetBlockResponse>
+  private readonly cache: Cache<Block>
 
   constructor() {
-    this.cache = new Cache<GetBlockResponse>()
+    this.cache = new Cache<Block>()
   }
 
   async get(blockNumber: number) {
     return this.cache.get(blockNumber)
   }
 
-  set(o: GetBlockResponse, blockNumber: number) {
+  set(o: Block, blockNumber: number) {
     this.cache.set(o, blockNumber)
   }
 }

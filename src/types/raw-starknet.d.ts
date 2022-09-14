@@ -1,12 +1,17 @@
-import {
-  Transaction,
-  BlockNumber,
-  Status,
-  StructAbi,
-  ExecutionResources
-} from "starknet"
-import {BigNumberish} from "starknet/dist/utils/number";
-import {AbiEntry, CompressedCompiledContract, EntryPointType, RawCalldata, Signature} from "starknet/dist/types/lib";
+import BN, { isBN } from 'bn.js';
+
+export type Status =
+  | 'NOT_RECEIVED'
+  | 'RECEIVED'
+  | 'PENDING'
+  | 'ACCEPTED_ON_L2'
+  | 'ACCEPTED_ON_L1'
+  | 'REJECTED';
+
+export type BigNumberish = string | number | BN;
+
+export type Signature = string[];
+export type RawCalldata = BigNumberish[];
 
 export declare type Event = {
   from_address: string;
@@ -14,61 +19,90 @@ export declare type Event = {
   data: RawCalldata;
 };
 
-export declare type GetBlockResponse = {
+export interface MessageToL1 {
+  to_address: string;
+  payload: Array<string>;
+}
+
+export interface MessageToL2 {
+  from_address: string;
+  payload: Array<string>;
+}
+
+export declare type Block = {
   block_number: number;
-  state_root: string;
   block_hash: string;
+  new_root: string;
+  parent_hash: string;
+  sequencer_address?: string;
+  status: Status;
   transactions: Transaction[];
   timestamp: number;
-  transaction_receipts: TransactionReceipt[];
-  parent_block_hash: string;
-  status: Status;
-  gas_price: string,
-  sequencer_address: string
 };
 
-export declare type Transaction = DeployTransaction | InvokeFunctionTransaction;
+export declare type Transaction = DeclareTransaction | DeployTransaction | InvokeFunctionTransaction | L1HandlerTransaction;
 
 export declare type DeployTransaction = {
   type: 'DEPLOY';
   transaction_hash: string;
+  class_hash: string;
   contract_address: string;
   contract_address_salt: BigNumberish;
-  class_hash: string;
-  constructor_calldata: string[];
-  contract_definition: CompressedCompiledContract;
-  nonce?: BigNumberish;
+  version?: BigNumberish;
+  constructor_calldata?: RawCalldata;
 };
 
-export declare type InvokeFunctionTransaction = {
-  type: 'INVOKE_FUNCTION';
+export declare type DeclareTransaction = {
+  type: 'DECLARE';
   transaction_hash: string;
-  contract_address: string;
-  signature?: Signature;
-  entry_point_type?: EntryPointType;
-  entry_point_selector: string;
-  calldata?: RawCalldata;
-  nonce?: BigNumberish;
+  class_hash: string;
+  sender_address: string;
   max_fee?: BigNumberish;
+  nonce?: BigNumberish;
+  signature?: Signature;
   version?: BigNumberish;
 };
 
-export declare type TransactionReceipt = {
-  // status: Status;
+export declare type InvokeFunctionTransaction = {
+  type: 'INVOKE';
   transaction_hash: string;
-  transaction_index: number;
-  // block_hash: string;
-  // block_number: BlockNumber;
-  l2_to_l1_messages: string[];
-  events: Event[];
-  actual_fee: string;
-  execution_resources: ExecutionResources
+  contract_address: string;
+  entry_point_selector: string;
+  max_fee?: BigNumberish;
+  nonce?: BigNumberish;
+  signature?: Signature;
+  version?: BigNumberish;
+  calldata?: RawCalldata;
+};
+
+export declare type L1HandlerTransaction = {
+  type: 'L1_HANDLER';
+  transaction_hash: string;
+  contract_address: string;
+  entry_point_selector: string;
+  nonce?: BigNumberish;
+  version?: BigNumberish;
+  calldata?: RawCalldata;
+};
+
+export declare type TransactionReceipt = {
+  // CommonTransactionReceiptResponse
+  transaction_hash: string;
+  status: Status;
+  actual_fee?: BigNumberish;
+  status_data?: string;
+  // InvokeTransactionReceiptResponse
+  messages_sent?: Array<MessageToL1>;
+  events?: Array<Event>;
+  l1_origin_message?: MessageToL2;
 };
 
 export declare type GetCodeResponse = {
   bytecode: string[];
   abi: Abi;
 };
+
+export type AbiEntry = { name: string; type: 'felt' | 'felt*' | string };
 
 export declare type EventAbi = {
   data: { name: string, type: string }[],
@@ -83,6 +117,13 @@ export declare type FunctionAbi = {
   outputs: AbiEntry[];
   stateMutability?: 'view';
   type: 'function' | 'constructor' | 'l1_handler';
+};
+
+export type StructAbi = {
+  members: (AbiEntry & { offset: number })[];
+  name: string;
+  size: number;
+  type: 'struct';
 };
 
 export declare type Abi = Array<FunctionAbi | StructAbi | EventAbi>;
