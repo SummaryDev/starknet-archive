@@ -23,5 +23,5 @@ export interface ViewProvider {
 }
 
 export interface AbiProvider {
-    get(contractAddress: string, blockNumber: number, blockHash?: string): Promise<Abi | undefined>
+  get(contractAddress: string, blockNumber: number, blockHash?: string): Promise<Abi | undefined>
 }

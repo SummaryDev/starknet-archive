@@ -40,7 +40,7 @@ export declare type GetBlockResponse = {
   timestamp: number;
 };
 
-export declare type Transaction = DeclareTransaction | DeployTransaction | InvokeFunctionTransaction;
+export declare type Transaction = DeclareTransaction | DeployTransaction | InvokeFunctionTransaction | L1HandlerTransaction;
 
 export declare type DeployTransaction = {
   type: 'DEPLOY';
@@ -71,6 +71,16 @@ export declare type InvokeFunctionTransaction = {
   max_fee?: BigNumberish;
   nonce?: BigNumberish;
   signature?: Signature;
+  version?: BigNumberish;
+  calldata?: RawCalldata;
+};
+
+export declare type L1HandlerTransaction = {
+  type: 'L1_HANDLER';
+  transaction_hash: string;
+  contract_address: string;
+  entry_point_selector: string;
+  nonce?: BigNumberish;
   version?: BigNumberish;
   calldata?: RawCalldata;
 };

@@ -5,7 +5,7 @@ import {FeederApiProvider} from "./feeder";
 export class ComboApiProvider extends PathfinderApiProvider implements ApiProvider {
   private readonly feederApiProvider
 
-  constructor(private readonly pathfinderUrl: string, private readonly network: string) {
+  constructor(pathfinderUrl: string, private readonly network: string) {
     super(pathfinderUrl)
     this.feederApiProvider = new FeederApiProvider(network)
   }

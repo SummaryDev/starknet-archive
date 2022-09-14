@@ -30,8 +30,6 @@ export class BlockOrganizer extends TransactionCallOrganizer {
 
       const receipt = await this.apiProvider.getTransactionReceipt(tx.transaction_hash)
 
-      let organizedEvents = [] as OrganizedEvent[]
-
       if(receipt) {
         organizedTransaction.status = receipt.status
         organizedTransaction.status_data = receipt.status_data
@@ -41,7 +39,7 @@ export class BlockOrganizer extends TransactionCallOrganizer {
 
         if(receipt.events) {
           try {
-            organizedEvents = await super.organizeEvents(receipt.events, blockNumber, blockHash)
+            organizedTransaction.events = await super.organizeEvents(receipt.events, blockNumber, blockHash)
           } catch (err) {
             console.debug(`caught while organizing events for receipt ${receipt.transaction_hash} in block ${blockNumber} err=${err}`)
             throw err
@@ -50,51 +48,52 @@ export class BlockOrganizer extends TransactionCallOrganizer {
       }
 
       if (tx.type == 'INVOKE') {
-        const txInvoke = tx as InvokeFunctionTransaction
-
         let organizedFunction = {} as OrganizedFunction
 
         try {
-          organizedFunction = await super.organizeInvokeFunction(txInvoke, blockNumber, blockHash)
+          organizedFunction = await super.organizeFunction(tx, blockNumber, blockHash)
         } catch (err) {
-          console.debug(`caught while organizing invoke function for tx ${tx.transaction_hash} in block ${blockNumber} err=${err}`)
+          console.debug(`caught while organizing function for tx ${tx.transaction_hash} in block ${blockNumber} err=${err}`)
           throw err
         }
 
         organizedTransaction.function = organizedFunction.name
         organizedTransaction.inputs = organizedFunction.inputs
 
+      } else if (tx.type == 'L1_HANDLER') {
+        let organizedFunction = {} as OrganizedFunction
+
+        try {
+          organizedFunction = await super.organizeFunction(tx, blockNumber, blockHash)
+        } catch (err) {
+          console.debug(`caught while organizing function for tx ${tx.transaction_hash} in block ${blockNumber} err=${err}`)
+          throw err
+        }
+
+        organizedTransaction.function = organizedFunction.name
+        organizedTransaction.inputs = organizedFunction.inputs
       } else if (tx.type == 'DEPLOY') {
-        // const tx = transactions[receipt.transaction_index] as InvokeTransactionResponse
-        //
-        // let organizedFunction: OrganizedFunction = {} as OrganizedFunction
-        //
-        // try {
-        //   organizedFunction = await super.organizeConstructorFunction(tx, blockNumber, blockHash)
-        // } catch (err) {
-        //   console.debug(`caught while organizing constructor function for tx ${tx.transaction_hash} in block ${blockNumber} err=${err}`)
-        //   throw err
-        // }
-        //
-        // organizedTransaction.function = organizedFunction.name
-        // organizedTransaction.inputs = organizedFunction.inputs
-        //
-        // organizedTransaction.contract_address = tx.contract_address
-        // organizedTransaction.contract_address_salt = tx.contract_address_salt
-        // organizedTransaction.contract_definition = tx.contract_definition
-        // organizedTransaction.class_hash = tx.class_hash
-        // organizedTransaction.constructor_calldata = tx.constructor_calldata
-        // //TODO use organizedFunction to parse constructor_calldata into inputs
-      } else {
-        console.debug(`cannot organize transaction of type ${tx.type} ${tx.transaction_hash} in block ${blockNumber}`)
+        let organizedFunction: OrganizedFunction = {} as OrganizedFunction
+
+        try {
+          organizedFunction = await super.organizeConstructorFunction(tx, blockNumber, blockHash)
+        } catch (err) {
+          console.debug(`caught while organizing constructor function for tx ${tx.transaction_hash} in block ${blockNumber} err=${err}`)
+          throw err
+        }
+
+        organizedTransaction.function = organizedFunction.name
+        organizedTransaction.inputs = organizedFunction.inputs
+
       }
 
-      const txStripped = organizedTransaction as any
-      delete txStripped.calldata
+      const cleanedTransaction = organizedTransaction as any
+      delete cleanedTransaction.calldata
+      delete cleanedTransaction.constructor_calldata
 
-      organizedTransactions.push(txStripped)
+      organizedTransactions.push(cleanedTransaction)
 
-    } // thru transaction receipts
+    } // thru transactions
 
     return organizedTransactions
   }

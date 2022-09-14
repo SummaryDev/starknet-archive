@@ -12,7 +12,7 @@ import {
   Event,
   FunctionAbi,
   BigNumberish,
-  RawCalldata
+  RawCalldata, L1HandlerTransaction
 } from "../types/raw-starknet"
 import {ContractCallOrganizer} from "./contract-call"
 import {AbiProvider} from '../providers/interfaces'
@@ -24,7 +24,7 @@ export class TransactionCallOrganizer {
   constructor(private readonly abiProvider: AbiProvider) {
   }
 
-  async organizeInvokeFunction(tx: InvokeFunctionTransaction, blockNumber: number, blockHash?: string) {
+  async organizeFunction(tx: InvokeFunctionTransaction | L1HandlerTransaction, blockNumber: number, blockHash?: string) {
     const contractOrganizer = await this.getContractOrganizer(tx.contract_address!, blockNumber, blockHash)
 
     const functionAbi = contractOrganizer.getFunctionAbiFromSelector(tx.entry_point_selector!)
