@@ -1,6 +1,6 @@
 import {DataSource, Repository} from "typeorm";
 import {BlockEntity, RawAbi, RawAbiEntity, RawBlock, RawBlockEntity, TransactionEntity} from "./entities";
-import {OrganizedBlock, OrganizedTransaction} from "./types/organize-starknet";
+import {OrganizedBlock, OrganizedTransaction} from "./types/organized-starknet";
 import { ApiProvider, BlockProvider } from './providers/interfaces';
 import { ApiError } from './helpers/error';
 import { DatabaseBlockProvider } from './providers/block/database';
@@ -36,7 +36,7 @@ export class OrganizeBlockProcessor implements BlockProcessor {
     this.blockProvider = new DatabaseBlockProvider(apiProvider, ds)
     const viewProvider = new DatabaseViewProvider(apiProvider, ds)
     const abiProvider = new DatabaseAbiProvider(apiProvider, viewProvider, ds)
-    this.blockOrganizer = new BlockOrganizer(abiProvider)
+    this.blockOrganizer = new BlockOrganizer(apiProvider, abiProvider)
   }
 
   async process(blockNumber: number): Promise<boolean> {
