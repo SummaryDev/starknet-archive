@@ -2,7 +2,7 @@ import { MockAbiProvider } from "../src/providers/abi/mock"
 import { OnlineAbiProvider } from "../src/providers/abi/online"
 import { TransactionCallOrganizer } from "../src/organizers/transaction-call"
 import { ContractCallOrganizer } from "../src/organizers/contract-call"
-import { Abi, GetBlockResponse, TransactionReceipt, InvokeFunctionTransaction, DeployTransaction } from "../src/types/raw-starknet"
+import { Abi, Block, TransactionReceipt, InvokeFunctionTransaction, DeployTransaction } from "../src/types/raw-starknet"
 import { getFullSelector } from "../src/helpers/helpers"
 import assert = require("node:assert")
 // import JSON = require("json5")

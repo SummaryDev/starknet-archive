@@ -1,13 +1,9 @@
 import {
-  GetBlockResponse,
-  TransactionReceipt,
-  InvokeFunctionTransaction,
-  DeployTransaction
+  Block,
 } from "../types/raw-starknet"
 import {
-  OrganizedEvent,
   OrganizedTransaction, OrganizedFunction, OrganizedBlock
-} from "../types/organize-starknet"
+} from "../types/organized-starknet"
 import {TransactionCallOrganizer} from "./transaction-call"
 import * as console from '../helpers/console'
 import {AbiProvider, ApiProvider} from "../providers/interfaces";
@@ -18,7 +14,7 @@ export class BlockOrganizer extends TransactionCallOrganizer {
     super(abiProvider)
   }
 
-  async organizeTransactions(getBlockResponse: GetBlockResponse) {
+  async organizeTransactions(getBlockResponse: Block) {
     const blockNumber = getBlockResponse.block_number
     const blockHash = getBlockResponse.block_hash
     const transactions = getBlockResponse.transactions
@@ -98,10 +94,9 @@ export class BlockOrganizer extends TransactionCallOrganizer {
     return organizedTransactions
   }
 
-  async organizeBlock(getBlockResponse: GetBlockResponse) {
-    const o = getBlockResponse as any
-    const block = o as OrganizedBlock
-    block.transactions = await this.organizeTransactions(getBlockResponse)
+  async organizeBlock(rawBlock: Block) {
+    const block = rawBlock as OrganizedBlock
+    block.transactions = await this.organizeTransactions(rawBlock)
     return block
   }
 }

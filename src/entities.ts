@@ -1,5 +1,5 @@
-import {EntitySchema, ValueTransformer} from 'typeorm';
-import {OrganizedBlock, OrganizedTransaction, OrganizedEvent, FunctionInput, EventArgument} from "./types/organize-starknet";
+import {EntitySchema} from 'typeorm';
+import {OrganizedBlock, OrganizedTransaction, OrganizedEvent, FunctionInput, EventArgument} from "./types/organized-starknet";
 
 export const BlockEntity = new EntitySchema<OrganizedBlock>({
   name: "block",

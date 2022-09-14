@@ -5,7 +5,7 @@ import {
   OrganizedFunction,
   OrganizedEvent,
   StarknetArgument
-} from "../types/organize-starknet"
+} from "../types/organized-starknet"
 import {
   InvokeFunctionTransaction,
   DeployTransaction,

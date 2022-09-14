@@ -1,7 +1,7 @@
 import {AbiProvider} from "../interfaces";
 import {DataSource, Repository} from "typeorm";
 import {ArgumentEntity, InputEntity, RawAbi, RawAbiEntity, TransactionEntity} from "../../entities";
-import {EventArgument, FunctionInput, OrganizedTransaction} from "../../types/organize-starknet";
+import {EventArgument, FunctionInput, OrganizedTransaction} from "../../types/organized-starknet";
 import {MemoryCache} from "../../helpers/cache";
 import {Abi, FunctionAbi} from "../../types/raw-starknet";
 import * as console from "../../helpers/console";

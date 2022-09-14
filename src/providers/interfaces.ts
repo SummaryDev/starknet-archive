@@ -1,11 +1,11 @@
-import { Abi, GetBlockResponse, TransactionReceipt, Transaction } from "../types/raw-starknet";
+import { Abi, Block, TransactionReceipt, Transaction } from "../types/raw-starknet";
 
 export interface BlockProvider {
-  get(blockNumber: number): Promise<GetBlockResponse | undefined>
+  get(blockNumber: number): Promise<Block | undefined>
 }
 
 export interface ApiProvider {
-  getBlock(blockNumber: number): Promise<GetBlockResponse | undefined>
+  getBlock(blockNumber: number): Promise<Block | undefined>
 
   getContractAbi(contractAddress: string): Promise<Abi | undefined>
 

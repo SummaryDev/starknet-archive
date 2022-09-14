@@ -1,5 +1,5 @@
 import {Provider} from "starknet";
-import {GetBlockResponse, TransactionReceipt, Transaction} from "../../types/raw-starknet";
+import {Block, TransactionReceipt, Transaction} from "../../types/raw-starknet";
 import axios from "axios";
 import {ApiError} from "../../helpers/error";
 import {ApiProvider} from "../interfaces";
@@ -39,7 +39,7 @@ export class FeederApiProvider implements ApiProvider {
     }
 
     if (res) {
-      return res as GetBlockResponse
+      return res as Block
     }
   }
 

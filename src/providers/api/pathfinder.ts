@@ -2,7 +2,7 @@ import * as console from "../../helpers/console";
 import axios from "axios";
 import {ApiProvider} from "../interfaces";
 import {ApiError} from "../../helpers/error";
-import {Abi, GetBlockResponse, Transaction, TransactionReceipt} from "../../types/raw-starknet";
+import {Abi, Block, Transaction, TransactionReceipt} from "../../types/raw-starknet";
 import {getFullSelector} from "../../helpers/helpers";
 
 export class PathfinderApiProvider implements ApiProvider {
@@ -49,7 +49,7 @@ export class PathfinderApiProvider implements ApiProvider {
     if (data.error)
       throw new Error(`pathfinder cannot ${method} ${blockNumber} for ${data.error.code} ${data.error.message}`)
 
-    return data.result as GetBlockResponse
+    return data.result as Block
   }
 
   async getContractAbi(contractAddress: string): Promise<Abi | undefined>  {

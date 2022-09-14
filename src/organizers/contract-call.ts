@@ -7,7 +7,7 @@ import {
   OrganizedEvent,
   StarknetContractCode,
   EventArgument
-} from "../types/organize-starknet";
+} from "../types/organized-starknet";
 import { Abi, Event, FunctionAbi, BigNumberish} from "../types/raw-starknet";
 import {getFullSelector} from "../helpers/helpers";
 import * as console from '../helpers/console';

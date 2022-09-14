@@ -29,7 +29,7 @@ export interface MessageToL2 {
   payload: Array<string>;
 }
 
-export declare type GetBlockResponse = {
+export declare type Block = {
   block_number: number;
   block_hash: string;
   new_root: string;
