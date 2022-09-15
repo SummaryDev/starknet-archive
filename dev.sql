@@ -243,4 +243,10 @@ query: ALTER TABLE "transaction" ADD "status_data" character varying
 query: ALTER TABLE "transaction" ADD "l1_origin_message" jsonb
 query: ALTER TABLE "transaction" ADD "sender_address" character varying
 
-select * from raw_receipt
+ALTER TABLE transaction ALTER COLUMN contract_address DROP NOT NULL;
+
+select * from raw_receipt;
+
+select max(block_number) from block;
+
+delete from raw_block where block_number = 322717;

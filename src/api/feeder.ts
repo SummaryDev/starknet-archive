@@ -1,4 +1,4 @@
-import {Provider} from "starknet";
+import {Provider, HttpError, GatewayError} from "starknet";
 import {Block, TransactionReceipt, Transaction} from "../types/raw-starknet";
 import axios from "axios";
 import {ApiError} from "../helpers/error";
@@ -51,6 +51,10 @@ export class FeederApi implements Api {
     } catch (err) {
       if (axios.isAxiosError(err)) {
         throw new ApiError(`feeder cannot getClassAt ${contractAddress} for ${err.message}`)
+      } else if(err instanceof HttpError && err.errorCode === 429) {
+        throw new ApiError(`feeder cannot getClassAt ${contractAddress} for ${err.message}`)
+      } else if(err instanceof GatewayError && err.errorCode == 'StarknetErrorCode.UNINITIALIZED_CONTRACT') {// this error means no contract was found so we don't retry but return and try getting abi by class hash
+        return
       } else
         throw (err)
     }

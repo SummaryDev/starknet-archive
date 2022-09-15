@@ -29,7 +29,7 @@ export class DatabaseApi implements Api {
 
   private readonly memoryCache = MemoryCache.getInstance()
 
-  constructor(private readonly apiProvider: Api, ds: DataSource) {
+  constructor(private readonly api: Api, ds: DataSource) {
     this.blockRepository = ds.getRepository<RawBlock>(RawBlockEntity)
     this.abiRepository = ds.getRepository<RawAbi>(RawAbiEntity)
     this.txRepository = ds.getRepository<OrganizedTransaction>(TransactionEntity)
@@ -45,7 +45,7 @@ export class DatabaseApi implements Api {
     const fromDb = await this.blockRepository.findOneBy({block_number: blockNumber})
 
     if (!fromDb) {
-      const fromApi = await this.apiProvider.getBlock(blockNumber)
+      const fromApi = await this.api.getBlock(blockNumber)
       await this.blockRepository.save({block_number: blockNumber, raw: fromApi})
       ret = fromApi
       console.debug(`from api for ${blockNumber}`)
@@ -70,7 +70,7 @@ export class DatabaseApi implements Api {
       ret = fromDb.raw
       console.debug(`from db for ${contractAddress} ${viewFunction} ${blockNumber}`)
     } else {
-      const fromApi = await this.apiProvider.callView(contractAddress, viewFunction, blockNumber, blockHash)
+      const fromApi = await this.api.callView(contractAddress, viewFunction, blockNumber, blockHash)
 
       if(fromApi) {
         await this.viewRepository.save({
@@ -150,12 +150,12 @@ export class DatabaseApi implements Api {
         ret = fromDb.raw
         console.debug(`from db for ${h}`)
       } else {
-        let fromApi = await this.apiProvider.getContractAbi(h)
+        let fromApi = await this.api.getContractAbi(h)
 
         if(fromApi) {
           console.debug(`from contract api for ${h}`)
         } else if (tryClass) {
-          fromApi = await this.apiProvider.getClassAbi(h)
+          fromApi = await this.api.getClassAbi(h)
           if(fromApi) {
             console.debug(`from class api for ${h}`)
           }
@@ -364,7 +364,7 @@ export class DatabaseApi implements Api {
     const fromDb = await this.receiptRepository.findOneBy({transaction_hash: txHash})
 
     if (!fromDb) {
-      const fromApi = await this.apiProvider.getTransactionReceipt(txHash)
+      const fromApi = await this.api.getTransactionReceipt(txHash)
       await this.receiptRepository.save({transaction_hash: txHash, raw: fromApi})
       ret = fromApi
       console.debug(`from api for ${txHash}`)

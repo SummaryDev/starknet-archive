@@ -29,10 +29,10 @@ export class OrganizeBlockProcessor implements BlockProcessor {
   private readonly blockOrganizer: BlockOrganizer
   private databaseApi: DatabaseApi
 
-  constructor(private readonly api: Api, private readonly ds: DataSource) {
+  constructor(api: Api, ds: DataSource) {
     this.blockRepository = ds.getRepository<OrganizedBlock>(BlockEntity)
     this.databaseApi = new DatabaseApi(api, ds)
-    this.blockOrganizer = new BlockOrganizer(api)
+    this.blockOrganizer = new BlockOrganizer(this.databaseApi)
   }
 
   async process(blockNumber: number): Promise<boolean> {
