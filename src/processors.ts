@@ -27,7 +27,7 @@ function canRetry(err: any): boolean {
 export class OrganizeBlockProcessor implements BlockProcessor {
   private readonly blockRepository: Repository<OrganizedBlock>
   private readonly blockOrganizer: BlockOrganizer
-  private databaseApi: DatabaseApi
+  private readonly databaseApi: DatabaseApi
 
   constructor(api: Api, ds: DataSource) {
     this.blockRepository = ds.getRepository<OrganizedBlock>(BlockEntity)
