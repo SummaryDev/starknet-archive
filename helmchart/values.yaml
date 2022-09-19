@@ -15,3 +15,5 @@ env:
     value: "src/migration"
   - name: "STARKNET_ARCHIVE_PATHFINDER_URL"
     value: "http://pathfinder:9545"
+  - name: "STARKNET_ARCHIVE_RETRY_WAIT"
+    value: "30000"
