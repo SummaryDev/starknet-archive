@@ -21,9 +21,9 @@ export class MemoryCache {
     return this.cache.getItem<T>(key)
   }
 
-  public set<T>(key: string, item: any, isCachedForever: boolean): Promise<void> {
+  public set<T>(key: string, item: any): Promise<void> {
     const options: Partial<ICachingOptions> = {
-      isCachedForever,
+      ttl: 60 * 60
     }
     return this.cache.setItem(key, item, options)
   }

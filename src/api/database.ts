@@ -168,7 +168,7 @@ export class DatabaseApi implements Api {
       }
 
       if (ret) {
-        await this.memoryCache.set(h, ret, true)
+        await this.memoryCache.set(h, ret)
       }
     }
 
