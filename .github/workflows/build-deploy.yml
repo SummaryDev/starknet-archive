@@ -44,9 +44,8 @@ jobs:
     - name: Deploy to EKS
       uses: tensor-hq/eksctl-helm-action@0.1.0
       env:
-        name: ${{ steps.var.outputs.name }}
         namespace: ${{ steps.var.outputs.namespace }}
-        image: ${{ steps.build.outputs.image }}
+        image_archive: ${{ steps.build.outputs.image }}
         db_host: ${{ secrets.db_host }}
         db_password_archive: ${{ secrets.db_password_archive }}
       with:

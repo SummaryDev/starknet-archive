@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: starknet-archive
-        image: "${starknet_archive_image}"
+        image: "${image_archive}"
         env:
         - name: TYPEORM_PASSWORD
           value: "${db_password_archive}"
@@ -30,7 +30,7 @@ spec:
         - name: TYPEORM_PORT
           value: "5432"
         - name: TYPEORM_SYNCHRONIZE
-          value: "true"
+          value: "false"
         - name: TYPEORM_LOGGING
           value: "false"
         - name: TYPEORM_ENTITIES
