@@ -15,32 +15,34 @@ spec:
       - name: starknet-archive
         image: ${image_archive}
         env:
-        - name: "TYPEORM_PASSWORD"
+        - name: TYPEORM_PASSWORD
           value: ${db_password_archive}
-        - name: "TYPEORM_HOST"
+        - name: TYPEORM_HOST
           value: ${db_host}
-        - name: "TYPEORM_DATABASE"
+        - name: TYPEORM_DATABASE
           value: ${namespace}
-        - name: "TYPEORM_SCHEMA"
+        - name: TYPEORM_SCHEMA
           value: starknet-${network}
         - name: TYPEORM_CONNECTION
           value: postgres
         - name: TYPEORM_USERNAME
           value: archive
         - name: TYPEORM_PORT
-          value: "5432"
+          value: 5432
         - name: TYPEORM_SYNCHRONIZE
-          value: "false"
+          value: false
         - name: TYPEORM_LOGGING
-          value: "false"
+          value: false
         - name: TYPEORM_ENTITIES
           value: ./lib/entities.js
         - name: TYPEORM_MIGRATIONS_DIR
           value: src/migration
         - name: STARKNET_ARCHIVE_PATHFINDER_URL
-          value: http://pathfinder-${network}:9545
+          value: http://pathfinder-${network}-${namespace}:9545
+        - name: STARKNET_ARCHIVE_NETWORK
+          value: ${network}-alpha
         - name: STARKNET_ARCHIVE_RETRY_WAIT
-          value: "30000"
+          value: 30000
         resources: 
           limits:
             memory: "1024Mi"
