@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
-env | grep 'namespace\|name\|image'
+env | grep 'namespace\|network\|db_host\|image_archive'
 
-helm --namespace $namespace upgrade --install ${name:=starknet-archive}-$namespace ./helmchart/ --set db_host=${db_host} --set db_password_archive=${db_password_archive} --set database=$namespace --set image=${image:=$image_archive} --set name=${name:=starknet-archive}
+envsubst < deploy.yaml | kubectl --namespace $namespace -f - apply --dry-run
+

@@ -30,15 +30,15 @@ async function iterateBlocks(ds: DataSource) {
 
   const q = await blockRepository.createQueryBuilder().select('max(block_number)', 'max')
   const r = await q.getRawOne()
-  const next = r.max + 1
+  const nextBlock = r ? r.max + 1 : 0
 
-  const startBlock = typeof process.env.STARKNET_ARCHIVE_START_BLOCK !== 'undefined' ? Number.parseInt(process.env.STARKNET_ARCHIVE_START_BLOCK!) : next
+  const startBlock = typeof process.env.STARKNET_ARCHIVE_START_BLOCK !== 'undefined' ? Number.parseInt(process.env.STARKNET_ARCHIVE_START_BLOCK!) : nextBlock
   const finishBlock = typeof process.env.STARKNET_ARCHIVE_FINISH_BLOCK !== 'undefined' ? Number.parseInt(process.env.STARKNET_ARCHIVE_FINISH_BLOCK!) : Number.MAX_VALUE
 
   const retryWait = Number.parseInt(process.env.STARKNET_ARCHIVE_RETRY_WAIT || '1000')
 
   const pathfinderUrl = process.env.STARKNET_ARCHIVE_PATHFINDER_URL || 'https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a' /*'http://54.80.141.84:9545'*/
-  const network = 'goerli-alpha'
+  const network = process.env.STARKNET_ARCHIVE_NETWORK || 'goerli-alpha'
 
   const api = new ComboApi(pathfinderUrl, network)
 

@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: starknet-archive-${network}-${namespace}
+spec:
+  selector:
+    matchLabels:
+      app: starknet-archive-${network}-${namespace}
+  template:
+    metadata:
+      labels:
+        app: starknet-archive-${network}-${namespace}
+    spec:
+      containers:
+      - name: starknet-archive
+        image: ${image_archive}
+        env:
+        - name: "TYPEORM_PASSWORD"
+          value: ${db_password_archive}
+        - name: "TYPEORM_HOST"
+          value: ${db_host}
+        - name: "TYPEORM_DATABASE"
+          value: ${namespace}
+        - name: "TYPEORM_SCHEMA"
+          value: starknet-${network}
+        - name: TYPEORM_CONNECTION
+          value: postgres
+        - name: TYPEORM_USERNAME
+          value: archive
+        - name: TYPEORM_PORT
+          value: "5432"
+        - name: TYPEORM_SYNCHRONIZE
+          value: "false"
+        - name: TYPEORM_LOGGING
+          value: "false"
+        - name: TYPEORM_ENTITIES
+          value: ./lib/entities.js
+        - name: TYPEORM_MIGRATIONS_DIR
+          value: src/migration
+        - name: STARKNET_ARCHIVE_PATHFINDER_URL
+          value: http://pathfinder-${network}:9545
+        - name: STARKNET_ARCHIVE_RETRY_WAIT
+          value: "30000"
+        resources: 
+          limits:
+            memory: "1024Mi"
+            cpu: "1000m"
+          requests:
+            memory: "100Mi"
+            cpu: "100m"
+
