@@ -22,7 +22,7 @@ spec:
         - name: TYPEORM_DATABASE
           value: "${namespace}"
         - name: TYPEORM_SCHEMA
-          value: "starknet-${network}"
+          value: "starknet_${network}"
         - name: TYPEORM_CONNECTION
           value: "postgres"
         - name: TYPEORM_USERNAME
@@ -30,7 +30,7 @@ spec:
         - name: TYPEORM_PORT
           value: "5432"
         - name: TYPEORM_SYNCHRONIZE
-          value: "false"
+          value: "true"
         - name: TYPEORM_LOGGING
           value: "false"
         - name: TYPEORM_ENTITIES
