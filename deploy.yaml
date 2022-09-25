@@ -30,9 +30,9 @@ spec:
         - name: TYPEORM_PORT
           value: "5432"
         - name: TYPEORM_SYNCHRONIZE
-          value: false
+          value: "false"
         - name: TYPEORM_LOGGING
-          value: false
+          value: "false"
         - name: TYPEORM_ENTITIES
           value: ./lib/entities.js
         - name: TYPEORM_MIGRATIONS_DIR
