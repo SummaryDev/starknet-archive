@@ -13,20 +13,20 @@ spec:
     spec:
       containers:
       - name: starknet-archive
-        image: ${image}
+        image: "${image}"
         env:
         - name: TYPEORM_PASSWORD
-          value: ${db_password_archive}
+          value: "${db_password_archive}"
         - name: TYPEORM_HOST
-          value: ${db_host}
+          value: "${db_host}"
         - name: TYPEORM_DATABASE
-          value: ${namespace}
+          value: "${namespace}"
         - name: TYPEORM_SCHEMA
-          value: starknet-${network}
+          value: "starknet-${network}"
         - name: TYPEORM_CONNECTION
-          value: postgres
+          value: "postgres"
         - name: TYPEORM_USERNAME
-          value: archive
+          value: "archive"
         - name: TYPEORM_PORT
           value: "5432"
         - name: TYPEORM_SYNCHRONIZE
@@ -34,13 +34,13 @@ spec:
         - name: TYPEORM_LOGGING
           value: "false"
         - name: TYPEORM_ENTITIES
-          value: ./lib/entities.js
+          value: "./lib/entities.js"
         - name: TYPEORM_MIGRATIONS_DIR
-          value: src/migration
+          value: "src/migration"
         - name: STARKNET_ARCHIVE_PATHFINDER_URL
-          value: http://pathfinder-${network}-${namespace}:9545
+          value: "http://pathfinder-${network}-${namespace}:9545"
         - name: STARKNET_ARCHIVE_NETWORK
-          value: ${network}-alpha
+          value: "${network}-alpha"
         - name: STARKNET_ARCHIVE_RETRY_WAIT
           value: "30000"
         resources: 
