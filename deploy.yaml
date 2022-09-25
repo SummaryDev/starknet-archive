@@ -28,7 +28,7 @@ spec:
         - name: TYPEORM_USERNAME
           value: archive
         - name: TYPEORM_PORT
-          value: 5432
+          value: "5432"
         - name: TYPEORM_SYNCHRONIZE
           value: false
         - name: TYPEORM_LOGGING
@@ -42,7 +42,7 @@ spec:
         - name: STARKNET_ARCHIVE_NETWORK
           value: ${network}-alpha
         - name: STARKNET_ARCHIVE_RETRY_WAIT
-          value: 30000
+          value: "30000"
         resources: 
           limits:
             memory: "1024Mi"
