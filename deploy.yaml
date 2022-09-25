@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: starknet-archive
-        image: ${image_archive}
+        image: ${image}
         env:
         - name: TYPEORM_PASSWORD
           value: ${db_password_archive}
