@@ -1,6 +1,0 @@
-apiVersion: v2
-name: microservice-writer
-description: Microservice with env variables
-type: application
-version: 0.1.0
-appVersion: "0.0.1"

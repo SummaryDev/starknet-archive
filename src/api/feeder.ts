@@ -16,7 +16,7 @@ export class FeederApi implements Api {
     if(network === 'goerli-alpha') {
       this.feederUrl = 'https://alpha4.starknet.io'
     } else {
-      this.feederUrl = 'https://mainnet.starknet.io'
+      this.feederUrl = 'https://alpha-mainnet.starknet.io'
     }
 
     this.provider = new Provider({
