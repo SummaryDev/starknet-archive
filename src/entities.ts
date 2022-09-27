@@ -57,7 +57,8 @@ export const TransactionEntity = new EntitySchema<OrganizedTransactionData>({
       type: String
     },
     contract_address: {
-      type: String
+      type: String,
+      nullable: true
     },
     entry_point_selector: {
       type: String,
