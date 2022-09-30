@@ -1,15 +1,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: starknet-archive-${network}-${namespace}
+  name: starknet-archive-${network}
 spec:
   selector:
     matchLabels:
-      app: starknet-archive-${network}-${namespace}
+      app: starknet-archive-${network}
   template:
     metadata:
       labels:
-        app: starknet-archive-${network}-${namespace}
+        app: starknet-archive-${network}
     spec:
       containers:
       - name: starknet-archive
@@ -38,7 +38,7 @@ spec:
         - name: TYPEORM_MIGRATIONS_DIR
           value: "src/migration"
         - name: STARKNET_ARCHIVE_PATHFINDER_URL
-          value: "http://pathfinder-${network}-${namespace}:9545"
+          value: "http://pathfinder-${network}:9545"
         - name: STARKNET_ARCHIVE_NETWORK
           value: "${network}-alpha"
         - name: STARKNET_ARCHIVE_RETRY_WAIT
@@ -46,8 +46,8 @@ spec:
         resources: 
           limits:
             memory: "1024Mi"
-            cpu: "1000m"
+#            cpu: "1000m"
           requests:
-            memory: "100Mi"
-            cpu: "100m"
+            memory: "200Mi"
+#            cpu: "100m"
 
