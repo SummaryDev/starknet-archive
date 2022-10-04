@@ -39,8 +39,9 @@ async function iterateBlocks(ds: DataSource) {
 
   const pathfinderUrl = process.env.STARKNET_ARCHIVE_PATHFINDER_URL || 'https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a' /*'http://54.80.141.84:9545'*/
   const network = process.env.STARKNET_ARCHIVE_NETWORK || 'goerli-alpha'
+  const abiUrl = process.env.STARKNET_ARCHIVE_ABI_URL || 'https://api-abi-goerli.dev.summary.dev'
 
-  const api = new ComboApi(pathfinderUrl, network)
+  const api = new ComboApi(pathfinderUrl, network, abiUrl)
 
   const p = new OrganizeBlockProcessor(api, ds)
 

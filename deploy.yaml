@@ -39,6 +39,8 @@ spec:
           value: "src/migration"
         - name: STARKNET_ARCHIVE_PATHFINDER_URL
           value: "http://pathfinder-${network}:9545"
+        - name: STARKNET_ARCHIVE_ABI_URL
+          value: "http://api-abi-${network}:3001"
         - name: STARKNET_ARCHIVE_NETWORK
           value: "${network}-alpha"
         - name: STARKNET_ARCHIVE_RETRY_WAIT

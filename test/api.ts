@@ -1,7 +1,7 @@
-import {expect} from 'chai'
 import {createConnection, DataSource} from "typeorm"
 import { FeederApi } from "../src/api/feeder";
 import { PathfinderApi } from "../src/api/pathfinder";
+import { AbiApi } from "../src/api/abi";
 import { ComboApi } from "../src/api/combo";
 import { DatabaseApi } from "../src/api/database";
 import * as console from '../src/helpers/console'
@@ -11,6 +11,11 @@ import {BlockOrganizer} from '../src/organizers/block'
 //import JSON = require("json5")
 import { MemoryCache } from "../src/helpers/cache";
 import { Api } from "../src/api/interfaces";
+
+import * as chai from 'chai'
+import chaiAsPromised = require('chai-as-promised');
+chai.use(chaiAsPromised)
+const expect = chai.expect
 
 function log(o: any) {
   console.log(JSON.stringify(o, null, 2))
@@ -625,6 +630,7 @@ describe('api', function() {
 
     const pathfinderApi = new PathfinderApi(pathfinderUrl)
     const feederApi = new FeederApi(network)
+    const abiApi = new AbiApi()
 
     it('getBlock', async () => {
       const blockNumber = 254149
@@ -671,6 +677,41 @@ describe('api', function() {
       const rc = await api.getContractAbi(contractAddress)
 
       expect(rf).deep.eq(rc)
+    })
+
+
+    it('AbiApi', async () => {
+      let h = '0x01ecfc4bf6c3b5317a25fec2eb942db4f336077f7506acc3eb253889d73a45d4'
+
+      const r0 = await abiApi.getClassAbi(h)
+      log(r0)
+
+      h = '0x1ecfc4bf6c3b5317a25fec2eb942db4f336077f7506acc3eb253889d73a45d4'
+
+      const r1 = await abiApi.getClassAbi(h)
+      log(r1)
+
+      expect(r0).deep.eq(r1)
+
+      //TODO chaiaspromised not working here
+      // h = '0x1ecfc4bf6c3b5317a25fec2eb942db4f336077f7506acc3eb253889d73a45dX'
+      //
+      // expect(await abiApi.getClassAbi(h)).to.throw
+
+      h = '010455c752b86932ce552f2b0fe81a880746649b9aee7e0d842bf3f52378f9f8'
+
+      let r = await abiApi.getClassAbi(h)
+      log(r)
+
+      h = '00005345c2ff3cf38e5f2c24fa41279d13f754172f0674a2598eae39b094b5cb'
+
+      r = await abiApi.getClassAbi(h)
+      log(r)
+
+      h = '0000008719984fd09d467c64014c83c0d9445c309b710ece2260c8f364cb31b3'
+
+      r = await abiApi.getContractAbi(h)
+      log(r)
     })
 
     it('getClassAbi', async () => {

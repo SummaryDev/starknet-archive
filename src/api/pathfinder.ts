@@ -75,7 +75,7 @@ export class PathfinderApi implements Api {
     // return ret
   }
 
-  async getClassAbi(classHash: string): Promise<Abi> {
+  async getClassAbi(classHash: string): Promise<Abi | undefined> {
     throw new Error('pathfinder does not return ABI by starknet_getClass') //TODO revisit as future versions of pathfinder may start supporting ABI in starknet_getClass
   }
 
