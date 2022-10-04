@@ -3,7 +3,9 @@
 env | grep 'namespace\|network\|db_host\|image'
 
 function fun() {
-#envsubst < deploy.yaml | kubectl --namespace $namespace -f - delete
+    network=$1
+
+    #envsubst < deploy.yaml | kubectl --namespace $namespace -f - delete
 
     cat deploy.yaml | \
     sed 's/${namespace}/namespace/g' | sed "s/namespace/$namespace/g" | \
@@ -14,11 +16,7 @@ function fun() {
     kubectl --namespace $namespace -f - delete
 }
 
-export network=goerli
+fun goerli
 
-fun
-
-export network=mainnet
-
-fun
+fun mainnet
 
