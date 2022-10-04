@@ -45,7 +45,7 @@ async function iterateBlocks(ds: DataSource) {
 
   const p = new OrganizeBlockProcessor(api, ds)
 
-  console.info(`processing blocks ${startBlock} to ${finishBlock} from ${network} and ${pathfinderUrl}`)
+  console.info(`processing blocks ${startBlock} to ${finishBlock} from ${network} ${pathfinderUrl} ${abiUrl}`)
 
   for (let blockNumber = startBlock; blockNumber <= finishBlock; ) {
     console.info(`processing ${blockNumber}`)
