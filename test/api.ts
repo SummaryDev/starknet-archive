@@ -5,7 +5,7 @@ import { AbiApi } from "../src/api/abi";
 import { ComboApi } from "../src/api/combo";
 import { DatabaseApi } from "../src/api/database";
 import * as console from '../src/helpers/console'
-import { InvokeFunctionTransaction } from '../src/types/raw-starknet'
+import {Block, InvokeFunctionTransaction, TransactionReceipt} from '../src/types/raw-starknet'
 import {TransactionCallOrganizer} from '../src/organizers/transaction-call'
 import {BlockOrganizer} from '../src/organizers/block'
 //import JSON = require("json5")
@@ -14,6 +14,7 @@ import { Api } from "../src/api/interfaces";
 
 import * as chai from 'chai'
 import chaiAsPromised = require('chai-as-promised');
+import {RawReceipt} from "../src/entities";
 chai.use(chaiAsPromised)
 const expect = chai.expect
 
@@ -21,7 +22,7 @@ function log(o: any) {
   console.log(JSON.stringify(o, null, 2))
 }
 
-const pathfinderUrl = 'http://54.80.141.84:9545'/*'https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a'*/
+const pathfinderUrl = 'https://pathfinder-goerli.dev.summary.dev'/*http://54.80.141.84:9545'/*'https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a'*/
 const network = 'goerli-alpha'
 const api: Api = new ComboApi(pathfinderUrl, network)
 
@@ -42,6 +43,11 @@ describe('api', function() {
   })
 
   describe('DatabaseApi', async function() {
+    xit('deletes block, cascades, deletes raw block and raw receipts', async() => {
+      for(let blockNumber=386700; blockNumber <= 386823; blockNumber++) {
+        await databaseApi.deleteBlock(blockNumber)
+      }
+    })
 
     it('finds implementation contract address for proxy contract with implementation getter view function get_implementation_class_hash', async() => {
       // 0x5ef67d8c38b82ba699f206bf0db59f1828087a710bad48cc4d51a2b0da4c29 has view function get_implementation_class_hash
@@ -593,7 +599,7 @@ describe('api', function() {
     })
 
     it( 'organizeBlock problem blocks', async function () {
-      const blocks = [269354/*322717, 269717, 269354, 269147, 269130, 268515, 268486, 268464, 68385, 268374, 254923, 235506, 231612, 231579, 167434, 183423, 190290, 161308, 164233, 62135, 111570, 38172, 36568, 27592, 17281, 71368, 71405, 200501, 1564, 1064, 86*/]
+      const blocks = [386599/*386798/*269354/*322717, 269717, 269354, 269147, 269130, 268515, 268486, 268464, 68385, 268374, 254923, 235506, 231612, 231579, 167434, 183423, 190290, 161308, 164233, 62135, 111570, 38172, 36568, 27592, 17281, 71368, 71405, 200501, 1564, 1064, 86*/]
 
       const blockOrganizer = new BlockOrganizer(databaseApi)
 

@@ -11,7 +11,8 @@ import {
   RawView,
   RawViewEntity,
   RawReceipt,
-  RawReceiptEntity
+  RawReceiptEntity,
+  BlockEntity
 } from "../entities";
 import {Abi, FunctionAbi, Block, Transaction, TransactionReceipt} from "../types/raw-starknet";
 import {EventArgument, FunctionInput, OrganizedTransaction} from "../types/organized-starknet";
@@ -26,6 +27,7 @@ export class DatabaseApi implements Api {
   private readonly argumentRepository: Repository<EventArgument>
   private readonly viewRepository: Repository<RawView>
   private readonly receiptRepository: Repository<RawReceipt>
+  private readonly organizedBlockRepository: Repository<Block>
 
   private readonly memoryCache = MemoryCache.getInstance()
 
@@ -37,6 +39,7 @@ export class DatabaseApi implements Api {
     this.argumentRepository = ds.getRepository<EventArgument>(ArgumentEntity)
     this.viewRepository = ds.getRepository<RawView>(RawViewEntity)
     this.receiptRepository = ds.getRepository<RawReceipt>(RawReceiptEntity)
+    this.organizedBlockRepository = ds.getRepository<Block>(BlockEntity)
   }
 
   async getBlock(blockNumber: number): Promise<Block | undefined> {
@@ -55,6 +58,30 @@ export class DatabaseApi implements Api {
     }
 
     return ret
+  }
+
+  async deleteBlock(blockNumber: number) {
+    const organizedBlock = await this.organizedBlockRepository.findOneBy({block_number: blockNumber})
+
+    if(organizedBlock) {
+      await this.organizedBlockRepository.remove(organizedBlock)
+    }
+
+    const rawBlock = await this.blockRepository.findOneBy({block_number: blockNumber})
+
+    if(rawBlock) {
+      const raw = rawBlock.raw as Block
+
+      for(let i=0; i < raw.transactions.length; i++) {
+        const t = raw.transactions[i]
+        const rawReceipt = await this.receiptRepository.findOneBy({transaction_hash: t.transaction_hash})
+        if(rawReceipt) {
+          await this.receiptRepository.remove(rawReceipt)
+        }
+      }
+
+      await this.blockRepository.remove(rawBlock)
+    }
   }
 
   async callView(contractAddress: string, viewFunction: string, blockNumber?: number, blockHash?: string) {

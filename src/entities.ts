@@ -131,6 +131,7 @@ export const TransactionEntity = new EntitySchema<OrganizedTransactionData>({
       joinColumn: {name: 'block_number'},
       nullable: false,
       inverseSide: 'transactions',
+      onDelete: "CASCADE",
     },
     inputs: {
       type: "one-to-many",
@@ -205,6 +206,7 @@ export const InputEntity = new EntitySchema<FunctionInputData>({
       joinColumn: {name: 'transaction_hash'},
       nullable: false,
       inverseSide: 'inputs',
+      onDelete: "CASCADE",
     }
   },
   indices: [
@@ -248,6 +250,7 @@ export const EventEntity = new EntitySchema<OrganizedEventData>({
       joinColumn: {name: 'transaction_hash'},
       nullable: false,
       inverseSide: 'events',
+      onDelete: "CASCADE",
     },
     arguments: {
       type: "one-to-many",
@@ -322,6 +325,7 @@ export const ArgumentEntity = new EntitySchema<EventArgumentData>({
       joinColumn: {name: 'event_id'},
       nullable: false,
       inverseSide: 'arguments',
+      onDelete: "CASCADE",
     }
   },
   indices: [
