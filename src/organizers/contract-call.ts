@@ -133,7 +133,7 @@ export class ContractCallOrganizer {
   getArraySizeFromCalldata(calldata: { fullCalldataValues: BigNumberish[], startIndex: number }) {
     try {
       let size = 0
-      if(calldata.fullCalldataValues.length > calldata.startIndex) {
+      if(calldata.fullCalldataValues.length >= calldata.startIndex) {
         size = BigNumber.from(calldata.fullCalldataValues[calldata.startIndex - 1]).toNumber();
       } else {
         console.warn(`getArraySizeFromCalldata - startIndex ${calldata.startIndex} is more than calldata length ${calldata.fullCalldataValues.length}`)
