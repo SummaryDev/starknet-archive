@@ -70,6 +70,7 @@ function canRetry(err: any): boolean {
         || err.message.includes('BLOCK_NOT_FOUND') // feeder api: block is not there yet
         || err.message.includes('Invalid block') // pathfinder api code 24: block is not there yet //TODO when start sourcing everything from pathfinder such gap where we got the block already but cannot call other api methods at this block should not be possible and should be treated as unrecoverable error
         || err.message.includes('Block missing')) // pathfinder api code -32603: starknet_getTransactionReceipt Internal error: Block missing from database
+        || err.message.includes('Block not found') // pathfinder api code 24
     )
   if(ret)
     console.info(`retrying for ${err}`/*, err*/)
