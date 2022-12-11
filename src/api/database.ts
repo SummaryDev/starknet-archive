@@ -366,7 +366,7 @@ export class DatabaseApi implements Api {
 
     const implementationContractGetters = abi.filter(o => {
       const a = o as FunctionAbi
-      return a.type == 'function' && filterstrings.includes(a.name) && a.stateMutability == 'view'
+      return a.type == 'function' && filterstrings.includes(a.name) /*&& a.stateMutability == 'view'*/
     })
 
     console.debug(implementationContractGetters)

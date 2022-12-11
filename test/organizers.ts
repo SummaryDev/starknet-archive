@@ -13,10 +13,11 @@ function log(o: any) {
   console.log(JSON.stringify(o, null, 2))
 }
 
-const pathfinderUrl = 'https://pathfinder-goerli.dev.summary.dev'/*'http://54.80.141.84:9545'/*'https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a'*/
-const network = 'goerli-alpha'
+const pathfinderUrl = 'https://pathfinder-mainnet.dev.summary.dev/rpc/v0.2'/*'https://pathfinder-goerli.dev.summary.dev'/*'http://54.80.141.84:9545'/*'https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a'*/
+const network = 'mainnet-alpha'/*'goerli-alpha'*/
+const apiAbiUrl = 'https://api-abi-mainnet.dev.summary.dev'
 
-const api = new ComboApi(pathfinderUrl, network)
+const api = new ComboApi(pathfinderUrl, network, apiAbiUrl)
 
 describe('organizers', function () {
   this.timeout(6000000)

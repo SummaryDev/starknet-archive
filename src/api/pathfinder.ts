@@ -10,7 +10,7 @@ export class PathfinderApi implements Api {
   }
 
   async call(method: string, params: any) {
-    console.debug(`call ${method} ` + JSON.stringify(params))
+    console.debug(`call ${method} ` + JSON.stringify(params) + ' ' + this.url)
 
     const data = {
       jsonrpc: '2.0',
@@ -52,27 +52,28 @@ export class PathfinderApi implements Api {
     return data.result as Block
   }
 
-  async getContractAbi(contractAddress: string): Promise<Abi | undefined>  {
-    throw new Error('pathfinder does not return ABI by starknet_getClassAt') //TODO revisit as future versions of pathfinder may start supporting ABI in starknet_getClassAt
-    // let ret = undefined
-    //
-    // const method = 'starknet_getClassAt'
-    //
-    // const data = await this.call(method, ['latest', contractAddress])
-    //
-    // if (data.error) {
-    //   const m = `pathfinder cannot ${method} ${contractAddress} for ${data.error.code} ${data.error.message}`
-    //   if (data.error.code === 20)// this error 20 Contract not found means no abi was found so we don't retry but return and try getting abi by class hash
-    //     return
-    //   else if (data.error.code === -32603) // this is a recoverable error: -32603 Internal error: Fetching class hash from database
-    //     throw new ApiError(`pathfinder cannot ${method} for ${data.error}`)
-    //   else
-    //     throw new Error(m)
-    // } else if (data.result && data.result.abi) {
-    //   ret = JSON.parse(data.result.abi)
-    // }
-    //
-    // return ret
+  async getContractAbi(contractAddress: string, blockNumber?: number): Promise<Abi | undefined>  {
+    let ret = undefined
+
+    const method = 'starknet_getClassAt'
+
+    const blockId = blockNumber ? {block_number: blockNumber} : 'latest'
+
+    const data = await this.call(method, {block_id: blockId, contract_address: contractAddress}) // "params\":{\"block_id\": {\"block_number\": 12799},\"contract_address\":\"0xf0f5b3eed258344152e1f17baf84a2e1b621cd754b625bec169e8595aea767\"}
+
+    if (data.error) {
+      const m = `pathfinder cannot ${method} ${contractAddress} for ${data.error.code} ${data.error.message}`
+      if (data.error.code === 20)// this error 20 Contract not found means no abi was found so we don't retry but return and try getting abi by class hash
+        return
+      else if (data.error.code === -32603) // this is a recoverable error: -32603 Internal error: Fetching class hash from database
+        throw new ApiError(`pathfinder cannot ${method} for ${data.error}`)
+      else
+        throw new Error(m)
+    } else if (data.result && data.result.abi) {
+      ret = data.result.abi/*JSON.parse(data.result.abi)*/
+    }
+
+    return ret
   }
 
   async getClassAbi(classHash: string): Promise<Abi | undefined> {

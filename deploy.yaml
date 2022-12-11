@@ -38,7 +38,7 @@ spec:
         - name: TYPEORM_MIGRATIONS_DIR
           value: "src/migration"
         - name: STARKNET_ARCHIVE_PATHFINDER_URL
-          value: "http://pathfinder-${starknet_network}:9545"
+          value: "http://pathfinder-${starknet_network}:9545/rpc/v0.2"
         - name: STARKNET_ARCHIVE_ABI_URL
           value: "http://api-abi-${starknet_network}:3001"
         - name: STARKNET_ARCHIVE_NETWORK

@@ -20,6 +20,7 @@ export class ComboApi extends PathfinderApi implements Api {
 
   async getContractAbi(contractAddress: string) {
     // return this.feederApiProvider.getContractAbi(contractAddress)
-    return this.abiApiProvider.getContractAbi(contractAddress)
+    //return this.abiApiProvider.getContractAbi(contractAddress)
+    return super.getContractAbi(contractAddress)
   }
 }
