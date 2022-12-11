@@ -362,7 +362,7 @@ export class DatabaseApi implements Api {
   }
 
   static getImplementationGetters(abi: Abi) {
-    const filterstrings = ['get_implementation', 'implementation', 'proxy_get_implementation', 'Proxy_get_implementation', 'getImplementation', 'getImplementation_', 'get_implementation_class_hash', 'getImplementationHash']
+    const filterstrings = ['get_implementation', 'implementation', 'proxy_get_implementation', 'Proxy_get_implementation', 'getImplementation', 'getImplementation_', 'get_implementation_class_hash', 'getImplementationHash', 'get_implementation_hash']
 
     const implementationContractGetters = abi.filter(o => {
       const a = o as FunctionAbi
