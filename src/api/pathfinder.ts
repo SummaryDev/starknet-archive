@@ -131,6 +131,9 @@ export class PathfinderApi implements Api {
         // Internal error: StarknetErrorCode.TRANSACTION_FAILED //TODO revisit this logic: -32603 Internal error: database is locked is usually recoverable error while -32603 for starknet_call is not so return nothing and don't retry
         console.warn(m)
         return
+      } else if (data.error.code === 24) { //TODO revisit this logic: get_implementation at block 12293 for 24 Block not found is rare and unexplainable
+        console.warn(m)
+        return
       } else {
         throw new Error(m)
       }
