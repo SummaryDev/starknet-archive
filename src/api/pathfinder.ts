@@ -87,7 +87,7 @@ export class PathfinderApi implements Api {
 
     if (data.error) {
       const m = `pathfinder cannot ${method} ${classHash} for ${data.error.code} ${data.error.message}`
-      if (data.error.code === 20)// this error 20 Contract not found means no abi was found so we don't retry but return and try getting abi by class hash
+      if (data.error.code === 28)// this error 28 Class hash not found means no abi was found so we don't retry but return
         return
       else if (data.error.code === -32603) // this is a recoverable error: -32603 Internal error: Fetching class hash from database
         throw new ApiError(`pathfinder cannot ${method} for ${data.error}`)
