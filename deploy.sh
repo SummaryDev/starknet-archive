@@ -24,7 +24,7 @@ function fun {
 
     waitfor pathfinder-${starknet_network}
 
-    waitfor api-abi-${starknet_network}
+#    waitfor api-abi-${starknet_network}
 
     #envsubst < deploy.yaml | kubectl --namespace $namespace -f - apply
 
