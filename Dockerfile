@@ -9,7 +9,7 @@ WORKDIR /usr/src/app
 
 # Install the Javascript dependencies, including all devDependencies.
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci
 
 # Copy the rest of the application in and build it.
 COPY . ./
@@ -25,7 +25,7 @@ WORKDIR /usr/src/app
 # (Install OS dependencies; just libraries.)
 
 # Install the Javascript dependencies, only runtime libraries.
-COPY package.json .
+COPY package.json package-lock.json ./
 RUN npm ci
 
 # Copy the dist tree from the first stage.
