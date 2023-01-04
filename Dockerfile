@@ -26,7 +26,7 @@ WORKDIR /usr/src/app
 
 # Install the Javascript dependencies, only runtime libraries.
 COPY package.json .
-RUN npm install --production
+RUN npm ci
 
 # Copy the dist tree from the first stage.
 COPY --from=starknet-archive-builder /usr/src/app/lib lib
