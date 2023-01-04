@@ -2,7 +2,7 @@ import 'dotenv/config'
 import {createConnection, getConnectionOptions, DataSource, Repository} from "typeorm"
 import * as console from './helpers/console'
 import {sleep} from './helpers/helpers'
-import {ComboApi} from "./api/combo";
+import {PathfinderApi} from "./api/pathfinder";
 import {BlockOrganizer} from "./organizers/block";
 import {ApiError} from "./helpers/error";
 import {DatabaseApi} from "./api/database";
@@ -38,14 +38,12 @@ async function iterateBlocks(ds: DataSource) {
   const retryWait = Number.parseInt(process.env.STARKNET_ARCHIVE_RETRY_WAIT || '1000')
 
   const pathfinderUrl = process.env.STARKNET_ARCHIVE_PATHFINDER_URL || 'https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a' /*'http://54.80.141.84:9545'*/
-  const network = process.env.STARKNET_ARCHIVE_NETWORK || 'goerli-alpha'
-  const abiUrl = process.env.STARKNET_ARCHIVE_ABI_URL || 'https://api-abi-goerli.dev.summary.dev'
 
-  const api = new ComboApi(pathfinderUrl, network, abiUrl)
+  const api = new PathfinderApi(pathfinderUrl)
 
   const p = new OrganizeBlockProcessor(api, ds)
 
-  console.info(`processing blocks ${startBlock} to ${finishBlock} from ${network} ${pathfinderUrl} ${abiUrl}`)
+  console.info(`processing blocks ${startBlock} to ${finishBlock} from $${pathfinderUrl}`)
 
   for (let blockNumber = startBlock; blockNumber <= finishBlock; ) {
     console.info(`processing ${blockNumber}`)

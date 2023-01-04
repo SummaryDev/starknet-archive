@@ -1,8 +1,5 @@
 import {createConnection, DataSource} from "typeorm"
-import { FeederApi } from "../src/api/feeder";
 import { PathfinderApi } from "../src/api/pathfinder";
-import { AbiApi } from "../src/api/abi";
-import { ComboApi } from "../src/api/combo";
 import { DatabaseApi } from "../src/api/database";
 import * as console from '../src/helpers/console'
 import {Block, InvokeFunctionTransaction, TransactionReceipt} from '../src/types/raw-starknet'
@@ -23,9 +20,7 @@ function log(o: any) {
 }
 
 const pathfinderUrl = 'https://pathfinder-mainnet.dev.summary.dev/rpc/v0.2'/*'https://pathfinder-goerli.dev.summary.dev'/*'http://54.80.141.84:9545'/*'https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a'*/
-const network = 'mainnet-alpha'/*'goerli-alpha'*/
-const apiAbiUrl = 'https://api-abi-mainnet.dev.summary.dev'
-const api: Api = new ComboApi(pathfinderUrl, network, apiAbiUrl)
+const api: Api = new PathfinderApi(pathfinderUrl)
 
 describe('api', function() {
   this.timeout(6000000)
@@ -636,8 +631,6 @@ describe('api', function() {
   describe('Api', async function() {
 
     const pathfinderApi = new PathfinderApi(pathfinderUrl)
-    const feederApi = new FeederApi(network)
-    const abiApi = new AbiApi()
 
     it('getBlock', async () => {
       const blockNumber = 254149
@@ -649,8 +642,6 @@ describe('api', function() {
 
       expect(rp).deep.eq(expected)
 
-      const rf = await feederApi.getBlock(blockNumber)
-      log(rf)
     })
 
     it('getContractAbi 0x6715e129c11f1c5ec5ea460115de61e7d21f9e6873cb27109bc0bb3339acf53', async () => {
@@ -662,11 +653,6 @@ describe('api', function() {
       const expectedOld = JSON.parse('[{"data":[{"name":"implementation","type":"felt"}],"keys":[],"name":"Upgraded","type":"event"},{"inputs":[{"name":"implementation_address","type":"felt"}],"name":"constructor","outputs":[],"type":"constructor"},{"inputs":[{"name":"selector","type":"felt"},{"name":"calldata_size","type":"felt"},{"name":"calldata","type":"felt*"}],"name":"__default__","outputs":[{"name":"retdata_size","type":"felt"},{"name":"retdata","type":"felt*"}],"type":"function"},{"inputs":[{"name":"selector","type":"felt"},{"name":"calldata_size","type":"felt"},{"name":"calldata","type":"felt*"}],"name":"__l1_default__","outputs":[],"type":"l1_handler"}]')
 
       const expected = JSON.parse('[{"data":[{"name":"implementation","type":"felt"}],"keys":[],"name":"Upgraded","type":"event"},{"inputs":[{"name":"implementation_address","type":"felt"},{"name":"initializer_selector","type":"felt"},{"name":"calldata_len","type":"felt"},{"name":"calldata","type":"felt*"}],"name":"constructor","outputs":[],"type":"constructor"},{"inputs":[],"name":"get_implementation","outputs":[{"name":"implementation","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"selector","type":"felt"},{"name":"calldata_size","type":"felt"},{"name":"calldata","type":"felt*"}],"name":"__default__","outputs":[{"name":"retdata_size","type":"felt"},{"name":"retdata","type":"felt*"}],"type":"function"},{"inputs":[{"name":"selector","type":"felt"},{"name":"calldata_size","type":"felt"},{"name":"calldata","type":"felt*"}],"name":"__l1_default__","outputs":[],"type":"l1_handler"}]')
-
-      const rf = await feederApi.getContractAbi(contractAddress)
-      log(rf)
-
-      expect(rf).deep.eq(expected)
     })
 
     it('getContractAbi', async () => {
@@ -676,66 +662,18 @@ describe('api', function() {
 
       const expected = JSON.parse('[{"data":[{"name":"implementation","type":"felt"}],"keys":[],"name":"Upgraded","type":"event"},{"inputs":[{"name":"implementation_address","type":"felt"}],"name":"constructor","outputs":[],"type":"constructor"},{"inputs":[{"name":"selector","type":"felt"},{"name":"calldata_size","type":"felt"},{"name":"calldata","type":"felt*"}],"name":"__default__","outputs":[{"name":"retdata_size","type":"felt"},{"name":"retdata","type":"felt*"}],"type":"function"},{"inputs":[{"name":"selector","type":"felt"},{"name":"calldata_size","type":"felt"},{"name":"calldata","type":"felt*"}],"name":"__l1_default__","outputs":[],"type":"l1_handler"}]')
 
-      const rf = await feederApi.getContractAbi(contractAddress)
-      log(rf)
-
-      expect(rf).deep.eq(expected)
-
       const rc = await api.getContractAbi(contractAddress)
-
-      expect(rf).deep.eq(rc)
     })
 
-
-    it('AbiApi', async () => {
-      let h = '0x01ecfc4bf6c3b5317a25fec2eb942db4f336077f7506acc3eb253889d73a45d4'
-
-      const r0 = await abiApi.getClassAbi(h)
-      log(r0)
-
-      h = '0x1ecfc4bf6c3b5317a25fec2eb942db4f336077f7506acc3eb253889d73a45d4'
-
-      const r1 = await abiApi.getClassAbi(h)
-      log(r1)
-
-      expect(r0).deep.eq(r1)
-
-      //TODO chaiaspromised not working here
-      // h = '0x1ecfc4bf6c3b5317a25fec2eb942db4f336077f7506acc3eb253889d73a45dX'
-      //
-      // expect(await abiApi.getClassAbi(h)).to.throw
-
-      h = '010455c752b86932ce552f2b0fe81a880746649b9aee7e0d842bf3f52378f9f8'
-
-      let r = await abiApi.getClassAbi(h)
-      log(r)
-
-      h = '00005345c2ff3cf38e5f2c24fa41279d13f754172f0674a2598eae39b094b5cb'
-
-      r = await abiApi.getClassAbi(h)
-      log(r)
-
-      h = '0000008719984fd09d467c64014c83c0d9445c309b710ece2260c8f364cb31b3'
-
-      r = await abiApi.getContractAbi(h)
-      log(r)
-    })
 
     it('getClassAbi', async () => {
       const classHash = '0x1ecfc4bf6c3b5317a25fec2eb942db4f336077f7506acc3eb253889d73a45d4'
 
-      const rf = await feederApi.getClassAbi(classHash)
-      log(rf)
-
       const expected = JSON.parse('[{"members":[{"name":"low","offset":0,"type":"felt"},{"name":"high","offset":1,"type":"felt"}],"name":"Uint256","size":2,"type":"struct"},{"members":[{"name":"amount","offset":0,"type":"Uint256"},{"name":"reward_debt","offset":2,"type":"Uint256"}],"name":"UserInfo","size":4,"type":"struct"},{"data":[{"name":"from_","type":"felt"},{"name":"to","type":"felt"},{"name":"value","type":"Uint256"}],"keys":[],"name":"Transfer","type":"event"},{"data":[{"name":"owner","type":"felt"},{"name":"spender","type":"felt"},{"name":"value","type":"Uint256"}],"keys":[],"name":"Approval","type":"event"},{"data":[{"name":"implementation","type":"felt"}],"keys":[],"name":"Upgraded","type":"event"},{"data":[{"name":"caller","type":"felt"},{"name":"owner","type":"felt"},{"name":"assets","type":"Uint256"},{"name":"shares","type":"Uint256"}],"keys":[],"name":"Deposit","type":"event"},{"data":[{"name":"caller","type":"felt"},{"name":"receiver","type":"felt"},{"name":"owner","type":"felt"},{"name":"assets","type":"Uint256"},{"name":"shares","type":"Uint256"}],"keys":[],"name":"Withdraw","type":"event"},{"data":[{"name":"user","type":"felt"},{"name":"new_fee_percent","type":"felt"}],"keys":[],"name":"FeePercentUpdated","type":"event"},{"data":[{"name":"user","type":"felt"},{"name":"new_harvest_window","type":"felt"}],"keys":[],"name":"HarvestWindowUpdated","type":"event"},{"data":[{"name":"user","type":"felt"},{"name":"new_harvest_delay","type":"felt"}],"keys":[],"name":"HarvestDelayUpdated","type":"event"},{"data":[{"name":"user","type":"felt"},{"name":"new_harvest_delay","type":"felt"}],"keys":[],"name":"HarvestDelayUpdateScheduled","type":"event"},{"data":[{"name":"user","type":"felt"},{"name":"new_target_float_percent","type":"felt"}],"keys":[],"name":"TargetFloatPercentUpdated","type":"event"},{"data":[{"name":"user","type":"felt"},{"name":"strategies_len","type":"felt"},{"name":"strategies","type":"felt*"}],"keys":[],"name":"Harvest","type":"event"},{"data":[{"name":"user","type":"felt"},{"name":"strategy_address","type":"felt"},{"name":"underlying_amount","type":"Uint256"}],"keys":[],"name":"StrategyDeposit","type":"event"},{"data":[{"name":"user","type":"felt"},{"name":"strategy_address","type":"felt"},{"name":"underlying_amount","type":"Uint256"}],"keys":[],"name":"StrategyWithdrawal","type":"event"},{"data":[{"name":"user","type":"felt"},{"name":"strategy_address","type":"felt"}],"keys":[],"name":"StrategyTrusted","type":"event"},{"data":[{"name":"user","type":"felt"},{"name":"strategy_address","type":"felt"}],"keys":[],"name":"StrategyDistrusted","type":"event"},{"data":[{"name":"user","type":"felt"},{"name":"amount","type":"Uint256"}],"keys":[],"name":"FeesClaimed","type":"event"},{"data":[{"name":"user","type":"felt"},{"name":"strategy_address","type":"felt"}],"keys":[],"name":"WithdrawalStackPushed","type":"event"},{"data":[{"name":"user","type":"felt"},{"name":"strategy_address","type":"felt"}],"keys":[],"name":"WithdrawalStackPopped","type":"event"},{"data":[{"name":"user","type":"felt"},{"name":"stack_len","type":"felt"},{"name":"stack","type":"felt*"}],"keys":[],"name":"WithdrawalStackSet","type":"event"},{"data":[{"name":"user","type":"felt"},{"name":"index","type":"felt"},{"name":"old_strategy","type":"felt"},{"name":"new_strategy","type":"felt"}],"keys":[],"name":"WithdrawalStackIndexReplaced","type":"event"},{"data":[{"name":"user","type":"felt"},{"name":"index1","type":"felt"},{"name":"index2","type":"felt"},{"name":"new_strategy1","type":"felt"},{"name":"new_strategy2","type":"felt"}],"keys":[],"name":"WithdrawalStackIndexesSwapped","type":"event"},{"inputs":[],"name":"getWithdrawalStack","outputs":[{"name":"strategies_withdrawal_stack_len","type":"felt"},{"name":"strategies_withdrawal_stack","type":"felt*"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalFloat","outputs":[{"name":"float","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"lp_token","type":"felt"}],"name":"totalFloatLP","outputs":[{"name":"float","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalStrategyHoldings","outputs":[{"name":"holdings","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"feePercent","outputs":[{"name":"res","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"harvestDelay","outputs":[{"name":"delay","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"harvestWindow","outputs":[{"name":"window","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"targetFloatPercent","outputs":[{"name":"percent","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"lockedProfit","outputs":[{"name":"res","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"lastHarvest","outputs":[{"name":"time","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"lastHarvestWindowStart","outputs":[{"name":"res","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"nextHarvestDelay","outputs":[{"name":"delay","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"name":"name","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"name":"symbol","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"name":"totalSupply","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"name":"decimals","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"account","type":"felt"}],"name":"balanceOf","outputs":[{"name":"balance","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"owner","type":"felt"},{"name":"spender","type":"felt"}],"name":"allowance","outputs":[{"name":"remaining","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalAssets","outputs":[{"name":"totalManagedAssets","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"asset","outputs":[{"name":"assetTokenAddress","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"assets","type":"Uint256"}],"name":"convertToShares","outputs":[{"name":"shares","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"shares","type":"Uint256"}],"name":"convertToAssets","outputs":[{"name":"assets","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"receiver","type":"felt"}],"name":"maxDeposit","outputs":[{"name":"maxAssets","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"receiver","type":"felt"}],"name":"maxMint","outputs":[{"name":"maxShares","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"owner","type":"felt"}],"name":"maxWithdraw","outputs":[{"name":"maxAssets","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"assets","type":"Uint256"}],"name":"previewWithdraw","outputs":[{"name":"shares","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"owner","type":"felt"}],"name":"maxRedeem","outputs":[{"name":"maxShares","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"shares","type":"Uint256"}],"name":"previewRedeem","outputs":[{"name":"assets","type":"Uint256"}],"stateMutability":"view","type":"function"},{"data":[{"name":"depositor","type":"felt"},{"name":"receiver","type":"felt"},{"name":"lp_address","type":"felt"},{"name":"assets","type":"Uint256"},{"name":"shares","type":"Uint256"}],"keys":[],"name":"DepositLP","type":"event"},{"data":[{"name":"caller","type":"felt"},{"name":"receiver","type":"felt"},{"name":"owner","type":"felt"},{"name":"lp_token","type":"felt"},{"name":"assets","type":"Uint256"},{"name":"shares","type":"Uint256"}],"keys":[],"name":"WithdrawLP","type":"event"},{"data":[{"name":"newRewardPerBlock","type":"Uint256"},{"name":"newEndBlock","type":"felt"}],"keys":[],"name":"NewRewardPerBlockAndEndBlock","type":"event"},{"data":[{"name":"user","type":"felt"},{"name":"harvestAmount","type":"Uint256"}],"keys":[],"name":"HarvestRewards","type":"event"},{"inputs":[{"name":"user","type":"felt"},{"name":"token","type":"felt"}],"name":"getUserDeposit","outputs":[{"name":"amount","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"lp_token","type":"felt"}],"name":"isTokenWhitelisted","outputs":[{"name":"res","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"assets","type":"Uint256"}],"name":"previewDeposit","outputs":[{"name":"shares","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"assets","type":"Uint256"},{"name":"lock_time","type":"felt"}],"name":"previewDepositForTime","outputs":[{"name":"shares","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"lp_token","type":"felt"},{"name":"assets","type":"Uint256"},{"name":"lock_time","type":"felt"}],"name":"previewDepositLP","outputs":[{"name":"shares","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"shares","type":"Uint256"}],"name":"previewMint","outputs":[{"name":"assets","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"shares","type":"Uint256"},{"name":"lock_time","type":"felt"}],"name":"previewMintForTime","outputs":[{"name":"assets","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getCurrentBoostValue","outputs":[{"name":"res","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"user","type":"felt"}],"name":"getUserStakeInfo","outputs":[{"name":"unlock_time","type":"felt"},{"name":"tokens_len","type":"felt"},{"name":"tokens","type":"felt*"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getTokensMask","outputs":[{"name":"tokens_mask","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getEmergencyBreaker","outputs":[{"name":"address","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getImplementation","outputs":[{"name":"address","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"lp_token","type":"felt"},{"name":"input","type":"Uint256"}],"name":"previewWithdrawLP","outputs":[{"name":"amount","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getDefaultLockTime","outputs":[{"name":"lock_time","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getHarvestTaskContract","outputs":[{"name":"address","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"canHarvest","outputs":[{"name":"yes_no","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"rewardPerBlock","outputs":[{"name":"reward","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"startBlock","outputs":[{"name":"block","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"endBlock","outputs":[{"name":"block","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"lastRewardBlock","outputs":[{"name":"block","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"accTokenPerShare","outputs":[{"name":"res","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"user","type":"felt"}],"name":"userInfo","outputs":[{"name":"info","type":"UserInfo"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"user","type":"felt"}],"name":"calculatePendingRewards","outputs":[{"name":"rewards","type":"Uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"_from","type":"felt"},{"name":"_to","type":"felt"}],"name":"getMultiplier","outputs":[{"name":"multiplier","type":"felt"}],"stateMutability":"view","type":"function"},{"inputs":[{"name":"name","type":"felt"},{"name":"symbol","type":"felt"},{"name":"asset_addr","type":"felt"},{"name":"owner","type":"felt"},{"name":"_reward_per_block","type":"Uint256"},{"name":"start_reward_block","type":"felt"},{"name":"end_reward_block","type":"felt"}],"name":"initializer","outputs":[],"type":"function"},{"inputs":[{"name":"new_implementation","type":"felt"}],"name":"upgrade","outputs":[],"type":"function"},{"inputs":[{"name":"lp_token","type":"felt"},{"name":"mint_calculator_address","type":"felt"},{"name":"is_NFT","type":"felt"}],"name":"addWhitelistedToken","outputs":[{"name":"token_mask","type":"felt"}],"type":"function"},{"inputs":[{"name":"lp_token","type":"felt"}],"name":"removeWhitelistedToken","outputs":[],"type":"function"},{"inputs":[{"name":"address","type":"felt"}],"name":"setEmergencyBreaker","outputs":[],"type":"function"},{"inputs":[{"name":"assets","type":"Uint256"},{"name":"receiver","type":"felt"}],"name":"deposit","outputs":[{"name":"shares","type":"Uint256"}],"type":"function"},{"inputs":[{"name":"assets","type":"Uint256"},{"name":"receiver","type":"felt"},{"name":"lock_time_days","type":"felt"}],"name":"depositForTime","outputs":[{"name":"shares","type":"Uint256"}],"type":"function"},{"inputs":[{"name":"lp_token","type":"felt"},{"name":"assets","type":"Uint256"},{"name":"receiver","type":"felt"},{"name":"lock_time_days","type":"felt"}],"name":"depositLP","outputs":[{"name":"shares","type":"Uint256"}],"type":"function"},{"inputs":[{"name":"shares","type":"Uint256"},{"name":"receiver","type":"felt"}],"name":"mint","outputs":[{"name":"assets","type":"Uint256"}],"type":"function"},{"inputs":[{"name":"shares","type":"Uint256"},{"name":"receiver","type":"felt"},{"name":"lock_time_days","type":"felt"}],"name":"mintForTime","outputs":[{"name":"assets","type":"Uint256"}],"type":"function"},{"inputs":[{"name":"shares","type":"Uint256"},{"name":"receiver","type":"felt"},{"name":"owner","type":"felt"}],"name":"redeem","outputs":[{"name":"assets","type":"Uint256"}],"type":"function"},{"inputs":[{"name":"assets","type":"Uint256"},{"name":"receiver","type":"felt"},{"name":"owner","type":"felt"}],"name":"withdraw","outputs":[{"name":"shares","type":"Uint256"}],"type":"function"},{"inputs":[{"name":"lp_token","type":"felt"},{"name":"assets","type":"Uint256"},{"name":"receiver","type":"felt"},{"name":"owner","type":"felt"}],"name":"withdrawLP","outputs":[{"name":"shares","type":"Uint256"}],"type":"function"},{"inputs":[{"name":"recipient","type":"felt"},{"name":"amount","type":"Uint256"}],"name":"transfer","outputs":[{"name":"success","type":"felt"}],"type":"function"},{"inputs":[{"name":"sender","type":"felt"},{"name":"recipient","type":"felt"},{"name":"amount","type":"Uint256"}],"name":"transferFrom","outputs":[{"name":"success","type":"felt"}],"type":"function"},{"inputs":[{"name":"spender","type":"felt"},{"name":"amount","type":"Uint256"}],"name":"approve","outputs":[{"name":"success","type":"felt"}],"type":"function"},{"inputs":[{"name":"new_lock_time_days","type":"felt"}],"name":"setDefaultLockTime","outputs":[],"type":"function"},{"inputs":[{"name":"new_boost_value","type":"felt"}],"name":"setStakeBoost","outputs":[],"type":"function"},{"inputs":[{"name":"fee","type":"felt"}],"name":"setFeePercent","outputs":[],"type":"function"},{"inputs":[{"name":"window","type":"felt"}],"name":"setHarvestWindow","outputs":[],"type":"function"},{"inputs":[{"name":"new_delay","type":"felt"}],"name":"setHarvestDelay","outputs":[],"type":"function"},{"inputs":[{"name":"new_float","type":"felt"}],"name":"setTargetFloatPercent","outputs":[],"type":"function"},{"inputs":[{"name":"address","type":"felt"}],"name":"setHarvestTaskContract","outputs":[],"type":"function"},{"inputs":[{"name":"strategies_len","type":"felt"},{"name":"strategies","type":"felt*"}],"name":"harvest","outputs":[],"type":"function"},{"inputs":[{"name":"strategy_address","type":"felt"},{"name":"underlying_amount","type":"Uint256"}],"name":"depositIntoStrategy","outputs":[],"type":"function"},{"inputs":[{"name":"strategy_address","type":"felt"},{"name":"underlying_amount","type":"Uint256"}],"name":"withdrawFromStrategy","outputs":[],"type":"function"},{"inputs":[{"name":"strategy_address","type":"felt"}],"name":"trustStrategy","outputs":[],"type":"function"},{"inputs":[{"name":"strategy_address","type":"felt"}],"name":"distrustStrategy","outputs":[],"type":"function"},{"inputs":[{"name":"amount","type":"Uint256"}],"name":"claimFees","outputs":[],"type":"function"},{"inputs":[{"name":"strategy","type":"felt"}],"name":"pushToWithdrawalStack","outputs":[],"type":"function"},{"inputs":[],"name":"popFromWithdrawalStack","outputs":[],"type":"function"},{"inputs":[{"name":"stack_len","type":"felt"},{"name":"stack","type":"felt*"}],"name":"setWithdrawalStack","outputs":[],"type":"function"},{"inputs":[{"name":"index","type":"felt"},{"name":"address","type":"felt"}],"name":"replaceWithdrawalStackIndex","outputs":[],"type":"function"},{"inputs":[{"name":"index1","type":"felt"},{"name":"index2","type":"felt"}],"name":"swapWithdrawalStackIndexes","outputs":[],"type":"function"},{"inputs":[{"name":"_reward_per_block","type":"Uint256"},{"name":"new_end_block","type":"felt"}],"name":"updateRewardPerBlockAndEndBlock","outputs":[],"type":"function"},{"inputs":[],"name":"harvestRewards","outputs":[],"type":"function"},{"inputs":[{"name":"new_owner","type":"felt"}],"name":"transferOwnership","outputs":[],"type":"function"},{"inputs":[],"name":"pause","outputs":[],"type":"function"},{"inputs":[],"name":"unpause","outputs":[],"type":"function"}]')
-
-      expect(rf).deep.eq(expected)
 
       expect(pathfinderApi.getClassAbi(classHash)).to.throw
 
       const rc = await api.getClassAbi(classHash)
-
-      expect(rf).deep.eq(rc)
     })
 
     it('callView', async () => {
@@ -747,10 +685,6 @@ describe('api', function() {
       expect(rp).deep.eq([
         "0x70a61892f03b34f88894f0fb9bb4ae0c63a53f5042f79997862d1dffb8d6a30"
       ])
-
-      let rf = await feederApi.callView(contractAddressProxy, 'get_implementation', blockNumber)
-      log(rf)
-      expect(rp).deep.eq(rf)
 
       rp = await pathfinderApi.callView(contractAddressProxy, 'get_implementation') // latest
       log(rp)
@@ -781,11 +715,6 @@ describe('api', function() {
 
       expect(rc).deep.eq(expected)
 
-      const rf = await feederApi.getTransactionReceipt(txHash)
-      log(rf)
-
-      // TODO sequencer api bug adds an extra event not related to the tx but the same for all txs
-      expect(rf).not.deep.eq(rc)
     })
 
     it('getTransaction INVOKE', async () => {
@@ -798,11 +727,6 @@ describe('api', function() {
 
       expect(rc).deep.eq(expected)
 
-      const rf = await feederApi.getTransaction(txHash)
-      log(rf)
-
-      // sequencer api returns undefined nonce and no type
-      expect(rf).not.deep.eq(rc)
     })
 
     it('getTransaction DEPLOY', async () => {
@@ -815,11 +739,6 @@ describe('api', function() {
 
       expect(rc).deep.eq(expected)
 
-      const rf = await feederApi.getTransaction(txHash)
-      log(rf)
-
-      // sequencer api does not return constructor_calldata
-      expect(rf).not.deep.eq(rc)
     })
 
     it('getTransaction DECLARE', async () => {
@@ -832,11 +751,6 @@ describe('api', function() {
 
       expect(rc).deep.eq(expected)
 
-      const rf = await feederApi.getTransaction(txHash)
-      log(rf)
-
-      // sequencer api returns no type
-      expect(rf).not.deep.eq(rc)
     })
 
   })
