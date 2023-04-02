@@ -20,5 +20,5 @@ fun goerli
 
 fun mainnet
 
-fun testnet2
+#fun testnet2
 
