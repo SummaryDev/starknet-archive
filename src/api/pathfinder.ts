@@ -134,6 +134,9 @@ export class PathfinderApi implements Api {
       } else if (data.error.code === 24) { //TODO revisit this logic: get_implementation at block 12293 for 24 Block not found is rare and unexplainable
         console.warn(m)
         return
+      } else if (data.error.code === 21) { //TODO revisit this logic: et_implementation at block 785856 for 21 Invalid message selector
+        console.warn(m)
+        return
       } else {
         throw new Error(m)
       }

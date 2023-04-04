@@ -19,7 +19,7 @@ function log(o: any) {
   console.log(JSON.stringify(o, null, 2))
 }
 
-const pathfinderUrl = 'https://pathfinder-goerli.dev.summary.dev'/*'http://54.80.141.84:9545'/*'https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a'*/ /*'https://pathfinder-mainnet.dev.summary.dev/rpc/v0.2'*/
+const pathfinderUrl = 'https://pathfinder-goerli.prod.summary.dev' /*'https://pathfinder-goerli.dev.summary.dev'*//*'http://54.80.141.84:9545'/*'https://nd-862-579-607.p2pify.com/07778cfc6ee00fb6002836a99081720a'*/ /*'https://pathfinder-mainnet.dev.summary.dev/rpc/v0.2'*/
 const api: Api = new PathfinderApi(pathfinderUrl)
 
 describe('api', function() {
@@ -595,7 +595,7 @@ describe('api', function() {
     })
 
     it( 'organizeBlock problem blocks', async function () {
-      const blocks = [615603/*13207/*502052/*12799/*436538/*386599/*386798/*269354/*322717, 269717, 269354, 269147, 269130, 268515, 268486, 268464, 68385, 268374, 254923, 235506, 231612, 231579, 167434, 183423, 190290, 161308, 164233, 62135, 111570, 38172, 36568, 27592, 17281, 71368, 71405, 200501, 1564, 1064, 86*/]
+      const blocks = [785856/*615603/*13207/*502052/*12799/*436538/*386599/*386798/*269354/*322717, 269717, 269354, 269147, 269130, 268515, 268486, 268464, 68385, 268374, 254923, 235506, 231612, 231579, 167434, 183423, 190290, 161308, 164233, 62135, 111570, 38172, 36568, 27592, 17281, 71368, 71405, 200501, 1564, 1064, 86*/]
 
       const blockOrganizer = new BlockOrganizer(databaseApi)
 
