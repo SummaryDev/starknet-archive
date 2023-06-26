@@ -30,7 +30,7 @@ spec:
         - name: TYPEORM_PORT
           value: "5432"
         - name: TYPEORM_SYNCHRONIZE
-          value: "false"
+          value: "true"
         - name: TYPEORM_LOGGING
           value: "false"
         - name: TYPEORM_ENTITIES

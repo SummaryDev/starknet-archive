@@ -39,7 +39,7 @@ function fun {
 #    --dry-run=client
 }
 
-fun goerli
+#fun goerli
 
 fun mainnet
 
