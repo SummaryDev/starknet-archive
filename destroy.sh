@@ -16,7 +16,7 @@ function fun() {
     kubectl --namespace $namespace -f - delete
 }
 
-fun goerli
+#fun goerli
 
 fun mainnet
 
